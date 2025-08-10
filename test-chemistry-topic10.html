@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Test: Amino Acids & Proteins</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #dbeafe !important; /* Tailwind blue-100 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: #1e3a8a; /* Tailwind blue-900 */
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind green-100 */
+            border-color: #10b981 !important; /* Tailwind green-500 */
+            color: #064e3b; /* Tailwind green-900 */
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind red-100 */
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            color: #991b1b; /* Tailwind red-900 */
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-3xl">
+        <!-- Main Quiz View -->
+        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Amino Acids & Proteins Test</h2>
+                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            </div>
+            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                <!-- Navigation buttons will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <p class="text-xl mb-2">Your final score is:</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What are the fundamental building blocks of proteins?", options: ["Peptides", "Amino acids", "Zwitterions", "Carboxyl groups"], answer: "Amino acids" },
+            { question: "A molecule consisting of 2 to 50 amino acids linked together is called a:", options: ["Protein", "Polypeptide", "Peptide", "Zwitterion"], answer: "Peptide" },
+            { question: "A protein is defined as a molecule made up of how many amino acids?", options: ["Exactly 50", "50 or more", "2 to 49", "Over 100"], answer: "50 or more" },
+            { question: "Which two functional groups are present in every amino acid?", options: ["An amino group and a side chain", "A carboxyl group and a side chain", "An amino group and a carboxyl group", "A hydroxyl group and an amino group"], answer: "An amino group and a carboxyl group" },
+            { question: "The central carbon atom in an amino acid is known as the:", options: ["Alpha-carbon", "Beta-carbon", "Chiral carbon", "R-group carbon"], answer: "Alpha-carbon" },
+            { question: "Which part of an amino acid makes it unique from other amino acids?", options: ["The amino group", "The carboxyl group", "The alpha-carbon", "The side chain (R-group)"], answer: "The side chain (R-group)" },
+            { question: "Which of the following amino acids is achiral?", options: ["Alanine", "Valine", "Glycine", "Leucine"], answer: "Glycine" },
+            { question: "The classification of amino acids into polar and nonpolar is based on the properties of their:", options: ["Amino group", "Carboxyl group", "Side chains (R-groups)", "Alpha-carbon"], answer: "Side chains (R-groups)" },
+            { question: "Nonpolar amino acid side chains are described as:", options: ["Hydrophilic", "Hydrophobic", "Acidic", "Basic"], answer: "Hydrophobic" },
+            { question: "Which type of bonds are characteristic of nonpolar side chains?", options: ["O-H and N-H bonds", "C-O and C-N bonds", "C-C, C-H, and C-S bonds", "S-H and O-H bonds"], answer: "C-C, C-H, and C-S bonds" },
+            { question: "Polar amino acid side chains are described as:", options: ["Hydrophobic", "Hydrophilic", "Aromatic", "Aliphatic"], answer: "Hydrophilic" },
+            { question: "An amino acid is classified as acidic if:", options: ["The number of -NH₂ groups is greater than the number of -COOH groups.", "The number of -COOH groups is greater than the number of -NH₂ groups.", "The number of -NH₂ groups is equal to the number of -COOH groups.", "It contains a sulfur atom."], answer: "The number of -COOH groups is greater than the number of -NH₂ groups." },
+            { question: "An amino acid is classified as basic if:", options: ["The number of -NH₂ groups is greater than the number of -COOH groups.", "The number of -COOH groups is greater than the number of -NH₂ groups.", "The number of -NH₂ groups is equal to the number of -COOH groups.", "It is nonpolar."], answer: "The number of -NH₂ groups is greater than the number of -COOH groups." },
+            { question: "Which of the following is a nonpolar amino acid?", options: ["Serine", "Aspartic acid", "Lysine", "Alanine"], answer: "Alanine" },
+            { question: "Which of the following is an acidic amino acid?", options: ["Glutamic acid", "Histidine", "Cysteine", "Phenylalanine"], answer: "Glutamic acid" },
+            { question: "Which of the following is a basic amino acid?", options: ["Asparagine", "Arginine", "Tyrosine", "Tryptophan"], answer: "Arginine" },
+            { question: "A dipolar ion form of an amino acid is called a:", options: ["Peptide", "Protein", "Zwitterion", "Anion"], answer: "Zwitterion" },
+            { question: "A zwitterion is formed through an internal reaction between:", options: ["Two different amino acids", "The side chain and the amino group", "The amino group and the carboxyl group", "The alpha-carbon and the side chain"], answer: "The amino group and the carboxyl group" },
+            { question: "At a very low pH (e.g., pH=1), what is the net charge on an amino acid?", options: ["Negative", "Neutral", "Positive", "It varies depending on the side chain."], answer: "Positive" },
+            { question: "At a very high pH (e.g., pH=13), what is the net charge on an amino acid?", options: ["Negative", "Neutral", "Positive", "It varies depending on the side chain."], answer: "Negative" },
+            { question: "At a low pH, which groups in an amino acid are protonated?", options: ["Only the amino group", "Only the carboxyl group", "Both the amino and carboxyl groups", "Neither group is protonated"], answer: "Both the amino and carboxyl groups" },
+            { question: "At a high pH, which groups in an amino acid are deprotonated?", options: ["The amino group becomes -NH₂ and the carboxyl group becomes -COO⁻", "The amino group becomes -NH₃⁺ and the carboxyl group becomes -COOH", "The amino group becomes -NH₂ and the carboxyl group becomes -COOH", "The amino group becomes -NH₃⁺ and the carboxyl group becomes -COO⁻"], answer: "The amino group becomes -NH₂ and the carboxyl group becomes -COO⁻" },
+            { question: "Which functional group of an amino acid reacts with a base like NaOH?", options: ["The amino group", "The carboxyl group", "The side chain", "The alpha-carbon"], answer: "The carboxyl group" },
+            { question: "What are the products when an amino acid reacts with a strong base?", options: ["An ester and water", "An amide and water", "A salt and water", "An alcohol and ammonia"], answer: "A salt and water" },
+            { question: "The reaction of an amino acid with sodium carbonate (Na₂CO₃) liberates which gas?", options: ["Hydrogen (H₂)", "Nitrogen (N₂)", "Carbon dioxide (CO₂)", "Ammonia (NH₃)"], answer: "Carbon dioxide (CO₂)" },
+            { question: "What product is formed when the carboxyl group of an amino acid reacts with PCl₅?", options: ["An ester", "An amide", "An acyl chloride", "An alcohol"], answer: "An acyl chloride" },
+            { question: "The reaction of an amino acid with an alcohol in the presence of an acid catalyst is called:", options: ["Hydrolysis", "Saponification", "Esterification", "Neutralization"], answer: "Esterification" },
+            { question: "What is the product of the esterification of an amino acid?", options: ["An amide", "An ester", "A salt", "An acyl chloride"], answer: "An ester" },
+            { question: "Which functional group of an amino acid reacts with a dilute acid like HCl?", options: ["The amino group", "The carboxyl group", "The side chain", "The alpha-carbon"], answer: "The amino group" },
+            { question: "What is the product when an amino acid reacts with a mineral acid?", options: ["An ester", "An amide", "A salt", "An alcohol"], answer: "A salt" },
+            { question: "The reaction of a primary amino group with nitrous acid (HNO₂) produces what gas?", options: ["Carbon dioxide (CO₂)", "Hydrogen (H₂)", "Ammonia (NH₃)", "Nitrogen (N₂)"], answer: "Nitrogen (N₂)" },
+            { question: "What other organic product is formed when a primary amino acid reacts with nitrous acid?", options: ["A carboxylic acid", "An alcohol", "An amide", "An ester"], answer: "An alcohol" },
+            { question: "What is the product of the reaction between an amino acid and an acyl chloride?", options: ["An ester", "An amide", "A salt", "An alcohol"], answer: "An amide" },
+            { question: "The bond formed between two amino acids is called a:", options: ["Hydrogen bond", "Ionic bond", "Peptide bond", "Glycosidic bond"], answer: "Peptide bond" },
+            { question: "A peptide bond is chemically a(n):", options: ["Ester linkage", "Ether linkage", "Amide linkage", "Anhydride linkage"], answer: "Amide linkage" },
+            { question: "The formation of a dipeptide from two amino acids is what type of reaction?", options: ["Hydrolysis", "Oxidation", "Reduction", "Condensation"], answer: "Condensation" },
+            { question: "What molecule is eliminated during the formation of a peptide bond?", options: ["Ammonia", "Water", "Carbon dioxide", "Hydrogen"], answer: "Water" },
+            { question: "A molecule formed by the condensation of two amino acids is called a:", options: ["Polypeptide", "Dipeptide", "Protein", "Tripeptide"], answer: "Dipeptide" },
+            { question: "A tripeptide consists of how many amino acids?", options: ["2", "3", "4", "5"], answer: "3" },
+            { question: "The end of a peptide chain with a free amino group (-NH₂) is called the:", options: ["C-terminus", "N-terminus", "Alpha-terminus", "R-terminus"], answer: "N-terminus" },
+            { question: "The end of a peptide chain with a free carboxyl group (-COOH) is called the:", options: ["C-terminus", "N-terminus", "Alpha-terminus", "R-terminus"], answer: "C-terminus" },
+            { question: "How is a peptide named?", options: ["Starting from the C-terminal and ending with the N-terminal", "Starting from the N-terminal and ending with the C-terminal", "In alphabetical order of the amino acids", "In order of molecular weight of the amino acids"], answer: "Starting from the N-terminal and ending with the C-terminal" },
+            { question: "In the peptide Ala-Val-Cys, which amino acid is at the N-terminus?", options: ["Alanine (Ala)", "Valine (Val)", "Cysteine (Cys)", "Cannot be determined"], answer: "Alanine (Ala)" },
+            { question: "In the peptide Gly-Ser-Ala, which amino acid is at the C-terminus?", options: ["Glycine (Gly)", "Serine (Ser)", "Alanine (Ala)", "Cannot be determined"], answer: "Alanine (Ala)" },
+            { question: "Which of the following is a polar, neutral amino acid?", options: ["Leucine", "Serine", "Lysine", "Aspartic Acid"], answer: "Serine" },
+            { question: "Phenylalanine is classified as which type of amino acid?", options: ["Polar, acidic", "Polar, basic", "Nonpolar", "Polar, neutral"], answer: "Nonpolar" },
+            { question: "In its zwitterionic form, an amino acid has:", options: ["A net positive charge", "A net negative charge", "No net charge", "Two positive charges"], answer: "No net charge" },
+            { question: "The reaction of glycine with ethanol and an acid catalyst would produce:", options: ["Glycyl ethanoate", "Ethyl glycinate", "Glycyl ethanolamide", "No reaction"], answer: "Ethyl glycinate" },
+            { question: "What would be the major organic product of the reaction between alanine and NaOH?", options: ["Alanine salt (sodium alaninate)", "Alanine ester", "Alanine amide", "No reaction"], answer: "Alanine salt (sodium alaninate)" },
+            { question: "The peptide Val-Ala is the same molecule as Ala-Val.", options: ["True", "False"], answer: "False" },
+            { question: "Which of the following side chains would be considered hydrophilic?", options: ["-CH₃", "-CH₂-COOH", "-CH(CH₃)₂", "-CH₂-Ph"], answer: "-CH₂-COOH" },
+            { question: "Which of the following side chains would be considered hydrophobic?", options: ["-CH₂OH", "-CH₂SH", "-CH₂CH₂SCH₃ (Methionine)", "-(CH₂)₄NH₂"], answer: "-CH₂CH₂SCH₃ (Methionine)" },
+            { question: "At its isoelectric point (pI), an amino acid exists predominantly as a:", options: ["Cation", "Anion", "Zwitterion", "Non-ionic molecule"], answer: "Zwitterion" },
+            { question: "What is the product when phenylalanine reacts with HCl?", options: ["A salt where the amino group is protonated", "A salt where the carboxyl group is deprotonated", "An ester", "An amide"], answer: "A salt where the amino group is protonated" },
+            { question: "How many peptide bonds are in a tripeptide?", options: ["1", "2", "3", "4"], answer: "2" },
+            { question: "The reaction of an amino acid with benzoyl chloride would form an:", options: ["Ester", "Amide", "Anhydride", "Ether"], answer: "Amide" },
+            { question: "Which amino acid contains a thiol (-SH) group?", options: ["Serine", "Methionine", "Cysteine", "Threonine"], answer: "Cysteine" },
+            { question: "What is the predominant form of aspartic acid at pH = 13?", options: ["A species with two -COO⁻ groups and one -NH₂ group", "A species with two -COOH groups and one -NH₃⁺ group", "A species with one -COO⁻ group, one -COOH group, and one -NH₃⁺ group", "A species with two -COO⁻ groups and one -NH₃⁺ group"], answer: "A species with two -COO⁻ groups and one -NH₂ group" },
+            { question: "What is the predominant form of lysine at pH = 1?", options: ["A species with two -NH₃⁺ groups and one -COOH group", "A species with two -NH₂ groups and one -COO⁻ group", "A species with one -NH₃⁺ group, one -NH₂ group, and one -COO⁻ group", "A species with two -NH₃⁺ groups and one -COO⁻ group"], answer: "A species with two -NH₃⁺ groups and one -COOH group" },
+            { question: "The reaction of glycine with SOCl₂ would primarily target the:", options: ["Amino group", "Alpha-hydrogen", "Carboxyl group", "Side chain"], answer: "Carboxyl group" },
+            { question: "What is the three-letter code for Tryptophan?", options: ["Typ", "Trp", "Tph", "Tan"], answer: "Trp" },
+            { question: "Which of the following is an aromatic amino acid?", options: ["Proline", "Isoleucine", "Tyrosine", "Methionine"], answer: "Tyrosine" },
+            { question: "If a dipeptide has a molecular formula of C₅H₁₀O₃N₂ and is formed from an optically active amino acid (Y) and an optically inactive one (Z), what is Z?", options: ["Alanine", "Valine", "Leucine", "Glycine"], answer: "Glycine" },
+            { question: "Following the previous question, what is the structure of amino acid Y?", options: ["NH₂CH(CH₃)COOH", "NH₂CH₂COOH", "NH₂CH(CH₂CH₃)COOH", "NH₂C(CH₃)₂COOH"], answer: "NH₂CH(CH₃)COOH" },
+            { question: "What structural feature is necessary for a molecule to be optically active?", options: ["A carboxyl group", "An amino group", "A chiral carbon", "A peptide bond"], answer: "A chiral carbon" },
+            { question: "The reaction between two cysteine molecules can form a:", options: ["Peptide bond", "Disulfide bridge", "Hydrogen bond", "Salt bridge"], answer: "Disulfide bridge" },
+            { question: "Which of the following is NOT a function of proteins?", options: ["Structural support", "Catalyzing reactions (enzymes)", "Storing genetic information", "Transporting molecules"], answer: "Storing genetic information" },
+            { question: "The peptide bond has partial double bond character.", options: ["True", "False"], answer: "True" },
+            { question: "Which of the following amino acids would be classified as polar and basic?", options: ["Valine", "Asparagine", "Histidine", "Glutamic Acid"], answer: "Histidine" },
+            { question: "The reaction of an amino acid with an alcohol produces an ester and...", options: ["Water", "Ammonia", "Hydrogen gas", "Carbon dioxide"], answer: "Water" },
+            { question: "When drawing the structure of a dipeptide from Glycine and Alanine (Gly-Ala), which group from Glycine reacts?", options: ["Its amino group", "Its carboxyl group", "Its side chain", "Its alpha-carbon"], answer: "Its carboxyl group" },
+            { question: "When drawing the structure of the dipeptide Gly-Ala, which group from Alanine reacts?", options: ["Its amino group", "Its carboxyl group", "Its side chain", "Its alpha-carbon"], answer: "Its amino group" },
+            { question: "The general structure of an amino acid can be represented as:", options: ["R-CH(NH₂)-COOH", "R-CO-NH-R'", "R-O-R'", "R-CHO"], answer: "R-CH(NH₂)-COOH" },
+            { question: "Which of the following is a sulfur-containing amino acid?", options: ["Serine", "Methionine", "Threonine", "Asparagine"], answer: "Methionine" },
+            { question: "What is the chemical property that allows amino acids to act as buffers?", options: ["They are all nonpolar.", "They can form peptide bonds.", "They have both acidic and basic groups.", "They are optically active."], answer: "They have both acidic and basic groups." },
+            { question: "What is the product of the complete hydrolysis of a protein?", options: ["Dipeptides", "A mixture of amino acids", "Nucleotides", "Monosaccharides"], answer: "A mixture of amino acids" },
+            { question: "The reaction of the amino group of an amino acid with nitrous acid is a characteristic reaction of:", options: ["All amines", "Primary amines", "Secondary amines", "Tertiary amines"], answer: "Primary amines" },
+            { question: "Which of the following amino acids has a side chain that is part of a ring structure including the alpha-amino group?", options: ["Phenylalanine", "Tryptophan", "Histidine", "Proline"], answer: "Proline" },
+            { question: "What is the IUPAC name for Glycine?", options: ["2-aminopropanoic acid", "2-aminoethanoic acid", "3-aminopropanoic acid", "2-aminobutanoic acid"], answer: "2-aminoethanoic acid" },
+            { question: "What is the IUPAC name for Alanine?", options: ["2-aminopropanoic acid", "2-aminoethanoic acid", "3-aminopropanoic acid", "2-aminobutanoic acid"], answer: "2-aminopropanoic acid" },
+            { question: "The side chain of serine contains which functional group?", options: ["Carboxyl", "Thiol", "Phenyl", "Hydroxyl"], answer: "Hydroxyl" },
+            { question: "In the zwitterion form of alanine, which groups carry a charge?", options: ["The amino group is -NH₃⁺ and the carboxyl group is -COO⁻", "The amino group is -NH₂ and the side chain is -CH₃⁺", "The carboxyl group is -COO⁻ and the side chain is -CH₃⁻", "The amino group is -NH₃⁺ and the side chain is -CH₃⁻"], answer: "The amino group is -NH₃⁺ and the carboxyl group is -COO⁻" },
+            { question: "Which of the following reagents would NOT react with the carboxyl group of an amino acid?", options: ["NaOH", "Na₂CO₃", "HCl", "CH₃OH / H⁺"], answer: "HCl" },
+            { question: "How many different tripeptides can be made from one molecule each of glycine, alanine, and valine?", options: ["3", "4", "6", "9"], answer: "6" },
+            { question: "Which of the following best describes the solubility of amino acids?", options: ["Generally soluble in nonpolar solvents.", "Generally soluble in water.", "Generally insoluble in all solvents.", "Solubility depends only on the side chain."], answer: "Generally soluble in water." },
+            { question: "The reaction of an amino acid with PCl₅ produces an acyl chloride, POCl₃, and...", options: ["H₂O", "HCl", "Cl₂", "H₂"], answer: "HCl" },
+            { question: "Which amino acid is classified as nonpolar and aromatic?", options: ["Histidine", "Phenylalanine", "Proline", "Serine"], answer: "Phenylalanine" },
+            { question: "The side chain of glutamic acid is:", options: ["Basic", "Acidic", "Neutral polar", "Nonpolar"], answer: "Acidic" },
+            { question: "The side chain of Lysine is:", options: ["Basic", "Acidic", "Neutral polar", "Nonpolar"], answer: "Basic" },
+            { question: "The condensation reaction to form a dipeptide is a type of:", options: ["Dehydration synthesis", "Hydrolysis", "Oxidation", "Reduction"], answer: "Dehydration synthesis" },
+            { question: "Which of the following is a physical property of most amino acids?", options: ["They are liquids at room temperature.", "They have low melting points.", "They are crystalline solids.", "They are insoluble in water."], answer: "They are crystalline solids." },
+            { question: "The charge of a peptide chain depends on:", options: ["Only the N-terminal and C-terminal groups.", "Only the R-groups of the constituent amino acids.", "The pH of the solution and the pKa values of the terminal and R-groups.", "The number of peptide bonds."], answer: "The pH of the solution and the pKa values of the terminal and R-groups." },
+            { question: "What is the single letter code for Alanine?", options: ["A", "L", "N", "I"], answer: "A" },
+            { question: "What is the single letter code for Lysine?", options: ["L", "Y", "S", "K"], answer: "K" },
+            { question: "The reaction of alanine with ethanoyl chloride would result in the formation of an amide bond at the:", options: ["Carboxyl group", "Amino group", "Side chain", "Alpha-carbon"], answer: "Amino group" },
+            { question: "Which amino acid has the simplest side chain?", options: ["Alanine", "Valine", "Glycine", "Leucine"], answer: "Glycine" },
+            { question: "How many chiral centers does threonine have?", options: ["0", "1", "2", "3"], answer: "2" },
+            { question: "The peptide bond is planar.", options: ["True", "False"], answer: "True" },
+            { question: "Which of the following would NOT be a product of the reaction between glycine and nitrous acid (HNO₂)?", options: ["2-hydroxyacetic acid", "Water", "Nitrogen gas", "Ammonia"], answer: "Ammonia" },
+            { question: "The primary structure of a protein is determined by:", options: ["The sequence of amino acids", "Hydrogen bonding between backbone atoms", "The interaction of side chains", "The arrangement of multiple polypeptide chains"], answer: "The sequence of amino acids" }
+        ];
+
+        // --- DOM Elements ---
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+
+        /**
+         * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
+         */
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            // Update navigation button states
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        /**
+         * Handles selecting an answer, updating the state and UI.
+         */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            selectedBtn.classList.add('selected');
+            
+            // Mark the nav button as answered
+            const navBtn = document.querySelector(`#question-nav button[data-index="${currentQuestionIndex}"]`);
+            if (navBtn) {
+                navBtn.classList.add('bg-blue-200', 'dark:bg-blue-900');
+            }
+        }
+
+        /**
+         * Calculates score and builds the detailed review page.
+         */
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            questionNavContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4');
+                questionText.innerText = `${index + 1}. ${questionData.question}`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
+
+                    // If this option is the correct answer, color it green
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    // If this option was the user's INCORRECT choice, color it red
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+        }
+        
+        /**
+         * Updates the highlight on the bottom navigation panel to show the current question.
+         */
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            questionNavContainer.classList.remove('hidden');
+            // Reset nav button colors
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-200', 'dark:bg-blue-900');
+            });
+            loadQuiz();
+        });
+
+        // --- Initial Setup ---
+        // Create the navigation buttons
+        function createNav() {
+            quizData.forEach((_, index) => {
+                const navBtn = document.createElement('button');
+                navBtn.innerText = index + 1;
+                navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
+                navBtn.dataset.index = index;
+                navBtn.addEventListener('click', (e) => {
+                    currentQuestionIndex = parseInt(e.target.dataset.index);
+                    loadQuiz();
+                });
+                questionNav.appendChild(navBtn);
+            });
+        }
+        
+        createNav();
+        // Initial load of the first question
+        loadQuiz();
+    </script>
+</body>
+</html>
