@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Test: Carboxylic Acids & Derivatives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #dbeafe !important; /* Tailwind blue-100 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: #1e3a8a; /* Tailwind blue-900 */
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind green-100 */
+            border-color: #10b981 !important; /* Tailwind green-500 */
+            color: #064e3b; /* Tailwind green-900 */
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind red-100 */
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            color: #991b1b; /* Tailwind red-900 */
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-3xl">
+        <!-- Main Quiz View -->
+        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Carboxylic Acids Test</h2>
+                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            </div>
+            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                <!-- Navigation buttons will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <p class="text-xl mb-2">Your final score is:</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Nomenclature & Structure
+            { question: "What is the correct IUPAC name for the compound CH₃CH(Br)CH₂COOH?", options: ["2-Bromobutanoic acid", "3-Bromobutanoic acid", "1-Bromo-3-carboxypropane", "3-Bromopropanoic acid"], answer: "3-Bromobutanoic acid" },
+            { question: "The general formula for an aliphatic carboxylic acid is:", options: ["CₙH₂ₙ₊₁O₂", "CₙH₂ₙO", "CₙH₂ₙO₂", "CₙH₂ₙ₊₂O₂"], answer: "CₙH₂ₙO₂" },
+            { question: "What is the IUPAC name for the simplest aromatic carboxylic acid?", options: ["Phenylmethanoic acid", "Benzenecarboxylic acid", "Phenylic acid", "Carboxybenzene"], answer: "Benzenecarboxylic acid" },
+            { question: "The name for a dicarboxylic acid ends with the suffix:", options: ["-oic diacid", "-dicarboxylic acid", "-dioic acid", "-dicarboxylate"], answer: "-dioic acid" },
+            { question: "What is the correct IUPAC name for HOOC-COOH?", options: ["Ethanedioic acid", "Diformic acid", "Dicarboxylic acid", "Oxalic acid"], answer: "Ethanedioic acid" },
+            { question: "How would you name a carboxylic acid where the -COOH group is attached to a cyclohexane ring?", options: ["Cyclohexaneoic acid", "1-Carboxycyclohexane", "Cyclohexylmethanoic acid", "Cyclohexanecarboxylic acid"], answer: "Cyclohexanecarboxylic acid" },
+            { question: "The correct name for CH₃COCl is:", options: ["Acetyl chloride", "Ethanoyl chloride", "Chloroethanone", "Methylcarbonyl chloride"], answer: "Ethanoyl chloride" },
+            { question: "What is the IUPAC name for the ester formed from ethanol and propanoic acid?", options: ["Propyl ethanoate", "Ethyl propanoate", "Ethyl propanate", "Propoxyethane"], answer: "Ethyl propanoate" },
+            { question: "The IUPAC name for HCONH₂ is:", options: ["Formamide", "Methanamide", "Aminoformaldehyde", "Aminomethanone"], answer: "Methanamide" },
+            { question: "What is the correct name for the compound CH₃CONHCH₃?", options: ["N,N-Dimethylamide", "N-Methylethanamide", "Methyl acetamide", "Ethanamidomethane"], answer: "N-Methylethanamide" },
+            { question: "The structure of 2-hydroxy-4-methylpentanoic acid is correctly represented by which name?", options: ["A carboxylic acid with a pentane chain, a hydroxyl on C2 and a methyl on C4.", "An alcohol with a pentane chain, a carboxyl on C1 and a methyl on C4.", "A ketone-acid with a methyl group.", "A branched pentanol."], answer: "A carboxylic acid with a pentane chain, a hydroxyl on C2 and a methyl on C4." },
+            { question: "Phthalic acid is the common name for:", options: ["Benzene-1,3-dicarboxylic acid", "Benzene-1,4-dicarboxylic acid", "Benzene-1,2-dicarboxylic acid", "Hexane-1,6-dioic acid"], answer: "Benzene-1,2-dicarboxylic acid" },
+            { question: "The functional group of an acyl chloride is:", options: ["-COOH", "-COCl", "-COOCl", "-CHCl"], answer: "-COCl" },
+            { question: "What is the name of the amide derived from benzoic acid?", options: ["Benzenamide", "Benzamide", "Phenylamide", "Aniline"], answer: "Benzamide" },
+            { question: "The name for the ester CH₃CH₂COOCH₃ is:", options: ["Propyl methanoate", "Methyl propanoate", "Methyl propionate", "Methoxypropanone"], answer: "Methyl propanoate" },
+            { question: "What is the correct IUPAC name for the compound with the structure HOOC(CH₂)₄COOH?", options: ["Butane-1,4-dicarboxylic acid", "Hexanedioic acid", "Adipic acid", "Pentane-1,5-dioic acid"], answer: "Hexanedioic acid" },
+            { question: "The name 'N-ethyl-N-methylpropanamide' refers to a:", options: ["Primary amide", "Secondary amide", "Tertiary amide", "Quaternary ammonium salt"], answer: "Tertiary amide" },
+            { question: "The prefix used for the -COOH group when it is a substituent is:", options: ["Carboxylic", "Oxo", "Formyl", "Carboxy"], answer: "Carboxy" },
+            { question: "What is the IUPAC name for C₆H₅COCl?", options: ["Benzoyl chloride", "Phenylcarbonyl chloride", "Chlorobenzanone", "Phenylchloroate"], answer: "Benzoyl chloride" },
+            { question: "The structure of ethyl acetate is:", options: ["CH₃COOCH₂CH₃", "CH₃CH₂COOCH₃", "CH₃COOCH₃", "CH₃CH₂COOCH₂CH₃"], answer: "CH₃COOCH₂CH₃" },
+            // Physical Properties
+            { question: "Why do carboxylic acids have higher boiling points than alcohols of similar molecular mass?", options: ["They are more polar.", "They have stronger London dispersion forces.", "They can form stable dimers through hydrogen bonding.", "They are more acidic."], answer: "They can form stable dimers through hydrogen bonding." },
+            { question: "Which of the following carboxylic acids is most soluble in water?", options: ["Ethanoic acid", "Hexanoic acid", "Decanoic acid", "Benzoic acid"], answer: "Ethanoic acid" },
+            { question: "The solubility of carboxylic acids in water decreases as the carbon chain length increases because:", options: ["The polarity of the molecule decreases.", "The hydrophobic (nonpolar) portion of the molecule increases in size.", "The strength of the hydrogen bonds decreases.", "The molecular mass increases."], answer: "The hydrophobic (nonpolar) portion of the molecule increases in size." },
+            { question: "Which of the following has the lowest boiling point?", options: ["Propanoyl chloride", "Propanoic acid", "Propan-1-ol", "Butane"], answer: "Butane" },
+            { question: "Esters are known for their characteristic:", options: ["Pungent smells", "Fruity smells", "Fishy smells", "Lack of smell"], answer: "Fruity smells" },
+            { question: "Why do primary and secondary amides have high boiling points?", options: ["They are very polar.", "They can form strong intermolecular hydrogen bonds.", "They have large molecular masses.", "They exist as zwitterions."], answer: "They can form strong intermolecular hydrogen bonds." },
+            { question: "Which of the following compounds cannot form intermolecular hydrogen bonds with itself?", options: ["Propanamide", "N-methylpropanamide", "N,N-dimethylpropanamide", "Propanoic acid"], answer: "N,N-dimethylpropanamide" },
+            { question: "Acyl chlorides often fume in moist air because they:", options: ["Are volatile liquids.", "React with water to produce HCl gas.", "Are highly flammable.", "Sublime easily."], answer: "React with water to produce HCl gas." },
+            { question: "Which compound would have a higher boiling point, butanoic acid or pentan-1-ol?", options: ["Pentan-1-ol, because it has a larger molecular mass.", "Butanoic acid, because it can form stronger hydrogen-bonded dimers.", "Pentan-1-ol, because it has a longer carbon chain.", "They would have similar boiling points."], answer: "Butanoic acid, because it can form stronger hydrogen-bonded dimers." },
+            { question: "The solubility of amides in water is generally:", options: ["Higher than corresponding carboxylic acids.", "Lower than corresponding alkanes.", "Good for small amides due to hydrogen bonding.", "Negligible for all amides."], answer: "Good for small amides due to hydrogen bonding." },
+            // Preparation
+            { question: "Oxidation of propan-1-ol with hot, acidified KMnO₄ yields:", options: ["Propanal", "Propanone", "Propanoic acid", "Propene"], answer: "Propanoic acid" },
+            { question: "Which reagent can be used to oxidize benzaldehyde to benzoic acid?", options: ["LiAlH₄", "PCC", "Alkaline KMnO₄", "H₂/Ni"], answer: "Alkaline KMnO₄" },
+            { question: "The hydrolysis of propanenitrile (CH₃CH₂CN) under acidic conditions produces:", options: ["Propan-1-amine", "Propanoic acid and an ammonium salt", "Propanal", "Propanamide"], answer: "Propanoic acid and an ammonium salt" },
+            { question: "Toluene can be oxidized to benzoic acid using:", options: ["Cold, dilute KMnO₄", "Hot, acidified KMnO₄", "PCC in CH₂Cl₂", "O₃ followed by Zn/H₂O"], answer: "Hot, acidified KMnO₄" },
+            { question: "Which of the following compounds will NOT be oxidized to benzoic acid by hot KMnO₄?", options: ["Toluene", "Ethylbenzene", "Isopropylbenzene", "tert-Butylbenzene"], answer: "tert-Butylbenzene" },
+            { question: "Acyl chlorides are prepared from carboxylic acids using:", options: ["HCl", "Cl₂", "SOCl₂ or PCl₅", "NaCl"], answer: "SOCl₂ or PCl₅" },
+            { question: "The reaction of a carboxylic acid with an alcohol in the presence of an acid catalyst is called:", options: ["Saponification", "Hydrolysis", "Esterification", "Neutralization"], answer: "Esterification" },
+            { question: "How are primary amides typically prepared in a lab?", options: ["By reacting a carboxylic acid with ammonia.", "By reacting an acyl chloride with concentrated ammonia.", "By hydrolyzing a nitrile.", "By reducing a nitro compound."], answer: "By reacting an acyl chloride with concentrated ammonia." },
+            { question: "The preparation of an ester from a carboxylic acid and an alcohol is a(n) _______ reaction.", options: ["Irreversible", "Equilibrium", "Oxidation", "Reduction"], answer: "Equilibrium" },
+            { question: "What is the purpose of using SOCl₂ over PCl₅ for preparing acyl chlorides?", options: ["It is a stronger chlorinating agent.", "The by-products (SO₂ and HCl) are gases, which are easily removed.", "It is less expensive.", "The reaction does not require a catalyst."], answer: "The by-products (SO₂ and HCl) are gases, which are easily removed." },
+            // Reactions of Carboxylic Acids
+            { question: "Carboxylic acids are considered weak acids because they:", options: ["Do not react with bases.", "Only partially dissociate in water.", "Are insoluble in water.", "Have a pH greater than 7."], answer: "Only partially dissociate in water." },
+            { question: "Which gas is produced when ethanoic acid reacts with sodium metal?", options: ["Carbon dioxide", "Oxygen", "Hydrogen", "Methane"], answer: "Hydrogen" },
+            { question: "The reaction of benzoic acid with sodium bicarbonate (NaHCO₃) produces sodium benzoate, water, and:", options: ["Hydrogen gas", "Carbon monoxide", "Carbon dioxide gas", "No gas is produced"], answer: "Carbon dioxide gas" },
+            { question: "Which test can be used to distinguish a carboxylic acid from a phenol?", options: ["Reaction with NaOH", "Reaction with Na", "Reaction with NaHCO₃", "Litmus test"], answer: "Reaction with NaHCO₃" },
+            { question: "The reduction of a carboxylic acid with LiAlH₄ produces a:", options: ["Secondary alcohol", "Ketone", "Aldehyde", "Primary alcohol"], answer: "Primary alcohol" },
+            { question: "What are the products of the reaction between propanoic acid and ethanol with an acid catalyst?", options: ["Propyl ethanoate and water", "Ethyl propanoate and water", "Propanal and ethanal", "Diethyl ether and propene"], answer: "Ethyl propanoate and water" },
+            { question: "When converting a carboxylic acid to an acyl chloride, the -OH group is replaced by a -Cl group. This is an example of:", options: ["Nucleophilic addition", "Electrophilic substitution", "Nucleophilic acyl substitution", "Elimination"], answer: "Nucleophilic acyl substitution" },
+            { question: "The reaction RCOOH + PCl₅ → RCOCl + POCl₃ + ? What is the missing product?", options: ["H₂O", "Cl₂", "HCl", "H₂"], answer: "HCl" },
+            { question: "LiAlH₄ is a strong reducing agent. It will reduce the carboxyl group but will it also reduce a C=C double bond in the same molecule?", options: ["Yes, it reduces both.", "No, it is selective for the carboxyl group.", "It only reduces the C=C bond.", "It depends on the reaction conditions."], answer: "No, it is selective for the carboxyl group." },
+            { question: "The salt formed from the reaction of butanoic acid and potassium hydroxide is:", options: ["Potassium butanoate", "Potassium butoxide", "Butyl potassium", "Potassium butyrate"], answer: "Potassium butanoate" },
+            // Reactions of Acyl Chlorides
+            { question: "The reaction of an acyl chloride with water is called:", options: ["Esterification", "Saponification", "Hydrolysis", "Reduction"], answer: "Hydrolysis" },
+            { question: "What are the products when ethanoyl chloride reacts with water?", options: ["Ethanol and HCl", "Ethanoic acid and HCl", "Acetaldehyde and HCl", "Diethyl ether and Cl₂"], answer: "Ethanoic acid and HCl" },
+            { question: "The reaction of propanoyl chloride with methanol yields:", options: ["Propyl methanoate and HCl", "Methyl propanoate and HCl", "Propan-1-ol and chloromethane", "Propanal and methoxy chloride"], answer: "Methyl propanoate and HCl" },
+            { question: "What type of compound is formed when an acyl chloride reacts with a primary amine?", options: ["A primary amide", "A secondary (N-substituted) amide", "A tertiary (N,N-disubstituted) amide", "An imine"], answer: "A secondary (N-substituted) amide" },
+            { question: "The reaction of benzoyl chloride with ammonia gives:", options: ["Aniline", "Benzoic acid", "Benzamide", "Phenylammonium chloride"], answer: "Benzamide" },
+            { question: "Friedel-Crafts acylation involves the reaction of an acyl chloride with an aromatic ring in the presence of which catalyst?", options: ["H₂SO₄", "NaOH", "AlCl₃", "PCC"], answer: "AlCl₃" },
+            { question: "The product of the Friedel-Crafts acylation of benzene with ethanoyl chloride is:", options: ["Ethylbenzene", "Acetophenone (phenylethanone)", "Benzoic acid", "Benzyl chloride"], answer: "Acetophenone (phenylethanone)" },
+            { question: "Why are acyl chlorides so reactive?", options: ["The C=O bond is very weak.", "The C-Cl bond is very polar and the chloride ion is a good leaving group.", "They are non-polar.", "They readily form free radicals."], answer: "The C-Cl bond is very polar and the chloride ion is a good leaving group." },
+            { question: "What is the product of the reaction between ethanoyl chloride and diethylamine ((CH₃CH₂)₂NH)?", options: ["N-ethylethanamide", "N,N-diethylethanamide", "Ethanamide", "No reaction"], answer: "N,N-diethylethanamide" },
+            { question: "The reaction of an acyl chloride with an alcohol to form an ester is an example of:", options: ["Alcoholysis", "Hydrolysis", "Aminolysis", "Reduction"], answer: "Alcoholysis" },
+            // Reactions of Esters
+            { question: "The hydrolysis of an ester in the presence of a dilute acid produces:", options: ["A carboxylate salt and an alcohol.", "A carboxylic acid and an alcohol.", "An aldehyde and an alcohol.", "Two alcohols."], answer: "A carboxylic acid and an alcohol." },
+            { question: "The alkaline hydrolysis of an ester is called:", options: ["Esterification", "Saponification", "Neutralization", "Reduction"], answer: "Saponification" },
+            { question: "What are the products of the saponification of ethyl ethanoate with hot aqueous NaOH?", options: ["Ethanoic acid and ethanol", "Sodium ethanoate and ethanol", "Sodium ethoxide and ethanoic acid", "Acetaldehyde and sodium ethoxide"], answer: "Sodium ethanoate and ethanol" },
+            { question: "The reduction of an ester with LiAlH₄ yields:", options: ["A carboxylic acid.", "A secondary alcohol.", "Two molecules of primary alcohols.", "An aldehyde and an alcohol."], answer: "Two molecules of primary alcohols." },
+            { question: "What are the products when methyl benzoate (C₆H₅COOCH₃) is reduced by LiAlH₄?", options: ["Benzoic acid and methanol", "Benzyl alcohol (phenylmethanol) and methanol", "Phenol and ethanol", "Benzyl alcohol and ethanol"], answer: "Benzyl alcohol (phenylmethanol) and methanol" },
+            { question: "Why is alkaline hydrolysis of an ester effectively irreversible?", options: ["A gas is produced.", "A precipitate is formed.", "The carboxylate ion formed is resonance-stabilized and shows no tendency to react with the alcohol.", "The reaction is highly exothermic."], answer: "The carboxylate ion formed is resonance-stabilized and shows no tendency to react with the alcohol." },
+            { question: "If you hydrolyze propyl methanoate with dilute HCl, what are the products?", options: ["Propanoic acid and methanol", "Methanoic acid and propan-1-ol", "Propanoic acid and methanal", "Methanoic acid and propanal"], answer: "Methanoic acid and propan-1-ol" },
+            { question: "Saponification is the process used to make:", options: ["Plastics", "Dyes", "Soaps", "Perfumes"], answer: "Soaps" },
+            { question: "The first step in the mechanism of both acidic and basic ester hydrolysis is:", options: ["Protonation of the alcohol oxygen.", "Nucleophilic attack on the carbonyl carbon.", "Removal of the -OR' group.", "Formation of a carbocation."], answer: "Nucleophilic attack on the carbonyl carbon." },
+            { question: "Which part of the ester molecule comes from the alcohol during its formation?", options: ["The R-C=O part", "The -OR' part", "The C=O part", "The R- group"], answer: "The -OR' part" },
+            // Reactions of Amides
+            { question: "The hydrolysis of an amide under acidic conditions produces:", options: ["A carboxylic acid and an amine.", "A carboxylate salt and an amine.", "A carboxylic acid and an ammonium salt.", "An amine and an alcohol."], answer: "A carboxylic acid and an ammonium salt." },
+            { question: "What are the products when propanamide is boiled with aqueous NaOH?", options: ["Propanoic acid and ammonia", "Sodium propanoate and ammonia", "Propan-1-ol and sodium amide", "Propanal and ammonia"], answer: "Sodium propanoate and ammonia" },
+            { question: "Compared to esters, the hydrolysis of amides typically requires:", options: ["Milder conditions.", "More vigorous conditions (stronger acid/base and prolonged heating).", "The presence of a metal catalyst.", "UV light."], answer: "More vigorous conditions (stronger acid/base and prolonged heating)." },
+            { question: "The products of the acidic hydrolysis of N-methylbutanamide are:", options: ["Butanoic acid and methylamine.", "Butanoic acid and methylammonium chloride (if HCl is used).", "Butan-1-ol and methylamine.", "Sodium butanoate and methylamine."], answer: "Butanoic acid and methylammonium chloride (if HCl is used)." },
+            { question: "Why are amides less reactive towards nucleophilic acyl substitution than acyl chlorides?", options: ["The C=O bond in amides is less polar.", "The amide group is a very poor leaving group.", "Amides are not soluble.", "Steric hindrance is greater in amides."], answer: "The amide group is a very poor leaving group." },
+            // Mixed Concept Questions
+            { question: "Which of the following is the strongest acid?", options: ["Ethanol", "Phenol", "Ethanoic acid", "Water"], answer: "Ethanoic acid" },
+            { question: "Which compound will react with NaOH but not with NaHCO₃?", options: ["Hexan-1-ol", "Phenol", "Hexanoic acid", "Hexane"], answer: "Phenol" },
+            { question: "A compound gives a yellow precipitate with alkaline aqueous iodine (iodoform test) and also effervesces with sodium carbonate. What is the compound?", options: ["Lactic acid (2-hydroxypropanoic acid)", "Pyruvic acid (2-oxopropanoic acid)", "3-hydroxybutanoic acid", "Acetoacetic acid (3-oxobutanoic acid)"], answer: "Acetoacetic acid (3-oxobutanoic acid)" },
+            { question: "What is the final product when propanenitrile is heated under reflux with dilute H₂SO₄?", options: ["Propanamide", "Propan-1-amine", "Propanoic acid", "Propanal"], answer: "Propanoic acid" },
+            { question: "A compound C₃H₆O₂ is a sweet-smelling liquid. It reacts with NaOH(aq) on heating to form sodium ethanoate and methanol. What is the compound?", options: ["Ethyl methanoate", "Methyl ethanoate", "Propanoic acid", "1-hydroxypropanone"], answer: "Methyl ethanoate" },
+            { question: "Which reagent can distinguish between propanal and propanoic acid?", options: ["Acidified K₂Cr₂O₇", "Tollen's reagent", "NaHCO₃ solution", "2,4-DNPH"], answer: "NaHCO₃ solution" },
+            { question: "The conversion of a carboxylic acid to an ester using an alcohol and an acid catalyst is what type of reaction?", options: ["Addition", "Elimination", "Oxidation", "Condensation"], answer: "Condensation" },
+            { question: "Which of the following is a derivative of carboxylic acid?", options: ["Aldehyde", "Ketone", "Ester", "Alcohol"], answer: "Ester" },
+            { question: "The reaction of ethanoyl chloride with aniline (phenylamine) produces:", options: ["Benzamide", "N-phenylethanamide", "Phenyl ethanoate", "N-ethylaniline"], answer: "N-phenylethanamide" },
+            { question: "What is the main structural feature of a fatty acid?", options: ["A short-chain carboxylic acid.", "An aromatic carboxylic acid.", "A long-chain carboxylic acid.", "A dicarboxylic acid."], answer: "A long-chain carboxylic acid." },
+            { question: "Which of the following reagents can reduce an ester to two alcohols?", options: ["NaBH₄", "H₂/Ni", "LiAlH₄", "Sn/HCl"], answer: "LiAlH₄" },
+            { question: "The reaction of a primary amine with an acyl chloride is a key step in synthesizing:", options: ["Esters", "Ethers", "Substituted amides", "Alkenes"], answer: "Substituted amides" },
+            { question: "Saponification of a fat (a triester of glycerol) would produce glycerol and:", options: ["Three molecules of a fatty acid.", "Three molecules of a soap (carboxylate salt).", "Three molecules of an aldehyde.", "Three molecules of an alcohol."], answer: "Three molecules of a soap (carboxylate salt)." },
+            { question: "Which of the following compounds is the most reactive towards nucleophilic acyl substitution?", options: ["Ethanamide", "Ethyl ethanoate", "Ethanoic anhydride", "Ethanoyl chloride"], answer: "Ethanoyl chloride" },
+            { question: "The carboxyl group is a combination of which two functional groups?", options: ["Carbonyl and ether", "Carbonyl and hydroxyl", "Carbonyl and amine", "Hydroxyl and alkene"], answer: "Carbonyl and hydroxyl" },
+            { question: "What is the product of the reaction between butanoic acid and SOCl₂?", options: ["Butan-1-ol", "Butanal", "Butanoyl chloride", "Chlorobutane"], answer: "Butanoyl chloride" },
+            { question: "Alkaline hydrolysis of N-ethylpropanamide yields:", options: ["Propanoic acid and ethylamine", "Sodium propanoate and ethylamine", "Propan-1-ol and ethylamine", "Propanal and sodium ethoxide"], answer: "Sodium propanoate and ethylamine" },
+            { question: "Which of the following would be named with the suffix '-oate'?", options: ["An acid chloride", "An amide", "An ester", "A carboxylic acid"], answer: "An ester" },
+            { question: "The reaction of benzene with propanoyl chloride and AlCl₃ gives:", options: ["Propylbenzene", "Isopropylbenzene", "Propiophenone (1-phenylpropan-1-one)", "Benzoic acid"], answer: "Propiophenone (1-phenylpropan-1-one)" },
+            { question: "What is the role of the concentrated H₂SO₄ in esterification?", options: ["It acts as an oxidizing agent.", "It acts as a reducing agent.", "It acts as a catalyst and a dehydrating agent.", "It acts as a solvent."], answer: "It acts as a catalyst and a dehydrating agent." },
+            { question: "Which of the following is NOT a derivative of a carboxylic acid?", options: ["Amide", "Ester", "Acyl chloride", "Ketone"], answer: "Ketone" },
+            { question: "The common name for pentanedioic acid is:", options: ["Oxalic acid", "Malonic acid", "Succinic acid", "Glutaric acid"], answer: "Glutaric acid" },
+            { question: "Hydrolysis of an ester can be carried out using:", options: ["Only acid", "Only base", "Either acid or base", "A metal catalyst"], answer: "Either acid or base" },
+            { question: "The reaction of an acyl chloride with an alcohol is generally faster than the reaction of a carboxylic acid with an alcohol because:", options: ["The alcohol is a better nucleophile in the first case.", "The acyl chloride is a much more reactive electrophile.", "The reaction is less reversible.", "Both B and C are correct."], answer: "Both B and C are correct." },
+            { question: "What is the product when 2-methylpropanamide is heated with dilute HCl?", options: ["2-methylpropanoic acid and ammonia", "2-methylpropanoic acid and an ammonium salt", "2-methylpropan-1-ol and an ammonium salt", "Sodium 2-methylpropanoate and ammonia"], answer: "2-methylpropanoic acid and an ammonium salt" }
+        ];
+
+        // --- DOM Elements ---
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+
+        /**
+         * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
+         */
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                // Prefix options with A, B, C, D for clarity
+                const optionPrefix = String.fromCharCode(65 + currentQuestion.options.indexOf(optionText));
+                button.innerText = `${optionPrefix}. ${optionText}`;
+                button.dataset.option = optionText; // Store original option text
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            // Update navigation button states
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        /**
+         * Handles selecting an answer, updating the state and UI.
+         */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.dataset.option;
+            
+            Array.from(optionsEl.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            selectedBtn.classList.add('selected');
+        }
+
+        /**
+         * Calculates score and builds the detailed review page.
+         */
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            questionNavContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4');
+                questionText.innerText = `${index + 1}. ${questionData.question}`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    const optionPrefix = String.fromCharCode(65 + questionData.options.indexOf(optionText));
+                    optionDiv.innerText = `${optionPrefix}. ${optionText}`;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
+
+                    // If the user got it right, the correct answer is green
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    // If the user's choice was this one, and it was wrong
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+        }
+        
+        /**
+         * Updates the highlight on the bottom navigation panel.
+         */
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            questionNavContainer.classList.remove('hidden');
+            loadQuiz();
+        });
+
+        // --- Initial Setup ---
+        // Create the navigation buttons
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+
+        // Initial load of the first question
+        loadQuiz();
+    </script>
+</body>
+</html>
