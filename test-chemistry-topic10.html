@@ -43,7 +43,10 @@
         <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Amino Acids & Proteins Test</h2>
-                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+                <div class="text-right">
+                    <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+                    <div id="timer" class="text-sm font-semibold text-blue-600 dark:text-blue-400">Time: 00:00</div>
+                </div>
             </div>
             <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
             <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -68,7 +71,11 @@
             <div class="text-center mb-8">
                  <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
                  <p class="text-xl mb-2">Your final score is:</p>
-                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                 <div class="text-gray-600 dark:text-gray-300 space-y-1 mb-8">
+                    <p id="time-taken" class="text-lg"></p>
+                    <p id="avg-time" class="text-lg"></p>
+                 </div>
                  <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
             </div>
             <hr class="my-8 border-gray-300 dark:border-gray-600">
@@ -197,15 +204,58 @@
         const reviewArea = document.getElementById('review-area');
         const questionNavContainer = document.getElementById('question-nav-container');
         const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const timeTakenEl = document.getElementById('time-taken');
+        const avgTimeEl = document.getElementById('avg-time');
 
         // --- Quiz State ---
         let currentQuestionIndex = 0;
         const userAnswers = new Array(quizData.length).fill(null);
+        
+        // --- Timer State ---
+        let startTime;
+        let timerInterval;
+        let quizStarted = false;
 
         /**
-         * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
+         * Formats seconds into a MM:SS string.
+         */
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedMinutes}:${formattedSeconds}`;
+        }
+
+        /**
+         * Starts the timer and updates the display every second.
+         */
+        function startTimer() {
+            startTime = new Date();
+            timerInterval = setInterval(() => {
+                const now = new Date();
+                const elapsedSeconds = (now - startTime) / 1000;
+                timerEl.innerText = `Time: ${formatTime(elapsedSeconds)}`;
+            }, 1000);
+        }
+
+        /**
+         * Stops the timer interval.
+         */
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        /**
+         * Loads a question and its options into the DOM.
          */
         function loadQuiz() {
+            if (!quizStarted) {
+                startTimer();
+                quizStarted = true;
+            }
+
             const currentQuestion = quizData[currentQuestionIndex];
             questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
             progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
@@ -224,14 +274,13 @@
                 optionsEl.appendChild(button);
             });
 
-            // Update navigation button states
             updateNavHighlight();
             prevBtn.disabled = currentQuestionIndex === 0;
             nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
         }
 
         /**
-         * Handles selecting an answer, updating the state and UI.
+         * Handles selecting an answer.
          */
         function selectAnswer(e) {
             const selectedBtn = e.target;
@@ -242,7 +291,6 @@
             });
             selectedBtn.classList.add('selected');
             
-            // Mark the nav button as answered
             const navBtn = document.querySelector(`#question-nav button[data-index="${currentQuestionIndex}"]`);
             if (navBtn) {
                 navBtn.classList.add('bg-blue-200', 'dark:bg-blue-900');
@@ -250,9 +298,10 @@
         }
 
         /**
-         * Calculates score and builds the detailed review page.
+         * Calculates score, stops timer, and builds the review page.
          */
         function showResults() {
+            stopTimer();
             quizContainer.classList.add('hidden');
             questionNavContainer.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
@@ -282,11 +331,9 @@
                     optionDiv.innerText = optionText;
                     optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
 
-                    // If this option is the correct answer, color it green
                     if (optionText === correctAnswer) {
                         optionDiv.classList.add('correct');
                     }
-                    // If this option was the user's INCORRECT choice, color it red
                     if (optionText === userAnswer && userAnswer !== correctAnswer) {
                         optionDiv.classList.add('incorrect');
                     }
@@ -301,10 +348,20 @@
 
             const percentage = Math.round((score / quizData.length) * 100);
             scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+
+            // Calculate and display time stats
+            const endTime = new Date();
+            const totalSeconds = (endTime - startTime) / 1000;
+            const avgSeconds = totalSeconds / quizData.length;
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            const totalRemainingSeconds = Math.floor(totalSeconds % 60);
+
+            timeTakenEl.innerText = `Total Time Taken: ${totalMinutes} minutes and ${totalRemainingSeconds} seconds`;
+            avgTimeEl.innerText = `Average Time per Question: ${avgSeconds.toFixed(2)} seconds`;
         }
         
         /**
-         * Updates the highlight on the bottom navigation panel to show the current question.
+         * Updates the highlight on the bottom navigation panel.
          */
         function updateNavHighlight() {
             const navButtons = document.querySelectorAll('#question-nav button');
@@ -336,10 +393,12 @@
         restartBtn.addEventListener('click', () => {
             currentQuestionIndex = 0;
             userAnswers.fill(null);
+            quizStarted = false;
+            timerEl.innerText = 'Time: 00:00';
+            stopTimer();
             resultsContainer.classList.add('hidden');
             quizContainer.classList.remove('hidden');
             questionNavContainer.classList.remove('hidden');
-            // Reset nav button colors
             const navButtons = document.querySelectorAll('#question-nav button');
             navButtons.forEach(btn => {
                 btn.classList.remove('bg-blue-200', 'dark:bg-blue-900');
@@ -348,7 +407,6 @@
         });
 
         // --- Initial Setup ---
-        // Create the navigation buttons
         function createNav() {
             quizData.forEach((_, index) => {
                 const navBtn = document.createElement('button');
@@ -364,7 +422,6 @@
         }
         
         createNav();
-        // Initial load of the first question
         loadQuiz();
     </script>
 </body>
