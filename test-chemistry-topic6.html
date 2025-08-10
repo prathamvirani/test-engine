@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Test: Hydroxyl Compounds</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #dbeafe !important; /* Tailwind blue-100 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: #1e3a8a; /* Tailwind blue-900 */
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind green-100 */
+            border-color: #10b981 !important; /* Tailwind green-500 */
+            color: #064e3b; /* Tailwind green-900 */
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind red-100 */
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            color: #991b1b; /* Tailwind red-900 */
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-3xl">
+        <!-- Main Quiz View -->
+        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Hydroxyl Compounds Test</h2>
+                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            </div>
+            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                <!-- Navigation buttons will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <p class="text-xl mb-2">Your final score is:</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Section 6.1
+            { question: "What is the general formula for a saturated monohydric alcohol?", options: ["CnH2nOH", "CnH2n+1OH", "CnH2n+2OH", "CnH2n-1OH"], answer: "CnH2n+1OH" },
+            { question: "Which of the following is the correct IUPAC name for CH3CH(OH)CH(CH3)CH2CH3?", options: ["4-methyl-2-pentanol", "2-methyl-4-pentanol", "4-methylpentan-2-ol", "2-methylpentan-4-ol"], answer: "4-methylpentan-2-ol" },
+            { question: "A compound with the -OH group attached directly to a benzene ring is classified as a(n):", options: ["Aliphatic alcohol", "Aryl alcohol", "Phenol", "Secondary alcohol"], answer: "Phenol" },
+            { question: "What is the correct IUPAC name for glycerol, CH2(OH)CH(OH)CH2(OH)?", options: ["1,2,3-propanetriol", "1,2,3-trihydroxypropane", "Propane-1,2,3-triol", "Both A and C are correct"], answer: "Both A and C are correct" },
+            { question: "Which of the following alcohols has the highest boiling point?", options: ["Methanol", "Ethanol", "Propan-1-ol", "Butan-1-ol"], answer: "Butan-1-ol" },
+            { question: "Why is the boiling point of propan-1-ol (78°C) significantly higher than that of butane (-1°C), despite having similar molecular masses?", options: ["Propan-1-ol has stronger van der Waals forces.", "Propan-1-ol can form intermolecular hydrogen bonds.", "Butane is a more branched molecule.", "Butane has a higher vapor pressure."], answer: "Propan-1-ol can form intermolecular hydrogen bonds." },
+            { question: "Which of the following compounds is the most soluble in water?", options: ["Hexan-1-ol", "Butan-1-ol", "Ethane-1,2-diol", "Propan-1-ol"], answer: "Ethane-1,2-diol" },
+            { question: "The solubility of alcohols in water decreases as the carbon chain length increases because:", options: ["The hydrophobic alkyl portion becomes larger.", "The hydrophilic hydroxyl group becomes less effective.", "The density of the alcohol increases.", "Both A and B."], answer: "Both A and B." },
+            { question: "What is the IUPAC name for a cyclohexane ring with an -OH group on carbon 1 and a methyl group on carbon 3?", options: ["3-methyl-1-cyclohexanol", "1-methyl-3-cyclohexanol", "3-methylcyclohexanol", "Methylcyclohexanol"], answer: "3-methylcyclohexanol" },
+            { question: "When naming a compound with both a hydroxyl group and a double bond, which functional group is given priority in numbering the parent chain?", options: ["The double bond", "The hydroxyl group", "Whichever gives the lower set of numbers", "The longest chain length"], answer: "The hydroxyl group" },
+            { question: "What is the correct IUPAC name for tert-butyl alcohol?", options: ["2-methyl-2-butanol", "2,2-dimethyl-1-propanol", "2-methyl-2-propanol", "1,1-dimethylethanol"], answer: "2-methyl-2-propanol" },
+            { question: "Phenol is considered a hydroxyl compound, but it is not classified as an alcohol because:", options: ["It is aromatic.", "The -OH group is bonded to an sp2 hybridized carbon of the benzene ring.", "It is a solid at room temperature.", "It has acidic properties."], answer: "The -OH group is bonded to an sp2 hybridized carbon of the benzene ring." },
+            { question: "Comparing butan-1-ol and 2-methylpropan-2-ol, which would have a lower boiling point and why?", options: ["Butan-1-ol, because it is less branched.", "2-methylpropan-2-ol, because branching reduces the surface area for van der Waals forces.", "Butan-1-ol, because it has weaker hydrogen bonds.", "2-methylpropan-2-ol, because it is a tertiary alcohol."], answer: "2-methylpropan-2-ol, because branching reduces the surface area for van der Waals forces." },
+            { question: "The term 'hydrophilic' refers to the part of the alcohol molecule that is:", options: ["Water-loving, the alkyl chain.", "Water-fearing, the -OH group.", "Water-loving, the -OH group.", "Water-fearing, the alkyl chain."], answer: "Water-loving, the -OH group." },
+            { question: "What is the correct IUPAC name for the compound HOCH2CH2COOH?", options: ["1-carboxy-2-ethanol", "3-hydroxypropanoic acid", "1-hydroxy-3-propanoic acid", "2-hydroxyethanoic acid"], answer: "3-hydroxypropanoic acid" },
+            // Section 6.2
+            { question: "How is butan-2-ol classified?", options: ["Primary alcohol", "Secondary alcohol", "Tertiary alcohol", "Quaternary alcohol"], answer: "Secondary alcohol" },
+            { question: "Which of the following is a tertiary alcohol?", options: ["Pentan-1-ol", "Pentan-2-ol", "2-methylbutan-2-ol", "3-methylbutan-2-ol"], answer: "2-methylbutan-2-ol" },
+            { question: "The fermentation of glucose (C6H12O6) by yeast produces ethanol and what other substance?", options: ["Oxygen", "Water", "Carbon dioxide", "Methane"], answer: "Carbon dioxide" },
+            { question: "What are the typical conditions for the industrial hydration of ethene to produce ethanol?", options: ["High temperature, high pressure, and a phosphoric acid catalyst.", "Low temperature, low pressure, and a nickel catalyst.", "Room temperature, yeast, and anaerobic conditions.", "UV light and a halogen catalyst."], answer: "High temperature, high pressure, and a phosphoric acid catalyst." },
+            { question: "The hydration of propene, CH3CH=CH2, with dilute H2SO4 primarily yields:", options: ["Propan-1-ol", "Propan-2-ol", "Propanal", "Propane-1,2-diol"], answer: "Propan-2-ol" },
+            { question: "The reaction in the previous question follows which rule?", options: ["Saytzeff's Rule", "Huckel's Rule", "Markovnikov's Rule", "The Octet Rule"], answer: "Markovnikov's Rule" },
+            { question: "What is the product of the reduction of butanal (CH3CH2CH2CHO) with LiAlH4?", options: ["Butan-1-ol", "Butan-2-ol", "Butanoic acid", "Butane"], answer: "Butan-1-ol" },
+            { question: "The reduction of butanone (CH3COCH2CH3) with LiAlH4 produces:", options: ["Butan-1-ol", "Butan-2-ol", "Butanoic acid", "2-methylpropan-2-ol"], answer: "Butan-2-ol" },
+            { question: "The reaction of methylmagnesium bromide (CH3MgBr) with methanal (HCHO), followed by hydrolysis, yields:", options: ["Methanol", "Ethanol", "Propan-1-ol", "Propan-2-ol"], answer: "Ethanol" },
+            { question: "To synthesize 2-methylbutan-2-ol using a Grignard reagent, one could react:", options: ["Ethylmagnesium bromide with propanone.", "Methylmagnesium bromide with butanone.", "Propylmagnesium bromide with ethanal.", "Both A and B."], answer: "Methylmagnesium bromide with butanone." },
+            { question: "Which of the following alcohols would react fastest with sodium metal?", options: ["Ethanol", "Propan-2-ol", "2-methylpropan-2-ol", "Methanol"], answer: "Methanol" },
+            { question: "What gas is produced when an alcohol reacts with sodium?", options: ["Oxygen", "Carbon dioxide", "Hydrogen", "Methane"], answer: "Hydrogen" },
+            { question: "Refluxing ethanol with concentrated H2SO4 and sodium bromide will produce:", options: ["Bromoethane", "Ethene", "Diethyl ether", "Acetaldehyde"], answer: "Bromoethane" },
+            { question: "Which reagent is used in the Lucas test to distinguish between primary, secondary, and tertiary alcohols?", options: ["Acidified potassium permanganate", "Concentrated HCl and anhydrous ZnCl2", "Alkaline aqueous iodine", "Neutral iron(III) chloride"], answer: "Concentrated HCl and anhydrous ZnCl2" },
+            { question: "A tertiary alcohol, when treated with Lucas reagent, will:", options: ["Show no reaction at room temperature.", "Form a cloudy solution within 5 minutes.", "Form a cloudy solution almost immediately.", "Turn the solution from orange to green."], answer: "Form a cloudy solution almost immediately." },
+            { question: "The oxidation of propan-2-ol with acidified potassium dichromate(VI) (K2Cr2O7/H+) yields:", options: ["Propanal", "Propanoic acid", "Propanone", "No reaction"], answer: "Propanone" },
+            { question: "What is the final product when butan-1-ol is refluxed with an excess of acidified potassium permanganate (KMnO4/H+)?", options: ["Butanal", "Butanone", "Butanoic acid", "Butene"], answer: "Butanoic acid" },
+            { question: "Which mild oxidizing agent is used to oxidize a primary alcohol to an aldehyde without further oxidation to a carboxylic acid?", options: ["KMnO4/H+, reflux", "K2Cr2O7/H+, reflux", "Pyridinium chlorochromate (PCC)", "Concentrated HNO3"], answer: "Pyridinium chlorochromate (PCC)" },
+            { question: "What is the observation when a primary or secondary alcohol is warmed with acidified potassium dichromate(VI)?", options: ["The purple solution becomes colorless.", "A silver mirror is formed.", "The orange solution turns green.", "A yellow precipitate is formed."], answer: "The orange solution turns green." },
+            { question: "The dehydration of an alcohol typically requires:", options: ["A reducing agent like LiAlH4.", "An oxidizing agent like PCC.", "A strong acid catalyst like concentrated H2SO4 and heat.", "A base like NaOH."], answer: "A strong acid catalyst like concentrated H2SO4 and heat." },
+            { question: "Dehydration of butan-2-ol at 170°C with concentrated H2SO4 yields but-2-ene as the major product. This follows:", options: ["Markovnikov's Rule", "Saytzeff's Rule", "Le Chatelier's Principle", "Hund's Rule"], answer: "Saytzeff's Rule" },
+            { question: "Heating excess ethanol with concentrated H2SO4 at a lower temperature (around 140°C) primarily produces:", options: ["Ethene", "Ethanoic acid", "Diethyl ether", "Ethyl hydrogen sulfate"], answer: "Diethyl ether" },
+            { question: "The reaction between an alcohol and a carboxylic acid to form an ester is called:", options: ["Saponification", "Dehydration", "Oxidation", "Esterification"], answer: "Esterification" },
+            { question: "What are the products of the reaction between ethanol and ethanoic acid in the presence of an acid catalyst?", options: ["Diethyl ether and water", "Ethyl ethanoate and water", "Acetaldehyde and water", "Ethene and ethanoic acid"], answer: "Ethyl ethanoate and water" },
+            { question: "Which of the following alcohols will give a positive iodoform test?", options: ["Propan-1-ol", "Propan-2-ol", "2-methylpropan-2-ol", "Methanol"], answer: "Propan-2-ol" },
+            { question: "A positive iodoform test is characterized by the formation of a:", options: ["Silver mirror", "Green solution", "Purple solution", "Yellow precipitate"], answer: "Yellow precipitate" },
+            { question: "The iodoform test is specific for compounds containing which structural feature?", options: ["A tertiary alcohol group", "A carboxyl group", "A CH3CH(OH)- group", "A phenyl group"], answer: "A CH3CH(OH)- group" },
+            { question: "Which of the following is a common use for ethanol?", options: ["As a fuel", "As a solvent", "As an antiseptic", "All of the above"], answer: "All of the above" },
+            { question: "Williamson ether synthesis involves the reaction of:", options: ["Two alcohol molecules with an acid catalyst.", "An alkoxide ion with a primary alkyl halide.", "An alkene with an alcohol.", "An ester with a Grignard reagent."], answer: "An alkoxide ion with a primary alkyl halide." },
+            { question: "To prepare ethyl methyl ether, one should react:", options: ["Sodium methoxide with bromoethane.", "Sodium ethoxide with bromomethane.", "Methanol with ethanol and acid.", "Both A and B are suitable."], answer: "Both A and B are suitable." },
+            { question: "Why does the reaction of sodium tert-butoxide with bromoethane produce mainly an elimination product (ethene) instead of an ether?", options: ["The alkyl halide is too hindered.", "The alkoxide is a strong, hindered base.", "The temperature is too low.", "The solvent is not polar enough."], answer: "The alkoxide is a strong, hindered base." },
+            { question: "The reaction of an alcohol with PCl5 produces a chloroalkane and what other observable product?", options: ["Bubbles of H2 gas", "A yellow precipitate of PCl3", "Steamy fumes of HCl", "A purple solution"], answer: "Steamy fumes of HCl" },
+            { question: "Which alcohol will not be oxidized by acidified KMnO4?", options: ["2-methylpropan-1-ol", "Butan-2-ol", "2-methylpropan-2-ol", "Propan-1-ol"], answer: "2-methylpropan-2-ol" },
+            { question: "What is the product of the reaction between cyclohexanol and SOCl2?", options: ["Chlorocyclohexane", "Cyclohexene", "Cyclohexanone", "Benzene"], answer: "Chlorocyclohexane" },
+            { question: "The relative reactivity of alcohols in substitution reactions (like the Lucas test) is:", options: ["1° > 2° > 3°", "3° > 2° > 1°", "2° > 3° > 1°", "All are equally reactive."], answer: "3° > 2° > 1°" },
+            // Section 6.3
+            { question: "What is the correct IUPAC name for the compound with a hydroxyl group and a methyl group at positions 1 and 2 respectively on a benzene ring?", options: ["2-methylphenol", "1-hydroxy-2-methylbenzene", "o-cresol", "All of the above are acceptable names."], answer: "All of the above are acceptable names." },
+            { question: "Phenol is a solid at room temperature and has a higher melting point than toluene (methylbenzene) due to:", options: ["Higher molecular mass", "Intermolecular hydrogen bonding", "Its aromatic nature", "Stronger van der Waals forces"], answer: "Intermolecular hydrogen bonding" },
+            { question: "Phenol is more acidic than ethanol. This is primarily because:", options: ["The phenyl group is electron-donating.", "The phenoxide ion is stabilized by resonance.", "Ethanol can form stronger hydrogen bonds.", "The O-H bond in phenol is stronger."], answer: "The phenoxide ion is stabilized by resonance." },
+            { question: "The negative charge on the phenoxide ion is delocalized onto which positions of the benzene ring?", options: ["Ortho and para positions", "Meta positions only", "Ortho and meta positions", "All positions equally"], answer: "Ortho and para positions" },
+            { question: "Which of the following substituted phenols is the most acidic?", options: ["Phenol", "4-methylphenol (p-cresol)", "4-nitrophenol", "4-methoxyphenol"], answer: "4-nitrophenol" },
+            { question: "Electron-withdrawing groups on the benzene ring of a phenol will:", options: ["Increase its acidity by stabilizing the phenoxide ion.", "Decrease its acidity by destabilizing the phenoxide ion.", "Have no effect on acidity.", "Make the phenol a stronger base."], answer: "Increase its acidity by stabilizing the phenoxide ion." },
+            { question: "Phenol reacts with aqueous sodium hydroxide to form:", options: ["No reaction", "Sodium phenoxide and water", "Sodium phenoxide and hydrogen gas", "Cyclohexanol"], answer: "Sodium phenoxide and water" },
+            { question: "How does the reaction of phenol with metallic sodium compare to the reaction of ethanol with metallic sodium?", options: ["Phenol reacts more vigorously.", "Ethanol reacts more vigorously.", "They react at the same rate.", "Only ethanol reacts."], answer: "Phenol reacts more vigorously." },
+            { question: "What is the product when phenol is treated with excess aqueous bromine?", options: ["4-bromophenol", "2-bromophenol and 4-bromophenol", "2,4,6-tribromophenol", "No reaction"], answer: "2,4,6-tribromophenol" },
+            { question: "What is the characteristic observation for the reaction with excess aqueous bromine?", options: ["A silver mirror is formed.", "The reddish-brown bromine water is decolorized and a white precipitate is formed.", "The solution turns purple.", "Bubbles of gas are evolved."], answer: "The reddish-brown bromine water is decolorized and a white precipitate is formed." },
+            { question: "The nitration of phenol with excess concentrated nitric acid and sulfuric acid produces:", options: ["2-nitrophenol and 4-nitrophenol", "3-nitrophenol", "2,4,6-trinitrophenol (picric acid)", "Nitrobenzene"], answer: "2,4,6-trinitrophenol (picric acid)" },
+            { question: "What is the characteristic test to distinguish phenol from an aliphatic alcohol like cyclohexanol?", options: ["Reaction with sodium metal", "Lucas test", "Iodoform test", "Reaction with neutral iron(III) chloride solution"], answer: "Reaction with neutral iron(III) chloride solution" },
+            { question: "What is the positive result for the test with neutral iron(III) chloride solution?", options: ["A yellow precipitate", "A purple coloration", "A silver mirror", "Effervescence"], answer: "A purple coloration" },
+            { question: "Why does phenol not undergo substitution with PCl5 to form chlorobenzene under normal conditions?", options: ["The C-O bond in phenol has partial double bond character due to resonance.", "Phenol is not a strong enough nucleophile.", "PCl5 is not a strong enough electrophile.", "The reaction is sterically hindered."], answer: "The C-O bond in phenol has partial double bond character due to resonance." },
+            { question: "Which of the following is a major use of phenol?", options: ["As a fuel additive", "In the production of plastics like Bakelite", "As a food flavoring agent", "In the synthesis of perfumes"], answer: "In the production of plastics like Bakelite" },
+            { question: "Comparing the acidity of water, ethanol, and phenol, which is the correct order of increasing acidity (weakest acid first)?", options: ["Water < Ethanol < Phenol", "Ethanol < Water < Phenol", "Phenol < Water < Ethanol", "Ethanol < Phenol < Water"], answer: "Ethanol < Water < Phenol" },
+            { question: "The -OH group in phenol directs incoming electrophiles to which positions?", options: ["Meta position", "Ortho and para positions", "Any position on the ring", "It deactivates the ring to electrophilic attack."], answer: "Ortho and para positions" },
+            { question: "What is the common name for 2,4,6-trinitrophenol?", options: ["TNT", "Picric acid", "Aspirin", "Dettol"], answer: "Picric acid" },
+            { question: "The active ingredient in Dettol is a derivative of phenol. This highlights phenol's use as a(n):", options: ["Antiseptic", "Dye", "Plastic monomer", "Solvent"], answer: "Antiseptic" },
+            { question: "Phenol is soluble in NaOH solution but cyclohexanol is not. This is because:", options: ["Phenol is acidic enough to be deprotonated by NaOH.", "Cyclohexanol is a tertiary alcohol.", "Phenol can form stronger hydrogen bonds.", "Cyclohexanol is non-polar."], answer: "Phenol is acidic enough to be deprotonated by NaOH." },
+            // Comprehensive
+            { question: "Which of the following can be oxidized to a ketone?", options: ["Benzyl alcohol", "2-methylpropan-1-ol", "Cyclohexanol", "2-methylpropan-2-ol"], answer: "Cyclohexanol" },
+            { question: "Which compound will react with both sodium metal and aqueous sodium hydroxide?", options: ["Ethanol", "Cyclohexanol", "Phenol", "Diethyl ether"], answer: "Phenol" },
+            { question: "Which of the following pairs can be distinguished using the iodoform test?", options: ["Propan-1-ol and Propan-2-ol", "Methanol and Ethanol", "Butan-2-one and Pentan-3-one", "All of the above"], answer: "All of the above" },
+            { question: "The reaction of propanal with LiAlH4 followed by the reaction of the product with hot, concentrated H2SO4 gives:", options: ["Propene", "Propanone", "Propanoic acid", "Propan-2-ol"], answer: "Propene" },
+            { question: "What is the final organic product when phenylmethanol (C6H5CH2OH) is refluxed with acidified K2Cr2O7?", options: ["Benzaldehyde", "Benzoic acid", "Benzene", "Phenol"], answer: "Benzoic acid" },
+            { question: "Which of the following statements is FALSE?", options: ["Tertiary alcohols are resistant to oxidation.", "Phenol is more acidic than water.", "Primary alcohols can be oxidized to aldehydes using PCC.", "Secondary alcohols react with Lucas reagent more slowly than primary alcohols."], answer: "Secondary alcohols react with Lucas reagent more slowly than primary alcohols." },
+            { question: "How could you synthesize propan-2-ol from propene?", options: ["Oxidation with cold, dilute KMnO4", "Hydration with steam and an acid catalyst", "Reaction with HBr followed by hydrolysis with NaOH(aq)", "Both B and C"], answer: "Both B and C" },
+            { question: "Which compound below is a primary alcohol?", options: ["CH3CH(OH)CH3", "(CH3)3COH", "(CH3)2CHCH2OH", "Cyclohexanol"], answer: "(CH3)2CHCH2OH" },
+            { question: "The reaction of an alcohol with an acyl halide (RCOCl) is a method to form an:", options: ["Ether", "Aldehyde", "Ester", "Alkene"], answer: "Ester" },
+            { question: "What is the product of the reaction between phenol and ethanoyl chloride?", options: ["Phenyl ethanoate", "2-hydroxyacetophenone", "Ethyl phenyl ether", "No reaction"], answer: "Phenyl ethanoate" },
+            { question: "Which of the following has the lowest boiling point?", options: ["Butan-1-ol", "Butan-2-ol", "2-methylpropan-1-ol", "2-methylpropan-2-ol"], answer: "2-methylpropan-2-ol" },
+            { question: "To distinguish between pentan-2-ol and pentan-3-ol, the most suitable chemical test would be:", options: ["Lucas test", "Iodoform test", "Oxidation with acidified dichromate", "Reaction with sodium"], answer: "Iodoform test" },
+            { question: "The synthesis of tert-butyl ethyl ether is best achieved by:", options: ["Reaction of sodium ethoxide with 2-chloro-2-methylpropane.", "Reaction of sodium tert-butoxide with chloroethane.", "Heating tert-butanol and ethanol with concentrated acid.", "Reaction of tert-butanol with sodium ethoxide."], answer: "Reaction of sodium tert-butoxide with chloroethane." },
+            { question: "The product of the complete combustion of any alcohol is:", options: ["Carbon monoxide and water", "Carbon and water", "An aldehyde and water", "Carbon dioxide and water"], answer: "Carbon dioxide and water" },
+            { question: "Which of the following is NOT a hydroxyl compound?", options: ["Phenol", "Ethanol", "Ethanoic acid", "Diethyl ether"], answer: "Diethyl ether" },
+            { question: "The IUPAC name for isobutyl alcohol is:", options: ["2-methyl-1-propanol", "2-butanol", "2-methyl-2-propanol", "1-butanol"], answer: "2-methyl-1-propanol" },
+            { question: "Which reagent would convert 1-bromopropane to propan-1-ol?", options: ["H2O, acid catalyst", "Aqueous NaOH, heat", "LiAlH4", "PCC"], answer: "Aqueous NaOH, heat" },
+            { question: "The reaction of a Grignard reagent with a ketone, followed by hydrolysis, produces a:", options: ["Primary alcohol", "Secondary alcohol", "Tertiary alcohol", "Carboxylic acid"], answer: "Tertiary alcohol" },
+            { question: "Which of the following statements about phenol is correct?", options: ["It is a stronger acid than carbonic acid (H2CO3).", "It gives a purple color with neutral FeCl3 solution.", "It readily undergoes oxidation to form a ketone.", "It is completely immiscible with water at all temperatures."], answer: "It gives a purple color with neutral FeCl3 solution." },
+            { question: "The dehydration of 2-methylcyclohexanol would most likely produce:", options: ["1-methylcyclohexene", "2-methylcyclohexene", "3-methylcyclohexene", "Methylenecyclohexane"], answer: "1-methylcyclohexene" },
+            { question: "What is the classification of the alcohol in cholesterol?", options: ["Primary", "Secondary", "Tertiary", "Phenolic"], answer: "Secondary" },
+            { question: "Which of the following is used as an antiseptic and is the main component of 'rubbing alcohol'?", options: ["Methanol", "Ethanol", "Propan-2-ol (Isopropyl alcohol)", "Ethane-1,2-diol (Ethylene glycol)"], answer: "Propan-2-ol (Isopropyl alcohol)" },
+            { question: "The reaction of 2,4-dinitrophenol with NaOH would be:", options: ["Faster than the reaction of phenol with NaOH.", "Slower than the reaction of phenol with NaOH.", "Similar in rate to the reaction of phenol with NaOH.", "No reaction would occur."], answer: "Faster than the reaction of phenol with NaOH." },
+            { question: "What is the role of yeast in fermentation?", options: ["It acts as a solvent.", "It provides the sugar source.", "It provides enzymes that catalyze the conversion of sugar to ethanol.", "It provides oxygen for the reaction."], answer: "It provides enzymes that catalyze the conversion of sugar to ethanol." },
+            { question: "Which of the following is NOT a physical property of alcohols?", options: ["They are generally liquids or solids at room temperature.", "Their boiling points are higher than corresponding alkanes.", "Lower molecular weight alcohols are soluble in water.", "They are all denser than water."], answer: "They are all denser than water." },
+            { question: "The common name for 1,2-ethanediol is:", options: ["Glycerol", "Ethylene glycol", "Propylene glycol", "Acetone"], answer: "Ethylene glycol" },
+            { question: "Which of the following would be the strongest acid?", options: ["Ethanol", "Phenol", "2,4,6-trichlorophenol", "Water"], answer: "2,4,6-trichlorophenol" },
+            { question: "The reaction of cyclohexene with water and an acid catalyst will produce:", options: ["Phenol", "Benzene", "Cyclohexanol", "Cyclohexanone"], answer: "Cyclohexanol" },
+            { question: "Which of the following is NOT a valid method for preparing ethanol?", options: ["Fermentation of glucose.", "Hydration of ethene.", "Reduction of ethanoic acid.", "Oxidation of ethane."], answer: "Oxidation of ethane." },
+            { question: "A compound has the formula C4H10O. It reacts immediately with Lucas reagent and does not react with acidified dichromate solution. The compound is:", options: ["Butan-1-ol", "Butan-2-ol", "2-methylpropan-1-ol", "2-methylpropan-2-ol"], answer: "2-methylpropan-2-ol" }
+        ];
+
+        // --- DOM Elements ---
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+
+        /**
+         * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
+         */
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = currentQuestion.question;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            // Update navigation button states
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        /**
+         * Handles selecting an answer, updating the state and UI.
+         */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            selectedBtn.classList.add('selected');
+        }
+
+        /**
+         * Calculates score and builds the detailed review page.
+         */
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            questionNavContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4');
+                questionText.innerText = `${index + 1}. ${questionData.question}`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+        }
+        
+        /**
+         * Updates the highlight on the bottom navigation panel.
+         */
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            questionNavContainer.classList.remove('hidden');
+            loadQuiz();
+        });
+
+        // --- Initial Setup ---
+        // Create the navigation buttons
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+
+        // Initial load of the first question
+        loadQuiz();
+    </script>
+</body>
+</html>
