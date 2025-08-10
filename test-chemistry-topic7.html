@@ -41,9 +41,12 @@
     <div class="w-full max-w-3xl">
         <!-- Main Quiz View -->
         <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Carbonyl Compounds Test</h2>
-                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Carbonyl Compounds Test</h2>
+                    <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">Question 1 / 100</div>
+                </div>
+                <div id="timer" class="text-2xl font-mono font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-gray-700 px-4 py-2 rounded-lg">00:00</div>
             </div>
             <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
             <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -68,7 +71,10 @@
             <div class="text-center mb-8">
                  <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
                  <p class="text-xl mb-2">Your final score is:</p>
-                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-6">0 / 100</p>
+                 <div id="time-stats" class="text-center text-gray-600 dark:text-gray-400 space-y-1 mb-8">
+                    <!-- Time stats will be inserted here -->
+                 </div>
                  <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
             </div>
             <hr class="my-8 border-gray-300 dark:border-gray-600">
@@ -197,10 +203,36 @@
     const reviewArea = document.getElementById('review-area');
     const questionNavContainer = document.getElementById('question-nav-container');
     const questionNav = document.getElementById('question-nav');
+    const timerEl = document.getElementById('timer');
+    const timeStatsEl = document.getElementById('time-stats');
+
 
     // --- Quiz State ---
     let currentQuestionIndex = 0;
     const userAnswers = new Array(quizData.length).fill(null);
+    let timerInterval;
+    let totalSeconds = 0;
+
+    // --- Timer Functions ---
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval); // Clear any existing timer
+        const startTime = Date.now();
+        timerInterval = setInterval(() => {
+            totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+            timerEl.textContent = formatTime(totalSeconds);
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
 
     /**
      * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
@@ -247,6 +279,7 @@
      * Calculates score and builds the detailed review page.
      */
     function showResults() {
+        stopTimer();
         quizContainer.classList.add('hidden');
         questionNavContainer.classList.add('hidden');
         resultsContainer.classList.remove('hidden');
@@ -293,6 +326,13 @@
 
         const percentage = Math.round((score / quizData.length) * 100);
         scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+
+        // Display time stats
+        const avgTime = (totalSeconds / quizData.length).toFixed(2);
+        timeStatsEl.innerHTML = `
+            <p><strong>Total Time Taken:</strong> ${formatTime(totalSeconds)}</p>
+            <p><strong>Average Time per Question:</strong> ${avgTime} seconds</p>
+        `;
     }
     
     /**
@@ -328,10 +368,12 @@
     restartBtn.addEventListener('click', () => {
         currentQuestionIndex = 0;
         userAnswers.fill(null);
+        totalSeconds = 0;
         resultsContainer.classList.add('hidden');
         quizContainer.classList.remove('hidden');
         questionNavContainer.classList.remove('hidden');
         loadQuiz();
+        startTimer();
     });
 
     // --- Initial Setup ---
@@ -348,8 +390,9 @@
         questionNav.appendChild(navBtn);
     });
 
-    // Initial load of the first question
+    // Initial load of the first question and start timer
     loadQuiz();
+    startTimer();
 </script>
 </body>
 </html>
