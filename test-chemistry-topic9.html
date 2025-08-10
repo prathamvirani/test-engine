@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Test: Amines</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #dbeafe !important; /* Tailwind blue-100 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: #1e3a8a; /* Tailwind blue-900 */
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind green-100 */
+            border-color: #10b981 !important; /* Tailwind green-500 */
+            color: #064e3b; /* Tailwind green-900 */
+        }
+        /* Style for the user's incorrect choice on the review page */
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind red-100 */
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            color: #991b1b; /* Tailwind red-900 */
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-3xl">
+        <!-- Main Quiz View -->
+        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Amines Test</h2>
+                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            </div>
+            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                <!-- Navigation buttons will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <p class="text-xl mb-2">Your final score is:</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which of the following is the defining characteristic of an amine?", options: ["A carbonyl group", "A hydroxyl group", "A nitrogen atom with a lone pair of electrons", "A carbon-carbon double bond"], answer: "A nitrogen atom with a lone pair of electrons" },
+            { question: "An amine in which the nitrogen atom is bonded only to alkyl groups is known as a(n):", options: ["Aromatic amine", "Aliphatic amine", "Heterocyclic amine", "Amide"], answer: "Aliphatic amine" },
+            { question: "Which of the following is an example of an aromatic amine?", options: ["Ethylamine", "Aniline", "Piperidine", "Acetamide"], answer: "Aniline" },
+            { question: "A heterocyclic amine is one in which the nitrogen atom:", options: ["Is bonded to a benzene ring", "Is part of a ring structure", "Is bonded to three alkyl groups", "Is bonded to a carbonyl group"], answer: "Is part of a ring structure" },
+            { question: "How are amines classified as primary, secondary, or tertiary?", options: ["Based on the number of carbon atoms in the longest chain", "Based on the number of hydrogen atoms attached to the nitrogen atom", "Based on the number of double bonds in the molecule", "Based on the total number of atoms in the molecule"], answer: "Based on the number of hydrogen atoms attached to the nitrogen atom" },
+            { question: "Which of the following is a primary amine?", options: ["Trimethylamine", "Diethylamine", "Propylamine", "N-methylaniline"], answer: "Propylamine" },
+            { question: "What is the correct IUPAC name for CH₃CH₂NH₂?", options: ["Ethylamine", "Ethanamine", "Aminoethane", "N-methylethanamine"], answer: "Ethanamine" },
+            { question: "The correct IUPAC name for aniline is:", options: ["Benzenamine", "Phenylamine", "Aminobenzene", "All of the above"], answer: "All of the above" },
+            { question: "What is the correct IUPAC name for the following compound: CH₃NHCH₂CH₃?", options: ["N-methylethanamine", "N-ethylethanamine", "1-methylaminoethane", "2-aminopropane"], answer: "N-methylethanamine" },
+            { question: "In the IUPAC nomenclature of amines, what does the prefix \"N-\" indicate?", options: ["The presence of a nitrogen atom", "A substituent on the nitrogen atom", "A nitro group", "A nitrile group"], answer: "A substituent on the nitrogen atom" },
+            { question: "What is the correct IUPAC name for (CH₃)₃N?", options: ["Trimethylamine", "N,N-dimethylmethanamine", "1,1,1-trimethylamine", "Propylamine"], answer: "N,N-dimethylmethanamine" },
+            { question: "Which of the following has the highest boiling point?", options: ["Propane", "Propanol", "Propylamine", "Dimethyl ether"], answer: "Propanol" },
+            { question: "Why do primary and secondary amines have higher boiling points than alkanes of similar molecular weight?", options: ["They have stronger van der Waals forces.", "They can form hydrogen bonds with each other.", "They are more polar.", "All of the above."], answer: "They can form hydrogen bonds with each other." },
+            { question: "Why do tertiary amines have lower boiling points than primary and secondary amines of similar molecular weight?", options: ["They cannot form hydrogen bonds with each other.", "They are less polar.", "They have weaker van der Waals forces.", "They are more branched."], answer: "They cannot form hydrogen bonds with each other." },
+            { question: "Which of the following is most soluble in water?", options: ["Hexane", "Hexanol", "Hexylamine", "All are equally soluble."], answer: "Hexanol" },
+            { question: "The solubility of amines in water decreases as the length of the carbon chain increases because:", options: ["The hydrophobic portion of the molecule increases.", "The ability to form hydrogen bonds decreases.", "The polarity of the molecule decreases.", "All of the above."], answer: "The hydrophobic portion of the molecule increases." },
+            { question: "Which of the following can be used to prepare amines?", options: ["Reduction of nitriles", "Reduction of amides", "Reduction of nitro compounds", "All of the above"], answer: "All of the above" },
+            { question: "The reduction of a nitrile with a suitable reducing agent will produce a(n):", options: ["Primary amine", "Secondary amine", "Tertiary amine", "Amide"], answer: "Primary amine" },
+            { question: "What is the product of the reaction between an amine and a mineral acid?", options: ["An amide", "An alcohol", "A salt", "A nitrile"], answer: "A salt" },
+            { question: "The reaction of an amine with an acid chloride is known as the:", options: ["Hofmann rearrangement", "Gabriel synthesis", "Schotten-Baumann reaction", "Curtius rearrangement"], answer: "Schotten-Baumann reaction" },
+            { question: "What is the product of the reaction between a primary amine and an acid chloride?", options: ["A secondary amide", "A primary amide", "A tertiary amide", "An ester"], answer: "A secondary amide" },
+            { question: "The reaction of a primary aliphatic amine with nitrous acid at room temperature produces:", options: ["An alcohol and nitrogen gas", "A diazonium salt", "A nitrosoamine", "No reaction"], answer: "An alcohol and nitrogen gas" },
+            { question: "The reaction of a secondary amine with nitrous acid produces:", options: ["An alcohol and nitrogen gas", "A diazonium salt", "A nitrosoamine", "No reaction"], answer: "A nitrosoamine" },
+            { question: "The reaction of a tertiary amine with nitrous acid produces:", options: ["An alcohol and nitrogen gas", "A diazonium salt", "A nitrosoamine", "A soluble salt"], answer: "A soluble salt" },
+            { question: "The reaction of a primary aromatic amine with nitrous acid and HCl at 0-5°C produces:", options: ["An alcohol and nitrogen gas", "A diazonium salt", "A nitrosoamine", "No reaction"], answer: "A diazonium salt" },
+            { question: "What is the characteristic observation when a primary aliphatic amine reacts with nitrous acid?", options: ["Formation of a yellow precipitate", "Effervescence of a colorless gas", "Formation of a red solution", "No visible change"], answer: "Effervescence of a colorless gas" },
+            { question: "The reaction of phenylamine with bromine water results in:", options: ["No reaction", "Substitution at the ortho and para positions", "Substitution at the meta position", "Formation of a diazonium salt"], answer: "Substitution at the ortho and para positions" },
+            { question: "What is the product of the reaction of aniline with excess bromine water?", options: ["2-bromoaniline", "4-bromoaniline", "2,4-dibromoaniline", "2,4,6-tribromoaniline"], answer: "2,4,6-tribromoaniline" },
+            { question: "Azo compounds are characterized by the presence of a(n):", options: ["-N=N- group", "-NO2 group", "-CN group", "-CONH2 group"], answer: "-N=N- group" },
+            { question: "Azo compounds are formed by the reaction of a diazonium salt with a(n):", options: ["Alkene", "Alcohol", "Coupling agent", "Aldehyde"], answer: "Coupling agent" },
+            { question: "Which of the following can be used as a coupling agent in the formation of azo dyes?", options: ["Phenol", "Aniline", "Both a and b", "Neither a nor b"], answer: "Both a and b" },
+            { question: "The reaction of benzenediazonium chloride with phenol produces a(n):", options: ["Red dye", "Yellow dye", "Blue dye", "Green dye"], answer: "Red dye" },
+            { question: "In the coupling reaction, the diazonium salt acts as a(n):", options: ["Nucleophile", "Electrophile", "Free radical", "Leaving group"], answer: "Electrophile" },
+            { question: "The coupling reaction typically occurs at which position(s) on the benzene ring of the coupling agent?", options: ["Ortho and para", "Meta", "Any position", "Only the para position"], answer: "Ortho and para" },
+            { question: "What is the common name for phenylamine?", options: ["Aniline", "Pyridine", "Pyrrole", "Piperidine"], answer: "Aniline" },
+            { question: "Which of the following is a tertiary amine?", options: ["CH₃NH₂", "(CH₃)₂NH", "(CH₃)₃N", "C₆H₅NH₂"], answer: "(CH₃)₃N" },
+            { question: "The nitrogen atom in an amine has a hybridization of:", options: ["sp", "sp2", "sp3", "sp3d"], answer: "sp3" },
+            { question: "The geometry around the nitrogen atom in a primary amine is:", options: ["Linear", "Trigonal planar", "Tetrahedral", "Trigonal pyramidal"], answer: "Trigonal pyramidal" },
+            { question: "The bond angle in a typical amine is approximately:", options: ["180°", "120°", "109.5°", "107°"], answer: "107°" },
+            { question: "Amines are basic because:", options: ["They can accept a proton.", "They have a lone pair of electrons on the nitrogen atom.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "Which of the following is the strongest base?", options: ["Ammonia", "Methylamine", "Dimethylamine", "Trimethylamine"], answer: "Dimethylamine" },
+            { question: "Aromatic amines are generally weaker bases than aliphatic amines because:", options: ["The lone pair of electrons on the nitrogen atom is delocalized into the benzene ring.", "The benzene ring is an electron-withdrawing group.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "Which of the following is the weakest base?", options: ["Aniline", "Methylamine", "Ammonia", "Cyclohexylamine"], answer: "Aniline" },
+            { question: "The reaction of an amine with water is an example of a(n):", options: ["Acid-base reaction", "Redox reaction", "Substitution reaction", "Addition reaction"], answer: "Acid-base reaction" },
+            { question: "The salt formed from the reaction of an amine with an acid is:", options: ["Soluble in water", "Insoluble in water", "A gas", "A liquid"], answer: "Soluble in water" },
+            { question: "The reaction of a tertiary amine with an acid chloride results in:", options: ["A tertiary amide", "A secondary amide", "No reaction", "An ester"], answer: "No reaction" },
+            { question: "The nitrosation reaction can be used to distinguish between:", options: ["Primary, secondary, and tertiary amines", "Aliphatic and aromatic amines", "Amines and amides", "All of the above"], answer: "Primary, secondary, and tertiary amines" },
+            { question: "The diazonium salt formed from the reaction of a primary aromatic amine with nitrous acid is stable at:", options: ["Room temperature", "High temperatures", "Low temperatures (0-5°C)", "All temperatures"], answer: "Low temperatures (0-5°C)" },
+            { question: "The reaction of a diazonium salt with water at room temperature produces a(n):", options: ["Phenol", "Aniline", "Benzene", "Nitrobenzene"], answer: "Phenol" },
+            { question: "The reaction of a diazonium salt with cuprous chloride produces a(n):", options: ["Chlorobenzene", "Phenol", "Aniline", "Benzene"], answer: "Chlorobenzene" },
+            { question: "The reaction of a diazonium salt with cuprous bromide produces a(n):", options: ["Bromobenzene", "Phenol", "Aniline", "Benzene"], answer: "Bromobenzene" },
+            { question: "The reaction of a diazonium salt with potassium iodide produces a(n):", options: ["Iodobenzene", "Phenol", "Aniline", "Benzene"], answer: "Iodobenzene" },
+            { question: "The reaction of a diazonium salt with hypophosphorous acid produces:", options: ["Benzene", "Phenol", "Aniline", "Nitrobenzene"], answer: "Benzene" },
+            { question: "The reaction of a diazonium salt with a phenol is an example of a(n):", options: ["Coupling reaction", "Substitution reaction", "Addition reaction", "Elimination reaction"], answer: "Coupling reaction" },
+            { question: "The color of azo dyes is due to the presence of:", options: ["The azo group", "The benzene ring", "The delocalized pi system", "All of the above"], answer: "All of the above" },
+            { question: "Which of the following is a naturally occurring amine?", options: ["Nicotine", "Caffeine", "Morphine", "All of the above"], answer: "All of the above" },
+            { question: "The functional group of an amine is:", options: ["-OH", "-CHO", "-NH2", "-COOH"], answer: "-NH2" },
+            { question: "The general formula for a primary amine is:", options: ["RNH2", "R2NH", "R3N", "RCONH2"], answer: "RNH2" },
+            { question: "The common name for methanamine is:", options: ["Methylamine", "Formamine", "Aminomethane", "All of the above"], answer: "Methylamine" },
+            { question: "The IUPAC name for the simplest aromatic amine is:", options: ["Aniline", "Benzenamine", "Phenylamine", "All of the above"], answer: "All of the above" },
+            { question: "The boiling point of amines increases with increasing molecular weight due to:", options: ["Increased hydrogen bonding", "Increased van der Waals forces", "Increased polarity", "All of the above"], answer: "Increased van der Waals forces" },
+            { question: "The solubility of amines in water is due to their ability to form:", options: ["Hydrogen bonds with water", "Ionic bonds with water", "Covalent bonds with water", "None of the above"], answer: "Hydrogen bonds with water" },
+            { question: "The reaction of a nitrile with LiAlH₄ followed by hydrolysis yields a(n):", options: ["Primary amine", "Secondary amine", "Tertiary amine", "Amide"], answer: "Primary amine" },
+            { question: "The reaction of an amide with LiAlH₄ followed by hydrolysis yields a(n):", options: ["Primary amine", "Secondary amine", "Tertiary amine", "Carboxylic acid"], answer: "Primary amine" },
+            { question: "The reaction of a nitro compound with a reducing agent such as Sn/HCl yields a(n):", options: ["Primary amine", "Secondary amine", "Tertiary amine", "Amide"], answer: "Primary amine" },
+            { question: "The reaction of an amine with an acid is a(n):", options: ["Neutralization reaction", "Redox reaction", "Precipitation reaction", "None of the above"], answer: "Neutralization reaction" },
+            { question: "The salt formed from the reaction of an amine with an acid can be converted back to the amine by treatment with a(n):", options: ["Acid", "Base", "Oxidizing agent", "Reducing agent"], answer: "Base" },
+            { question: "The reaction of a primary amine with an acid chloride is an example of a(n):", options: ["Nucleophilic substitution reaction", "Electrophilic substitution reaction", "Addition reaction", "Elimination reaction"], answer: "Nucleophilic substitution reaction" },
+            { question: "The reaction of a secondary amine with an acid chloride yields a(n):", options: ["Secondary amide", "Tertiary amide", "Primary amide", "Ester"], answer: "Tertiary amide" },
+            { question: "The reaction of a tertiary amine with an acid chloride results in:", options: ["A tertiary amide", "A secondary amide", "No reaction", "An ester"], answer: "No reaction" },
+            { question: "The reaction of a primary aliphatic amine with nitrous acid is a useful test for:", options: ["Primary aliphatic amines", "Primary aromatic amines", "Secondary amines", "Tertiary amines"], answer: "Primary aliphatic amines" },
+            { question: "The reaction of a secondary amine with nitrous acid yields a(n):", options: ["Nitrosoamine", "Diazonium salt", "Alcohol", "Amide"], answer: "Nitrosoamine" },
+            { question: "The reaction of a tertiary amine with nitrous acid yields a(n):", options: ["Nitrosoamine", "Diazonium salt", "Soluble salt", "Amide"], answer: "Soluble salt" },
+            { question: "The reaction of a primary aromatic amine with nitrous acid and HCl at 0-5°C is known as:", options: ["Diazotization", "Nitration", "Halogenation", "Sulfonation"], answer: "Diazotization" },
+            { question: "The diazonium salt formed from the reaction of a primary aromatic amine with nitrous acid is a versatile intermediate for the synthesis of:", options: ["Phenols", "Aryl halides", "Azo dyes", "All of the above"], answer: "All of the above" },
+            { question: "The reaction of aniline with bromine water is an example of a(n):", options: ["Electrophilic substitution reaction", "Nucleophilic substitution reaction", "Addition reaction", "Elimination reaction"], answer: "Electrophilic substitution reaction" },
+            { question: "-NH₂ group in aniline is a(n):", options: ["Activating group and ortho, para-director", "Deactivating group and meta-director", "Activating group and meta-director", "Deactivating group and ortho, para-director"], answer: "Activating group and ortho, para-director" },
+            { question: "The reaction of a diazonium salt with a coupling agent is known as a(n):", options: ["Coupling reaction", "Diazotization reaction", "Nitration reaction", "Halogenation reaction"], answer: "Coupling reaction" },
+            { question: "The product of a coupling reaction is a(n):", options: ["Azo compound", "Phenol", "Aniline", "Benzene"], answer: "Azo compound" },
+            { question: "Azo compounds are widely used as:", options: ["Dyes", "Pharmaceuticals", "Explosives", "All of the above"], answer: "Dyes" },
+            { question: "The color of azo dyes can be varied by changing the:", options: ["Diazonium salt", "Coupling agent", "Both a and b", "Neither a nor b"], answer: "Both a and b" },
+            { question: "Which of the following is a heterocyclic amine?", options: ["Pyridine", "Pyrrole", "Piperidine", "All of the above"], answer: "All of the above" },
+            { question: "Which of the following is a secondary amine?", options: ["Aniline", "N-methylaniline", "N,N-dimethylaniline", "All of the above"], answer: "N-methylaniline" },
+            { question: "The IUPAC name for the following compound is: ", options: ["N-ethyl-N-methylpropanamine", "N-methyl-N-ethylpropanamine", "1-ethyl-1-methylaminopropane", "2-amino-2-methylpentane"], answer: "N-ethyl-N-methylpropanamine" },
+            { question: "The boiling point of butanol is higher than that of butylamine because:", options: ["The O-H bond is more polar than the N-H bond.", "Hydrogen bonding is stronger in butanol.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "The solubility of amines in water is due to their ability to act as:", options: ["Hydrogen bond donors", "Hydrogen bond acceptors", "Both a and b", "Neither a nor b"], answer: "Both a and b" },
+            { question: "The reduction of a nitro group to an amino group can be achieved using:", options: ["LiAlH₄", "NaBH₄", "Sn/HCl", "All of the above"], answer: "Sn/HCl" },
+            { question: "The reaction of an amine with an acid is a reversible reaction. The position of the equilibrium can be shifted to the right by:", options: ["Adding more acid", "Removing the salt", "Both a and b", "Neither a nor b"], answer: "Both a and b" },
+            { question: "The reaction of a primary amine with an acid chloride is faster than the reaction of a primary amine with a carboxylic acid because:", options: ["The acid chloride is more reactive than the carboxylic acid.", "The leaving group in the acid chloride is better than the leaving group in the carboxylic acid.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "The reaction of a secondary amine with an acid chloride is slower than the reaction of a primary amine with an acid chloride because:", options: ["The secondary amine is more sterically hindered than the primary amine.", "The secondary amine is a weaker nucleophile than the primary amine.", "Both a and b.", "Neither a nor b."], answer: "The secondary amine is more sterically hindered than the primary amine." },
+            { question: "The reaction of a tertiary amine with an acid chloride does not occur because:", options: ["The tertiary amine is too sterically hindered.", "The tertiary amine does not have a hydrogen atom on the nitrogen atom.", "Both a and b.", "Neither a nor b."], answer: "The tertiary amine does not have a hydrogen atom on the nitrogen atom." },
+            { question: "The reaction of a primary aliphatic amine with nitrous acid is a useful test to distinguish it from a primary aromatic amine because:", options: ["The primary aliphatic amine produces nitrogen gas, while the primary aromatic amine produces a diazonium salt.", "The primary aliphatic amine produces a diazonium salt, while the primary aromatic amine produces nitrogen gas.", "The primary aliphatic amine does not react, while the primary aromatic amine produces a diazonium salt.", "The primary aliphatic amine produces a diazonium salt, while the primary aromatic amine does not react."], answer: "The primary aliphatic amine produces nitrogen gas, while the primary aromatic amine produces a diazonium salt." },
+            { question: "The diazonium salt formed from the reaction of a primary aromatic amine with nitrous acid is a useful intermediate in organic synthesis because:", options: ["The diazonium group is a good leaving group.", "The diazonium group can be replaced by a variety of other groups.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "The reaction of aniline with bromine water is a useful test for:", options: ["Aniline", "Phenol", "Both a and b", "Neither a nor b"], answer: "Both a and b" },
+            { question: "The reaction of a diazonium salt with a coupling agent is a useful method for the synthesis of:", options: ["Azo dyes", "Phenols", "Aryl halides", "All of the above"], answer: "Azo dyes" },
+            { question: "The color of azo dyes is due to the extended conjugation of the pi system, which:", options: ["Lowers the energy of the HOMO-LUMO gap.", "Allows the molecule to absorb light in the visible region.", "Both a and b.", "Neither a nor b."], answer: "Both a and b." },
+            { question: "Which of the following is a primary aromatic amine?", options: ["Aniline", "Benzylamine", "N-methylaniline", "N,N-dimethylaniline"], answer: "Aniline" },
+            { question: "Which of the following is a secondary aromatic amine?", options: ["Aniline", "Benzylamine", "N-methylaniline", "N,N-dimethylaniline"], answer: "N-methylaniline" },
+            { question: "Which of the following is a tertiary aromatic amine?", options: ["Aniline", "Benzylamine", "N-methylaniline", "N,N-dimethylaniline"], answer: "N,N-dimethylaniline" },
+            { question: "The reaction of a diazonium salt with a phenol is an example of a(n):", options: ["Electrophilic aromatic substitution reaction", "Nucleophilic aromatic substitution reaction", "Addition reaction", "Elimination reaction"], answer: "Electrophilic aromatic substitution reaction" }
+        ];
+
+        // --- DOM Elements ---
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+
+        /**
+         * Loads a question and its options into the DOM.
+         */
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            // Sanitize question text to prevent potential script injection
+            questionEl.textContent = currentQuestion.question;
+            progressIndicator.textContent = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.textContent = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.textContent = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        /**
+         * Handles selecting an answer.
+         */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.textContent;
+            
+            Array.from(optionsEl.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            selectedBtn.classList.add('selected');
+            
+            // Also update the main navigation button to show it's answered
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons[currentQuestionIndex].classList.add('bg-blue-100', 'dark:bg-blue-900');
+        }
+
+        /**
+         * Calculates score and builds the review page.
+         */
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            questionNavContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700', 'mb-6');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4');
+                questionText.textContent = `${index + 1}. ${questionData.question}`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.textContent = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'border-gray-300', 'dark:border-gray-600');
+
+                    // If this option is the correct answer, shade it green
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    // If this option was the user's INCORRECT choice, shade it red
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.textContent = `${score} / ${quizData.length} (${percentage}%)`;
+        }
+        
+        /**
+         * Updates the highlight on the bottom navigation panel.
+         */
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                // Optional: add a confirmation before submitting
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            questionNavContainer.classList.remove('hidden');
+            // Reset nav button styles
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach(btn => btn.classList.remove('bg-blue-100', 'dark:bg-blue-900'));
+            loadQuiz();
+        });
+
+        // --- Initial Setup ---
+        // Create the navigation buttons
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.textContent = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+
+        // Initial load of the first question
+        loadQuiz();
+    </script>
+</body>
+</html>
