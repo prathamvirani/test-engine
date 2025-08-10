@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Test: Carbonyl Compounds</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #dbeafe !important; /* Tailwind blue-100 */
+            border-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: #1e3a8a; /* Tailwind blue-900 */
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d1fae5 !important; /* Tailwind green-100 */
+            border-color: #10b981 !important; /* Tailwind green-500 */
+            color: #064e3b; /* Tailwind green-900 */
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #fee2e2 !important; /* Tailwind red-100 */
+            border-color: #ef4444 !important; /* Tailwind red-500 */
+            color: #991b1b; /* Tailwind red-900 */
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+
+    <div class="w-full max-w-3xl">
+        <!-- Main Quiz View -->
+        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Carbonyl Compounds Test</h2>
+                <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
+            </div>
+            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+            </div>
+        </div>
+
+        <!-- Question Navigation Panel -->
+        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                <!-- Navigation buttons will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <p class="text-xl mb-2">Your final score is:</p>
+                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 mb-8">0 / 100</p>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- QUIZ DATA ---
+    const quizData = [
+        { question: "What is the general formula for aldehydes and ketones?", options: ["CnH2n+2O", "CnH2nO", "CnH2nO2", "CnH2n-2O"], answer: "CnH2nO" },
+        { question: "The IUPAC name for the simplest aldehyde, HCHO, is:", options: ["Formaldehyde", "Acetaldehyde", "Methanal", "Ethanal"], answer: "Methanal" },
+        { question: "What is the correct IUPAC name for acetone (CH₃COCH₃)?", options: ["Dimethyl ketone", "2-Propanal", "Propanone", "2-Propanone"], answer: "Propanone" },
+        { question: "The suffix used in IUPAC nomenclature for an aldehyde is:", options: ["-one", "-ol", "-oic acid", "-al"], answer: "-al" },
+        { question: "What is the correct IUPAC name for the following compound? CH₃CH(CH₃)CH₂CHO", options: ["2-Methylbutanal", "3-Methylbutanal", "Isopentanal", "3-Methyl-1-butanone"], answer: "3-Methylbutanal" },
+        { question: "When a -CHO group is attached to a benzene ring, the parent name is:", options: ["Benzal", "Phenylaldehyde", "Benzenecarbaldehyde", "Phenylmethanal"], answer: "Benzenecarbaldehyde" },
+        { question: "What is the IUPAC name for the following ketone? CH₃CH₂COCH₂CH₃", options: ["Diethyl ketone", "3-Pentanone", "2-Pentanone", "Pentan-3-al"], answer: "3-Pentanone" },
+        { question: "In naming a ketone, the carbon chain is numbered to give the carbonyl carbon:", options: ["The number 1", "The highest possible number", "The lowest possible number", "A number based on the longest alkyl group"], answer: "The lowest possible number" },
+        { question: "What is the correct IUPAC name for a ketone with 5 carbons, a carbonyl at C2 and a hydroxyl at C4?", options: ["4-Hydroxy-2-pentanone", "2-Oxo-4-pentanol", "4-Keto-2-pentanol", "2-Hydroxy-4-pentanone"], answer: "4-Hydroxy-2-pentanone" },
+        { question: "Which functional group has the highest priority in IUPAC naming?", options: ["Ketone", "Alcohol", "Aldehyde", "Carboxylic Acid"], answer: "Carboxylic Acid" },
+        { question: "The structure of 3-methylcyclohexanone is:", options: ["A six-membered ring with a methyl group and a -CHO group.", "A five-membered ring with a methyl group and a C=O group.", "A six-membered ring with a C=O in the ring and a methyl group at position 3.", "A six-membered ring with a methyl group at position 1 and a C=O at position 3."], answer: "A six-membered ring with a C=O in the ring and a methyl group at position 3." },
+        { question: "Benzaldehyde is an example of an:", options: ["Aliphatic aldehyde", "Aromatic ketone", "Aliphatic ketone", "Aromatic aldehyde"], answer: "Aromatic aldehyde" },
+        { question: "The functional group C=O is known as the:", options: ["Hydroxyl group", "Carbonyl group", "Carboxyl group", "Ether group"], answer: "Carbonyl group" },
+        { question: "How are aldehydes and ketones structurally different?", options: ["Ketones have a C=O bond, while aldehydes do not.", "The carbonyl carbon in an aldehyde is bonded to at least one hydrogen atom.", "The carbonyl carbon in a ketone is bonded to at least one hydrogen atom.", "Aldehydes contain oxygen, while ketones do not."], answer: "The carbonyl carbon in an aldehyde is bonded to at least one hydrogen atom." },
+        { question: "What is the IUPAC name for CH₃CH=CHCHO?", options: ["But-2-en-1-al", "But-2-enal", "1-Formyl-2-butene", "But-1-en-4-al"], answer: "But-2-enal" },
+        { question: "Which of the following is an isomer of butanal?", options: ["Butan-1-ol", "Butanoic acid", "Butanone", "Diethyl ether"], answer: "Butanone" },
+        { question: "The common name for pentanedial is:", options: ["Valeraldehyde", "Glutaraldehyde", "Adipaldehyde", "Pimelaldehyde"], answer: "Glutaraldehyde" },
+        { question: "What is the correct name for the compound with a -CHO group at both ends of a 4-carbon chain?", options: ["1,4-Butanedial", "Butanedial", "Dialbutane", "1,4-Diformylbutane"], answer: "Butanedial" },
+        { question: "In a molecule containing both an aldehyde and a ketone group, which group determines the suffix of the name?", options: ["The ketone group", "The aldehyde group", "The group on the longest chain", "The group with the lowest number"], answer: "The aldehyde group" },
+        { question: "The name '2-oxopentanal' indicates:", options: ["A five-carbon chain with two aldehyde groups.", "A five-carbon chain with an aldehyde group at C1 and a ketone group at C2.", "A five-carbon chain with two ketone groups.", "A cyclic compound with an oxygen in the ring."], answer: "A five-carbon chain with an aldehyde group at C1 and a ketone group at C2." },
+        { question: "Why do aldehydes and ketones have lower boiling points than alcohols of similar molecular weight?", options: ["They are less polar than alcohols.", "They cannot form intermolecular hydrogen bonds with each other.", "They have weaker van der Waals forces.", "They are more branched than alcohols."], answer: "They cannot form intermolecular hydrogen bonds with each other." },
+        { question: "The primary intermolecular force between aldehyde or ketone molecules is:", options: ["Hydrogen bonding", "Ionic bonding", "London dispersion forces", "Dipole-dipole interaction"], answer: "Dipole-dipole interaction" },
+        { question: "Why are small aldehydes and ketones (e.g., propanone) soluble in water?", options: ["They are nonpolar and mix with nonpolar water.", "The carbonyl oxygen can form hydrogen bonds with water molecules.", "They ionize completely in water.", "They have very low molecular weights."], answer: "The carbonyl oxygen can form hydrogen bonds with water molecules." },
+        { question: "How does the solubility of aldehydes and ketones in water change as the carbon chain length increases?", options: ["It increases.", "It decreases.", "It remains the same.", "It becomes infinite."], answer: "It decreases." },
+        { question: "Which of the following compounds has the highest boiling point?", options: ["Butane", "Propanal", "Propan-1-ol", "Propanone"], answer: "Propan-1-ol" },
+        { question: "The carbonyl group (C=O) makes aldehydes and ketones:", options: ["Nonpolar molecules", "Polar molecules", "Ionic compounds", "Gaseous at all temperatures"], answer: "Polar molecules" },
+        { question: "Formaldehyde (methanal) is a _______ at room temperature.", options: ["Liquid", "Solid", "Gas", "Plasma"], answer: "Gas" },
+        { question: "Compared to an alkane of similar molecular mass, the boiling point of a ketone is:", options: ["Lower", "Higher", "The same", "Impossible to predict"], answer: "Higher" },
+        { question: "Can a ketone molecule act as a hydrogen bond acceptor?", options: ["Yes, through the lone pairs on the oxygen atom.", "No, because it has no O-H bond.", "Yes, through the hydrogen atoms on the alpha-carbon.", "No, because it is a nonpolar molecule."], answer: "Yes, through the lone pairs on the oxygen atom." },
+        { question: "The characteristic smell of many fruits and flavorings is due to which class of compounds?", options: ["Alcohols", "Carboxylic acids", "Esters (formed from carbonyls)", "Alkanes"], answer: "Esters (formed from carbonyls)" },
+        { question: "Oxidation of a primary alcohol with pyridinium chlorochromate (PCC) yields:", options: ["A ketone", "A carboxylic acid", "An aldehyde", "An ester"], answer: "An aldehyde" },
+        { question: "To oxidize a primary alcohol to a carboxylic acid, which reagent should be used?", options: ["PCC in CH₂Cl₂", "KMnO₄/H⁺ with reflux", "LiAlH₄", "H₂/Ni"], answer: "KMnO₄/H⁺ with reflux" },
+        { question: "Oxidation of a secondary alcohol yields:", options: ["An aldehyde", "A tertiary alcohol", "A carboxylic acid", "A ketone"], answer: "A ketone" },
+        { question: "What is the product of the reaction of 2-propanol with K₂Cr₂O₇/H⁺?", options: ["Propanal", "Propanoic acid", "Propanone", "Propene"], answer: "Propanone" },
+        { question: "Why are tertiary alcohols resistant to oxidation under normal conditions?", options: ["They are too sterically hindered.", "They lack a hydrogen atom on the carbon bearing the -OH group.", "They are nonpolar.", "They immediately dehydrate to form alkenes."], answer: "They lack a hydrogen atom on the carbon bearing the -OH group." },
+        { question: "Friedel-Crafts acylation of benzene with ethanoyl chloride (CH₃COCl) and an AlCl₃ catalyst produces:", options: ["Benzaldehyde", "Acetophenone (phenylethanone)", "Benzoic acid", "Ethylbenzene"], answer: "Acetophenone (phenylethanone)" },
+        { question: "What is the role of AlCl₃ in Friedel-Crafts acylation?", options: ["It is a solvent.", "It is the source of the acyl group.", "It acts as a Lewis acid catalyst.", "It acts as a reducing agent."], answer: "It acts as a Lewis acid catalyst." },
+        { question: "Which of the following alcohols can be oxidized to produce butanal?", options: ["Butan-2-ol", "2-Methylpropan-2-ol", "Butan-1-ol", "2-Methylpropan-1-ol"], answer: "Butan-1-ol" },
+        { question: "The reaction of cyclohexanol with hot acidified KMnO₄ will produce:", options: ["Cyclohexanal", "Cyclohexene", "Cyclohexanone", "Hexanedioic acid"], answer: "Cyclohexanone" },
+        { question: "Which reagent is considered a mild oxidizing agent, suitable for stopping the oxidation of a primary alcohol at the aldehyde stage?", options: ["Concentrated HNO₃", "Collins reagent (CrO₃/pyridine)", "Hot acidified K₂Cr₂O₇", "O₃ followed by Zn/H₂O"], answer: "Collins reagent (CrO₃/pyridine)" },
+        { question: "Friedel-Crafts acylation is a type of:", options: ["Nucleophilic substitution", "Electrophilic aromatic substitution", "Nucleophilic addition", "Elimination reaction"], answer: "Electrophilic aromatic substitution" },
+        { question: "What starting material is needed to prepare pentan-3-one by oxidation?", options: ["Pentan-1-ol", "Pentan-2-ol", "Pentan-3-ol", "2-Methylbutan-2-ol"], answer: "Pentan-3-ol" },
+        { question: "Which of the following cannot be prepared by the oxidation of an alcohol?", options: ["Propanal", "Propanone", "2-Methylpropanal", "2-Methylpropan-2-one (This is not a valid name)"], answer: "2-Methylpropanal" },
+        { question: "Ozonolysis of 2-butene followed by a reductive workup (Zn/H₂O) yields:", options: ["Two molecules of ethanal", "Two molecules of ethanoic acid", "One molecule of butanal", "One molecule of butanone"], answer: "Two molecules of ethanal" },
+        { question: "The preparation of an aromatic ketone like benzophenone can be achieved by:", options: ["Oxidation of benzyl alcohol", "Friedel-Crafts acylation of benzene with benzoyl chloride", "Reduction of benzoic acid", "Grignard reaction with CO₂"], answer: "Friedel-Crafts acylation of benzene with benzoyl chloride" },
+        { question: "The characteristic reaction of aldehydes and ketones is:", options: ["Electrophilic substitution", "Nucleophilic substitution", "Nucleophilic addition", "Free radical halogenation"], answer: "Nucleophilic addition" },
+        { question: "Reduction of butanal with NaBH₄ produces:", options: ["Butan-1-ol", "Butan-2-ol", "Butanoic acid", "Butane"], answer: "Butan-1-ol" },
+        { question: "Reduction of butanone with LiAlH₄ produces:", options: ["Butan-1-ol", "Butan-2-ol", "Butanoic acid", "Butane"], answer: "Butan-2-ol" },
+        { question: "Which test is used to detect the presence of a carbonyl group in general?", options: ["Tollens' test", "Benedict's test", "Iodoform test", "Brady's test (2,4-DNPH)"], answer: "Brady's test (2,4-DNPH)" },
+        { question: "A positive Brady's test is indicated by the formation of:", options: ["A silver mirror", "A brick-red precipitate", "A yellow/orange precipitate", "A pale yellow precipitate"], answer: "A yellow/orange precipitate" },
+        { question: "The reaction of an aldehyde with 2,4-dinitrophenylhydrazine (2,4-DNPH) forms a:", options: ["Hydrazone", "Cyanohydrin", "Hemiacetal", "Carboxylate salt"], answer: "Hydrazone" },
+        { question: "Nucleophilic addition of HCN to ethanal, catalyzed by NaCN, forms:", options: ["2-Hydroxypropanoic acid", "2-Hydroxypropanenitrile", "3-Hydroxypropanenitrile", "Ethanoic acid"], answer: "2-Hydroxypropanenitrile" },
+        { question: "The product of the reaction in question 52 is called a:", options: ["Hydrazone", "Cyanohydrin", "Hemiacetal", "Amide"], answer: "Cyanohydrin" },
+        { question: "Hydrolysis of 2-hydroxypropanenitrile with dilute acid and heat yields:", options: ["Propanone", "Propan-2-ol", "2-Hydroxypropanoic acid (lactic acid)", "Propanoic acid"], answer: "2-Hydroxypropanoic acid (lactic acid)" },
+        { question: "Which of the following reagents can distinguish between an aldehyde and a ketone?", options: ["2,4-DNPH", "LiAlH₄", "Tollens' reagent", "HCN/NaCN"], answer: "Tollens' reagent" },
+        { question: "What is the observable result of a positive Tollens' test with propanal?", options: ["A brick-red precipitate forms.", "The solution turns green.", "A silver mirror forms on the test tube.", "A yellow precipitate forms."], answer: "A silver mirror forms on the test tube." },
+        { question: "In a positive Tollens' test, the aldehyde is ______ to a carboxylate ion.", options: ["Reduced", "Oxidized", "Dehydrated", "Hydrolyzed"], answer: "Oxidized" },
+        { question: "The oxidizing agent in Tollens' reagent is:", options: ["Cu²⁺(aq)", "Ag⁺(aq) as [Ag(NH₃)₂]⁺", "Cr₂O₇²⁻(aq)", "MnO₄⁻(aq)"], answer: "Ag⁺(aq) as [Ag(NH₃)₂]⁺" },
+        { question: "Which of the following compounds will NOT give a positive Tollens' test?", options: ["Ethanal", "Benzaldehyde", "Propanone", "Methanal"], answer: "Propanone" },
+        { question: "Benedict's test is used to distinguish between:", options: ["Aliphatic aldehydes and aromatic aldehydes", "Aliphatic aldehydes and ketones", "Aromatic aldehydes and ketones", "Alcohols and aldehydes"], answer: "Aliphatic aldehydes and ketones" },
+        { question: "A positive Benedict's test with an aliphatic aldehyde results in:", options: ["A silver mirror", "A brick-red precipitate of Cu₂O", "A yellow precipitate of CHI₃", "A colorless solution"], answer: "A brick-red precipitate of Cu₂O" },
+        { question: "Why does benzaldehyde typically give a negative result with Benedict's or Fehling's solution?", options: ["It is not an aldehyde.", "It is too sterically hindered.", "It is a weaker reducing agent and less soluble in the aqueous reagent.", "The benzene ring deactivates the carbonyl group."], answer: "It is a weaker reducing agent and less soluble in the aqueous reagent." },
+        { question: "The iodoform (triiodomethane) test is used to identify the presence of which structural feature?", options: ["A terminal alkyne", "A carboxylic acid group", "A methyl ketone group (CH₃CO-)", "A benzene ring"], answer: "A methyl ketone group (CH₃CO-)" },
+        { question: "Which of the following compounds will give a positive iodoform test?", options: ["Propanal", "Pentan-3-one", "Ethanal", "Benzaldehyde"], answer: "Ethanal" },
+        { question: "What is the observable result of a positive iodoform test?", options: ["A silver mirror", "A brick-red precipitate", "A yellow/orange precipitate", "A pale yellow precipitate of CHI₃"], answer: "A pale yellow precipitate of CHI₃" },
+        { question: "Besides methyl ketones, which other type of compound can give a positive iodoform test?", options: ["Primary alcohols that can be oxidized to methyl ketones.", "Alcohols that can be oxidized to a methyl ketone structure (e.g., ethanol, 2-alcohols).", "All aldehydes.", "Carboxylic acids."], answer: "Alcohols that can be oxidized to a methyl ketone structure (e.g., ethanol, 2-alcohols)." },
+        { question: "The reaction of ethanal with alkaline iodine (iodoform test) produces a yellow precipitate and:", options: ["Ethanoate ion", "Methanoate ion", "Propanoate ion", "Acetaldehyde"], answer: "Methanoate ion" },
+        { question: "Which pair of compounds can be distinguished using the iodoform test?", options: ["Propanal and Propanone", "Pentan-2-one and Pentan-3-one", "Methanal and Ethanal", "Butanal and Butanone"], answer: "Pentan-2-one and Pentan-3-one" },
+        { question: "Ketones are generally resistant to oxidation because it would require:", options: ["The addition of hydrogen", "The breaking of a strong carbon-carbon bond", "The removal of an oxygen atom", "The formation of a double bond"], answer: "The breaking of a strong carbon-carbon bond" },
+        { question: "The reaction of propanone with excess ethanol in the presence of an acid catalyst will form a(n):", options: ["Acetal", "Ketal", "Ester", "Ether"], answer: "Ketal" },
+        { question: "The intermediate formed in the reaction of an aldehyde with one equivalent of an alcohol is a(n):", options: ["Acetal", "Hemiacetal", "Ketal", "Hemiketal"], answer: "Hemiacetal" },
+        { question: "The reaction of an aldehyde with an alcohol to form an acetal is:", options: ["An oxidation", "A reduction", "A reversible nucleophilic addition-elimination", "An irreversible condensation"], answer: "A reversible nucleophilic addition-elimination" },
+        { question: "Why are aldehydes generally more reactive than ketones towards nucleophiles?", options: ["Ketones are more polar.", "Aldehydes have less steric hindrance and their carbonyl carbon is more electrophilic.", "Ketones have a stronger C=O bond.", "Aldehydes are always smaller molecules."], answer: "Aldehydes have less steric hindrance and their carbonyl carbon is more electrophilic." },
+        { question: "What is the product when benzaldehyde reacts with methylmagnesium bromide (CH₃MgBr) followed by acidic workup?", options: ["Benzyl alcohol", "1-Phenylethanol", "2-Phenylethanol", "Acetophenone"], answer: "1-Phenylethanol" },
+        { question: "Reaction of propanone with ethylmagnesium bromide followed by hydrolysis yields:", options: ["2-Methylbutan-2-ol", "Pentan-2-ol", "2-Methylpentan-2-ol", "Pentan-3-ol"], answer: "2-Methylbutan-2-ol" },
+        { question: "To synthesize a primary alcohol using a Grignard reagent, the carbonyl compound must be:", options: ["Acetone", "Any ketone", "Any aldehyde", "Methanal (formaldehyde)"], answer: "Methanal (formaldehyde)" },
+        { question: "The carbon atom of the carbonyl group is:", options: ["Nucleophilic", "Electrophilic", "A free radical", "Non-reactive"], answer: "Electrophilic" },
+        { question: "Which of the following is the strongest nucleophile for attacking a carbonyl carbon?", options: ["H₂O", "CH₃OH", "CH₃COO⁻", "CH₃⁻ (from CH₃MgBr)"], answer: "CH₃⁻ (from CH₃MgBr)" },
+        { question: "The hydrolysis of an acetal in aqueous acid regenerates the:", options: ["Alcohol and carboxylic acid", "Aldehyde/ketone and alcohol", "Alkene and water", "Ester and water"], answer: "Aldehyde/ketone and alcohol" },
+        { question: "What is the purpose of converting a carbonyl group to an acetal in a multi-step synthesis?", options: ["To increase its reactivity", "To act as a protecting group against nucleophiles or bases", "To oxidize it to a carboxylic acid", "To reduce it to an alcohol"], answer: "To act as a protecting group against nucleophiles or bases" },
+        { question: "Vigorous oxidation of cyclohexanone with hot, concentrated nitric acid can produce:", options: ["Cyclohexanol", "No reaction", "Hexanedioic acid (adipic acid)", "Benzene"], answer: "Hexanedioic acid (adipic acid)" },
+        { question: "The reaction of an aldehyde with ammonia or a primary amine forms a(n):", options: ["Amide", "Imine (Schiff base)", "Nitrile", "Azo compound"], answer: "Imine (Schiff base)" },
+        { question: "In the reaction RCHO + 2[H] → RCH₂OH, the aldehyde has been:", options: ["Oxidized", "Reduced", "Hydrolyzed", "Dehydrated"], answer: "Reduced" },
+        { question: "Which of the following is a condensation reaction?", options: ["Reduction of propanal with NaBH₄", "Reaction of propanone with HCN", "Reaction of ethanal with 2,4-DNPH", "Oxidation of ethanal with KMnO₄"], answer: "Reaction of ethanal with 2,4-DNPH" },
+        { question: "The α-hydrogen (alpha-hydrogen) in a carbonyl compound is:", options: ["The hydrogen attached to the carbonyl oxygen", "The hydrogen attached to the carbonyl carbon", "Any hydrogen in the molecule", "A hydrogen attached to the carbon adjacent to the carbonyl group"], answer: "A hydrogen attached to the carbon adjacent to the carbonyl group" },
+        { question: "The α-hydrogens of aldehydes and ketones are weakly:", options: ["Acidic", "Basic", "Oxidizing", "Reducing"], answer: "Acidic" },
+        { question: "The acidity of α-hydrogens is due to:", options: ["The inductive effect of the alkyl group", "Resonance stabilization of the conjugate base (enolate ion)", "The high electronegativity of carbon", "The presence of pi bonds"], answer: "Resonance stabilization of the conjugate base (enolate ion)" },
+        { question: "The Cannizzaro reaction is a characteristic reaction of aldehydes that:", options: ["Have α-hydrogens", "Do not have α-hydrogens", "Are cyclic", "Are unsaturated"], answer: "Do not have α-hydrogens" },
+        { question: "Which compound undergoes the Cannizzaro reaction?", options: ["Ethanal", "Propanal", "Benzaldehyde", "Propanone"], answer: "Benzaldehyde" },
+        { question: "The haloform reaction (e.g., iodoform test) is an example of a reaction that occurs at the:", options: ["Carbonyl carbon", "Carbonyl oxygen", "Alpha-carbon", "Beta-carbon"], answer: "Alpha-carbon" },
+        { question: "A compound with the formula C₅H₁₀O gives a positive Tollens' test but a negative iodoform test. What is the compound?", options: ["Pentan-2-one", "Pentan-3-one", "Pentanal", "3-Methylbutanal"], answer: "3-Methylbutanal" },
+        { question: "A compound with the formula C₅H₁₀O gives a positive iodoform test but a negative Tollens' test. What is the compound?", options: ["Pentan-2-one", "Pentan-3-one", "Pentanal", "3-Methylbutanal"], answer: "Pentan-2-one" },
+        { question: "To convert propene to propanone, a suitable two-step process would be:", options: ["Hydration, then oxidation", "Oxidation, then hydration", "Reduction, then oxidation", "Halogenation, then elimination"], answer: "Hydration, then oxidation" },
+        { question: "How could you synthesize 2-phenyl-2-propanol?", options: ["Reacting acetophenone with CH₃MgBr, then hydrolysis.", "Reacting benzaldehyde with CH₃CH₂MgBr, then hydrolysis.", "Oxidizing 2-phenylpropane.", "Reducing acetophenone."], answer: "Reacting acetophenone with CH₃MgBr, then hydrolysis." },
+        { question: "The starting materials for the synthesis of 1-phenylethanol via a Grignard reaction are:", options: ["Phenylmagnesium bromide and ethanal", "Methylmagnesium bromide and benzaldehyde", "Both a and b are correct", "Phenylmagnesium bromide and ethanone"], answer: "Both a and b are correct" },
+        { question: "Which sequence of reagents can be used to convert benzene into benzoic acid?", options: ["CH₃Cl/AlCl₃; then KMnO₄/H⁺, heat", "CH₃COCl/AlCl₃; then LiAlH₄", "Conc. HNO₃/H₂SO₄; then Sn/HCl", "Br₂/FeBr₃; then Mg/ether, then CO₂"], answer: "CH₃Cl/AlCl₃; then KMnO₄/H⁺, heat" },
+        { question: "An unknown compound forms an orange precipitate with 2,4-DNPH and a silver mirror with Tollens' reagent. The compound is a(n):", options: ["Ketone", "Alcohol", "Aldehyde", "Carboxylic acid"], answer: "Aldehyde" },
+        { question: "An unknown compound does NOT react with Tollens' reagent but does form a yellow precipitate with I₂/NaOH. The compound could be:", options: ["Butanal", "Butan-1-ol", "Butanone", "Pentan-3-one"], answer: "Butanone" },
+        { question: "The reaction of an aldehyde with PCl₅ will typically replace the carbonyl oxygen with two chlorine atoms to form a:", options: ["Dichloroalkane", "Acyl chloride", "Geminal dihalide", "Vicinal dihalide"], answer: "Geminal dihalide" },
+        { question: "The pungent smell of preserving solutions for biological specimens is due to an aqueous solution of:", options: ["Acetone", "Ethanoic acid", "Methanal (formaldehyde)", "Ethanol"], answer: "Methanal (formaldehyde)" }
+    ];
+
+    // --- DOM Elements ---
+    const quizContainer = document.getElementById('quiz-container');
+    const resultsContainer = document.getElementById('results-container');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const nextBtn = document.getElementById('next-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const scoreEl = document.getElementById('score');
+    const progressIndicator = document.getElementById('progress-indicator');
+    const reviewArea = document.getElementById('review-area');
+    const questionNavContainer = document.getElementById('question-nav-container');
+    const questionNav = document.getElementById('question-nav');
+
+    // --- Quiz State ---
+    let currentQuestionIndex = 0;
+    const userAnswers = new Array(quizData.length).fill(null);
+
+    /**
+     * Loads a question and its options into the DOM, highlighting a previous answer if it exists.
+     */
+    function loadQuiz() {
+        const currentQuestion = quizData[currentQuestionIndex];
+        questionEl.innerText = currentQuestion.question;
+        progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+        optionsEl.innerHTML = '';
+
+        currentQuestion.options.forEach(optionText => {
+            const button = document.createElement('button');
+            button.innerText = optionText;
+            button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+            
+            if (userAnswers[currentQuestionIndex] === optionText) {
+                button.classList.add('selected');
+            }
+            
+            button.addEventListener('click', selectAnswer);
+            optionsEl.appendChild(button);
+        });
+
+        // Update navigation button states
+        updateNavHighlight();
+        prevBtn.disabled = currentQuestionIndex === 0;
+        nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+    }
+
+    /**
+     * Handles selecting an answer, updating the state and UI.
+     */
+    function selectAnswer(e) {
+        const selectedBtn = e.target;
+        userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+        
+        Array.from(optionsEl.children).forEach(button => {
+            button.classList.remove('selected');
+        });
+        selectedBtn.classList.add('selected');
+    }
+
+    /**
+     * Calculates score and builds the detailed review page.
+     */
+    function showResults() {
+        quizContainer.classList.add('hidden');
+        questionNavContainer.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        
+        let score = 0;
+        reviewArea.innerHTML = '';
+
+        quizData.forEach((questionData, index) => {
+            const userAnswer = userAnswers[index];
+            const correctAnswer = questionData.answer;
+            if (userAnswer === correctAnswer) {
+                score++;
+            }
+
+            const questionReviewBlock = document.createElement('div');
+            questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700');
+            
+            const questionText = document.createElement('p');
+            questionText.classList.add('text-md', 'font-semibold', 'mb-4');
+            questionText.innerText = `${index + 1}. ${questionData.question}`;
+            
+            const optionsGrid = document.createElement('div');
+            optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+            questionData.options.forEach(optionText => {
+                const optionDiv = document.createElement('div');
+                optionDiv.innerText = optionText;
+                optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
+
+                if (optionText === correctAnswer) {
+                    optionDiv.classList.add('correct');
+                }
+                if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                    optionDiv.classList.add('incorrect');
+                }
+                
+                optionsGrid.appendChild(optionDiv);
+            });
+
+            questionReviewBlock.appendChild(questionText);
+            questionReviewBlock.appendChild(optionsGrid);
+            reviewArea.appendChild(questionReviewBlock);
+        });
+
+        const percentage = Math.round((score / quizData.length) * 100);
+        scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+    }
+    
+    /**
+     * Updates the highlight on the bottom navigation panel.
+     */
+    function updateNavHighlight() {
+        const navButtons = document.querySelectorAll('#question-nav button');
+        navButtons.forEach((btn, index) => {
+            btn.classList.remove('nav-active');
+            if (index === currentQuestionIndex) {
+                btn.classList.add('nav-active');
+            }
+        });
+    }
+
+    // --- Event Listeners ---
+    nextBtn.addEventListener('click', () => {
+        if (currentQuestionIndex < quizData.length - 1) {
+            currentQuestionIndex++;
+            loadQuiz();
+        } else {
+            showResults();
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            loadQuiz();
+        }
+    });
+
+    restartBtn.addEventListener('click', () => {
+        currentQuestionIndex = 0;
+        userAnswers.fill(null);
+        resultsContainer.classList.add('hidden');
+        quizContainer.classList.remove('hidden');
+        questionNavContainer.classList.remove('hidden');
+        loadQuiz();
+    });
+
+    // --- Initial Setup ---
+    // Create the navigation buttons
+    quizData.forEach((_, index) => {
+        const navBtn = document.createElement('button');
+        navBtn.innerText = index + 1;
+        navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
+        navBtn.dataset.index = index;
+        navBtn.addEventListener('click', (e) => {
+            currentQuestionIndex = parseInt(e.target.dataset.index);
+            loadQuiz();
+        });
+        questionNav.appendChild(navBtn);
+    });
+
+    // Initial load of the first question
+    loadQuiz();
+</script>
+</body>
+</html>
