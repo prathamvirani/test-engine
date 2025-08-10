@@ -1,68 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Test: Amino Acids & Proteins</title>
+    <title>Interactive Chemistry Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
         }
         /* Style for the selected answer during the test */
         .selected {
-            background-color: #dbeafe !important; /* Tailwind blue-100 */
-            border-color: #3b82f6 !important; /* Tailwind blue-500 */
-            color: #1e3a8a; /* Tailwind blue-900 */
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
         }
         /* Style for correct answers on the review page */
         .correct {
-            background-color: #d1fae5 !important; /* Tailwind green-100 */
-            border-color: #10b981 !important; /* Tailwind green-500 */
-            color: #064e3b; /* Tailwind green-900 */
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
         }
         /* Style for incorrect answers on the review page */
         .incorrect {
-            background-color: #fee2e2 !important; /* Tailwind red-100 */
-            border-color: #ef4444 !important; /* Tailwind red-500 */
-            color: #991b1b; /* Tailwind red-900 */
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
         }
         /* Style for the active question in the bottom navigation */
         .nav-active {
-            background-color: #3b82f6 !important; /* Tailwind blue-500 */
+            background-color: #007bff !important;
             color: white !important;
-            border-color: #3b82f6 !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-3xl">
-        <!-- Main Quiz View -->
-        <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Amino Acids & Proteins Test</h2>
-                <div class="text-right">
-                    <div id="progress-indicator" class="text-sm font-medium text-gray-500 dark:text-gray-400">Question 1 / 100</div>
-                    <div id="timer" class="text-sm font-semibold text-blue-600 dark:text-blue-400">Time: 00:00</div>
-                </div>
-            </div>
-            <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem]"></p>
-            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Options will be dynamically inserted here -->
-            </div>
-            <div class="mt-8 flex justify-between items-center">
-                <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
-                <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
-            </div>
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Amino Acids & Proteins Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on the building blocks of life. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
         </div>
 
-        <!-- Question Navigation Panel -->
-        <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
-            <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
-            <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
-                <!-- Navigation buttons will be dynamically inserted here -->
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Amino Acids & Proteins</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
             </div>
         </div>
 
@@ -70,11 +103,19 @@
         <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
             <div class="text-center mb-8">
                  <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
-                 <p class="text-xl mb-2">Your final score is:</p>
-                 <p id="score" class="text-5xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
-                 <div class="text-gray-600 dark:text-gray-300 space-y-1 mb-8">
-                    <p id="time-taken" class="text-lg"></p>
-                    <p id="avg-time" class="text-lg"></p>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
                  </div>
                  <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
             </div>
@@ -192,12 +233,15 @@
         ];
 
         // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
         const quizContainer = document.getElementById('quiz-container');
         const resultsContainer = document.getElementById('results-container');
         const questionEl = document.getElementById('question');
         const optionsEl = document.getElementById('options');
         const nextBtn = document.getElementById('next-btn');
         const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
         const restartBtn = document.getElementById('restart-btn');
         const scoreEl = document.getElementById('score');
         const progressIndicator = document.getElementById('progress-indicator');
@@ -205,57 +249,33 @@
         const questionNavContainer = document.getElementById('question-nav-container');
         const questionNav = document.getElementById('question-nav');
         const timerEl = document.getElementById('timer');
-        const timeTakenEl = document.getElementById('time-taken');
+        const totalTimeEl = document.getElementById('total-time');
         const avgTimeEl = document.getElementById('avg-time');
 
         // --- Quiz State ---
         let currentQuestionIndex = 0;
         const userAnswers = new Array(quizData.length).fill(null);
-        
-        // --- Timer State ---
-        let startTime;
         let timerInterval;
-        let quizStarted = false;
+        let secondsElapsed = 0;
 
-        /**
-         * Formats seconds into a MM:SS string.
-         */
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-            return `${formattedMinutes}:${formattedSeconds}`;
-        }
-
-        /**
-         * Starts the timer and updates the display every second.
-         */
+        // --- Timer Functions ---
         function startTimer() {
-            startTime = new Date();
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
             timerInterval = setInterval(() => {
-                const now = new Date();
-                const elapsedSeconds = (now - startTime) / 1000;
-                timerEl.innerText = `Time: ${formatTime(elapsedSeconds)}`;
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
             }, 1000);
         }
 
-        /**
-         * Stops the timer interval.
-         */
         function stopTimer() {
             clearInterval(timerInterval);
         }
 
-        /**
-         * Loads a question and its options into the DOM.
-         */
+        // --- Quiz Functions ---
         function loadQuiz() {
-            if (!quizStarted) {
-                startTimer();
-                quizStarted = true;
-            }
-
             const currentQuestion = quizData[currentQuestionIndex];
             questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
             progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
@@ -264,7 +284,7 @@
             currentQuestion.options.forEach(optionText => {
                 const button = document.createElement('button');
                 button.innerText = optionText;
-                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400');
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
                 
                 if (userAnswers[currentQuestionIndex] === optionText) {
                     button.classList.add('selected');
@@ -279,31 +299,21 @@
             nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
         }
 
-        /**
-         * Handles selecting an answer.
-         */
         function selectAnswer(e) {
             const selectedBtn = e.target;
             userAnswers[currentQuestionIndex] = selectedBtn.innerText;
             
-            Array.from(optionsEl.children).forEach(button => {
-                button.classList.remove('selected');
-            });
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
             selectedBtn.classList.add('selected');
-            
-            const navBtn = document.querySelector(`#question-nav button[data-index="${currentQuestionIndex}"]`);
-            if (navBtn) {
-                navBtn.classList.add('bg-blue-200', 'dark:bg-blue-900');
-            }
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
         }
 
-        /**
-         * Calculates score, stops timer, and builds the review page.
-         */
         function showResults() {
             stopTimer();
-            quizContainer.classList.add('hidden');
-            questionNavContainer.classList.add('hidden');
+            quizWrapper.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
             
             let score = 0;
@@ -317,11 +327,11 @@
                 }
 
                 const questionReviewBlock = document.createElement('div');
-                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
                 
                 const questionText = document.createElement('p');
-                questionText.classList.add('text-md', 'font-semibold', 'mb-4');
-                questionText.innerText = `${index + 1}. ${questionData.question}`;
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
                 
                 const optionsGrid = document.createElement('div');
                 optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
@@ -329,7 +339,7 @@
                 questionData.options.forEach(optionText => {
                     const optionDiv = document.createElement('div');
                     optionDiv.innerText = optionText;
-                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2');
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
 
                     if (optionText === correctAnswer) {
                         optionDiv.classList.add('correct');
@@ -348,21 +358,15 @@
 
             const percentage = Math.round((score / quizData.length) * 100);
             scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
 
-            // Calculate and display time stats
-            const endTime = new Date();
-            const totalSeconds = (endTime - startTime) / 1000;
-            const avgSeconds = totalSeconds / quizData.length;
-            const totalMinutes = Math.floor(totalSeconds / 60);
-            const totalRemainingSeconds = Math.floor(totalSeconds % 60);
-
-            timeTakenEl.innerText = `Total Time Taken: ${totalMinutes} minutes and ${totalRemainingSeconds} seconds`;
-            avgTimeEl.innerText = `Average Time per Question: ${avgSeconds.toFixed(2)} seconds`;
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
         }
         
-        /**
-         * Updates the highlight on the bottom navigation panel.
-         */
         function updateNavHighlight() {
             const navButtons = document.querySelectorAll('#question-nav button');
             navButtons.forEach((btn, index) => {
@@ -374,6 +378,13 @@
         }
 
         // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
         nextBtn.addEventListener('click', () => {
             if (currentQuestionIndex < quizData.length - 1) {
                 currentQuestionIndex++;
@@ -393,36 +404,25 @@
         restartBtn.addEventListener('click', () => {
             currentQuestionIndex = 0;
             userAnswers.fill(null);
-            quizStarted = false;
-            timerEl.innerText = 'Time: 00:00';
-            stopTimer();
             resultsContainer.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-            questionNavContainer.classList.remove('hidden');
-            const navButtons = document.querySelectorAll('#question-nav button');
-            navButtons.forEach(btn => {
-                btn.classList.remove('bg-blue-200', 'dark:bg-blue-900');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
             });
-            loadQuiz();
         });
 
         // --- Initial Setup ---
-        function createNav() {
-            quizData.forEach((_, index) => {
-                const navBtn = document.createElement('button');
-                navBtn.innerText = index + 1;
-                navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'transition-colors', 'font-medium', 'text-sm');
-                navBtn.dataset.index = index;
-                navBtn.addEventListener('click', (e) => {
-                    currentQuestionIndex = parseInt(e.target.dataset.index);
-                    loadQuiz();
-                });
-                questionNav.appendChild(navBtn);
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
             });
-        }
-        
-        createNav();
-        loadQuiz();
+            questionNav.appendChild(navBtn);
+        });
     </script>
 </body>
 </html>
