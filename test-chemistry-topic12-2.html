@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Chemistry Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Comprehensive Chemistry Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge across a wide range of chemistry topics. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Chemistry Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is the primary purpose of ¹H NMR spectroscopy?", options: ["To determine the types and number of carbon atoms in a molecule.", "To determine the types and number of hydrogen atoms in a molecule.", "To measure the mass-to-charge ratio of ions.", "To identify functional groups using infrared radiation."], answer: "To determine the types and number of hydrogen atoms in a molecule." },
+            { question: "In a low-resolution ¹H NMR spectrum, what does each single peak represent?", options: ["A single hydrogen atom.", "A group of chemically equivalent hydrogen atoms.", "A carbon atom.", "A functional group."], answer: "A group of chemically equivalent hydrogen atoms." },
+            { question: "What information does high-resolution ¹H NMR provide that low-resolution does not?", options: ["The molecular weight of the compound.", "The empirical formula of the compound.", "Splitting patterns (multiplicity).", "The color of the compound."], answer: "Splitting patterns (multiplicity)." },
+            { question: "The 'n+1' rule in ¹H NMR is used to determine:", options: ["The chemical shift.", "The integration value.", "The number of signals.", "The splitting pattern (multiplicity)."], answer: "The splitting pattern (multiplicity)." },
+            { question: "In the 'n+1' rule, what does 'n' represent?", options: ["The number of hydrogen atoms on the same carbon.", "The total number of hydrogen atoms in the molecule.", "The number of hydrogen atoms on adjacent carbon atoms.", "The number of carbon atoms in the molecule."], answer: "The number of hydrogen atoms on adjacent carbon atoms." },
+            { question: "A signal that is split into a triplet indicates that the adjacent carbon atom(s) have how many hydrogen atoms?", options: ["0", "1", "2", "3"], answer: "2" },
+            { question: "What does the integration value (area under the peak) in a ¹H NMR spectrum represent?", options: ["The number of adjacent protons.", "The relative number of protons giving rise to the signal.", "The chemical shift in ppm.", "The strength of the magnetic field."], answer: "The relative number of protons giving rise to the signal." },
+            { question: "The term 'chemical shift (δ)' in NMR spectroscopy refers to:", options: ["The position of a signal along the x-axis (in ppm).", "The height of a signal.", "The splitting of a signal.", "The total number of signals."], answer: "The position of a signal along the x-axis (in ppm)." },
+            { question: "Protons that are 'deshielded' appear at a:", options: ["Higher chemical shift value (downfield).", "Lower chemical shift value (upfield).", "Constant chemical shift of 0 ppm.", "Random chemical shift value."], answer: "Higher chemical shift value (downfield)." },
+            { question: "Which of the following would cause a proton to be more deshielded?", options: ["Attachment to a carbon with low electronegativity.", "Attachment to a carbon bonded to an electronegative atom like oxygen.", "Being far away from any functional groups.", "Being in a region of high electron density."], answer: "Attachment to a carbon bonded to an electronegative atom like oxygen." },
+            { question: "What is the purpose of using a reference standard like TMS (tetramethylsilane) in NMR?", options: ["To dissolve the sample.", "To provide a signal at 0 ppm for calibration.", "To increase the magnetic field strength.", "To split the signals of the sample."], answer: "To provide a signal at 0 ppm for calibration." },
+            { question: "The degree of unsaturation (DoU) for a compound with the molecular formula C₅H₁₀O is:", options: ["0", "1", "2", "3"], answer: "1" },
+            { question: "A sextet in a ¹H NMR spectrum indicates how many adjacent protons?", options: ["3", "4", "5", "6"], answer: "5" },
+            { question: "A singlet in a ¹H NMR spectrum indicates how many adjacent protons?", options: ["0", "1", "2", "3"], answer: "0" },
+            { question: "What is the primary information obtained from a ¹³C NMR spectrum?", options: ["The number and types of hydrogen atoms.", "The number and types of carbon atoms.", "The connectivity of hydrogen atoms.", "The molecular weight of the compound."], answer: "The number and types of carbon atoms." },
+            { question: "In a typical broadband-decoupled ¹³C NMR spectrum, what is the multiplicity of the signals?", options: ["Doublets", "Triplets", "Quartets", "Singlets"], answer: "Singlets" },
+            { question: "Why are signals in a ¹³C NMR spectrum usually singlets?", options: ["Carbon atoms do not have adjacent protons.", "The technique removes the splitting effect of attached protons.", "¹³C is not a magnetic nucleus.", "The magnetic field is too weak."], answer: "The technique removes the splitting effect of attached protons." },
+            { question: "How can you predict the number of signals in a ¹³C NMR spectrum?", options: ["By counting the total number of carbon atoms.", "By identifying the number of chemically non-equivalent carbon atoms.", "By applying the n+1 rule.", "By looking at the integration values."], answer: "By identifying the number of chemically non-equivalent carbon atoms." },
+            { question: "Carbon atoms that are interchangeable by rotational or reflectional symmetry are considered:", options: ["Chemically non-equivalent and give different signals.", "Chemically equivalent and give the same signal.", "Deshielded.", "Upfield."], answer: "Chemically equivalent and give the same signal." },
+            { question: "In ¹³C NMR, the chemical shift of a carbonyl carbon (C=O) is typically found:", options: ["Far downfield (160-220 ppm).", "Far upfield (0-40 ppm).", "In the middle of the spectrum (70-90 ppm).", "At 0 ppm."], answer: "Far downfield (160-220 ppm)." },
+            { question: "Chromatography is a laboratory technique used for:", options: ["Synthesizing new compounds.", "Measuring the boiling point of a liquid.", "Separating the components of a mixture.", "Determining the structure of a molecule."], answer: "Separating the components of a mixture." },
+            { question: "In paper chromatography, the stationary phase is:", options: ["The liquid solvent.", "The absorbent paper.", "The mixture being separated.", "The beaker containing the solvent."], answer: "The absorbent paper." },
+            { question: "The mobile phase in paper chromatography is:", options: ["The absorbent paper.", "The mixture being separated.", "The liquid solvent.", "The pencil line at the origin."], answer: "The liquid solvent." },
+            { question: "The separation of components in paper chromatography is based on:", options: ["Their different boiling points.", "Their different colors.", "Their different rates of movement up the paper.", "Their different molecular weights."], answer: "Their different rates of movement up the paper." },
+            { question: "The Retention Factor (Rf) value is calculated as:", options: ["(distance traveled by the solvent) / (distance traveled by the solute)", "(distance traveled by the solute) / (distance traveled by the solvent)", "(distance traveled by the solute) x (distance traveled by the solvent)", "(distance from origin to solvent front) - (distance from origin to spot)"], answer: "(distance traveled by the solute) / (distance traveled by the solvent)" },
+            { question: "A component that is more soluble in the mobile phase and has weaker adsorption to the stationary phase will:", options: ["Travel a shorter distance up the paper and have a lower Rf value.", "Travel a longer distance up the paper and have a higher Rf value.", "Not move from the origin line.", "Move at the same rate as the solvent front."], answer: "Travel a longer distance up the paper and have a higher Rf value." },
+            { question: "The line where the mixture is initially spotted on the chromatography paper is called the:", options: ["Solvent front.", "Finish line.", "Origin line.", "Rf line."], answer: "Origin line." },
+            { question: "The furthest point reached by the solvent on the chromatography paper is called the:", options: ["Origin line.", "Solvent front.", "Spot line.", "Mobile phase."], answer: "Solvent front." },
+            { question: "If a substance does not move from the origin line, its Rf value is:", options: ["1", "0", "Greater than 1", "Cannot be determined."], answer: "0" },
+            { question: "Paper chromatography is a type of:", options: ["Gas chromatography.", "Liquid chromatography.", "Adsorption chromatography.", "Partition chromatography."], answer: "Partition chromatography." },
+            { question: "What are the two functional groups present in every amino acid?", options: ["A hydroxyl group and a carbonyl group.", "An amino group and a carboxyl group.", "An ether group and an aldehyde group.", "A thiol group and a ketone group."], answer: "An amino group and a carboxyl group." },
+            { question: "The central carbon atom in an amino acid is called the:", options: ["Alpha-carbon.", "Beta-carbon.", "Chiral carbon.", "Functional carbon."], answer: "Alpha-carbon." },
+            { question: "The 'R' group in an amino acid is also known as the:", options: ["Amino group.", "Carboxyl group.", "Side chain.", "Peptide bond."], answer: "Side chain." },
+            { question: "A peptide bond is a type of:", options: ["Ester bond.", "Ether bond.", "Amide bond.", "Glycosidic bond."], answer: "Amide bond." },
+            { question: "A dipeptide is formed when:", options: ["Two amino acids are joined by a peptide bond.", "An amino acid reacts with an alcohol.", "A protein is hydrolyzed.", "Two carboxyl groups react."], answer: "Two amino acids are joined by a peptide bond." },
+            { question: "A molecule consisting of 50 or more amino acids linked together is called a:", options: ["Peptide.", "Dipeptide.", "Protein.", "Zwitterion."], answer: "Protein." },
+            { question: "Amino acids are classified as polar or nonpolar based on the properties of their:", options: ["Amino group.", "Carboxyl group.", "Side chain (R group).", "Alpha-carbon."], answer: "Side chain (R group)." },
+            { question: "A zwitterion is a molecule that has:", options: ["No charge.", "Only a positive charge.", "Only a negative charge.", "Both a positive and a negative charge."], answer: "Both a positive and a negative charge." },
+            { question: "At a very low pH (acidic solution), an amino acid will exist predominantly as a:", options: ["Cation (positive ion).", "Anion (negative ion).", "Zwitterion.", "Neutral molecule."], answer: "Cation (positive ion)." },
+            { question: "At a very high pH (basic solution), an amino acid will exist predominantly as a:", options: ["Cation (positive ion).", "Anion (negative ion).", "Zwitterion.", "Neutral molecule."], answer: "Anion (negative ion)." },
+            { question: "The reaction of the carboxyl group of an amino acid with an alcohol produces an:", options: ["Amide.", "Ester.", "Ether.", "Acyl chloride."], answer: "Ester." },
+            { question: "The reaction of the amino group of an amino acid with an acyl chloride produces an:", options: ["Ester.", "Amide.", "Acid anhydride.", "Ether."], answer: "Amide." },
+            { question: "Which amino acid does not have a chiral alpha-carbon?", options: ["Alanine", "Valine", "Glycine", "Leucine"], answer: "Glycine" },
+            { question: "The end of a peptide chain with a free amino group is called the:", options: ["C-terminus.", "N-terminus.", "Alpha-terminus.", "Side-terminus."], answer: "N-terminus." },
+            { question: "The end of a peptide chain with a free carboxyl group is called the:", options: ["C-terminus.", "N-terminus.", "Alpha-terminus.", "Side-terminus."], answer: "C-terminus." },
+            { question: "The functional group common to both aldehydes and ketones is the:", options: ["Hydroxyl group (-OH).", "Carboxyl group (-COOH).", "Carbonyl group (C=O).", "Amino group (-NH₂)."], answer: "Carbonyl group (C=O)." },
+            { question: "In an aldehyde, the carbonyl group is located:", options: ["In the middle of a carbon chain.", "At the end of a carbon chain.", "Attached to a nitrogen atom.", "Within a ring structure."], answer: "At the end of a carbon chain." },
+            { question: "The IUPAC name for an aldehyde ends with the suffix:", options: ["-ol", "-one", "-al", "-oic acid"], answer: "-al" },
+            { question: "In a ketone, the carbonyl group is located:", options: ["At the end of a carbon chain.", "Bonded to at least two other carbon atoms.", "Bonded to a hydrogen atom.", "Bonded to an oxygen atom via a single bond."], answer: "Bonded to at least two other carbon atoms." },
+            { question: "The IUPAC name for a ketone ends with the suffix:", options: ["-ol", "-one", "-al", "-oic acid"], answer: "-one" },
+            { question: "Aldehydes and ketones have lower boiling points than alcohols of similar molecular weight because they cannot:", options: ["Form dipole-dipole interactions.", "Form London dispersion forces.", "Act as hydrogen bond donors.", "Fit into a crystal lattice."], answer: "Act as hydrogen bond donors." },
+            { question: "Aldehydes can be prepared by the oxidation of:", options: ["Primary alcohols.", "Secondary alcohols.", "Tertiary alcohols.", "Ketones."], answer: "Primary alcohols." },
+            { question: "Ketones can be prepared by the oxidation of:", options: ["Primary alcohols.", "Secondary alcohols.", "Tertiary alcohols.", "Aldehydes."], answer: "Secondary alcohols." },
+            { question: "The reduction of an aldehyde produces a:", options: ["Primary alcohol.", "Secondary alcohol.", "Tertiary alcohol.", "Carboxylic acid."], answer: "Primary alcohol." },
+            { question: "The reduction of a ketone produces a:", options: ["Primary alcohol.", "Secondary alcohol.", "Tertiary alcohol.", "Carboxylic acid."], answer: "Secondary alcohol." },
+            { question: "Brady's test (using 2,4-dinitrophenylhydrazine) is a test for:", options: ["Alcohols.", "Carboxylic acids.", "The carbonyl group in aldehydes and ketones.", "Alkenes."], answer: "The carbonyl group in aldehydes and ketones." },
+            { question: "A positive Tollen's test (formation of a silver mirror) is characteristic of:", options: ["Ketones.", "Aldehydes.", "Alcohols.", "Carboxylic acids."], answer: "Aldehydes." },
+            { question: "A positive Benedict's test (formation of a red precipitate) is characteristic of:", options: ["Aromatic aldehydes.", "Ketones.", "Aliphatic aldehydes.", "Tertiary alcohols."], answer: "Aliphatic aldehydes." },
+            { question: "The iodoform test gives a positive result (yellow precipitate) for compounds containing which group?", options: ["A carboxyl group.", "A methyl ketone group (CH₃CO-).", "A hydroxyl group.", "A benzene ring."], answer: "A methyl ketone group (CH₃CO-)." },
+            { question: "The reaction of an aldehyde or ketone with HCN (hydrogen cyanide) is an example of:", options: ["Nucleophilic substitution.", "Electrophilic addition.", "Nucleophilic addition.", "Elimination."], answer: "Nucleophilic addition." },
+            { question: "The functional group in an alcohol is the:", options: ["Carbonyl group (-C=O).", "Hydroxyl group (-OH).", "Carboxyl group (-COOH).", "Ether group (-O-)."], answer: "Hydroxyl group (-OH)." },
+            { question: "A primary (1°) alcohol has the -OH group attached to a carbon that is bonded to:", options: ["No other carbon atoms.", "One other carbon atom.", "Two other carbon atoms.", "Three other carbon atoms."], answer: "One other carbon atom." },
+            { question: "A secondary (2°) alcohol has the -OH group attached to a carbon that is bonded to:", options: ["One other carbon atom.", "Two other carbon atoms.", "Three other carbon atoms.", "A benzene ring."], answer: "Two other carbon atoms." },
+            { question: "A tertiary (3°) alcohol has the -OH group attached to a carbon that is bonded to:", options: ["One other carbon atom.", "Two other carbon atoms.", "Three other carbon atoms.", "A carbonyl group."], answer: "Three other carbon atoms." },
+            { question: "A phenol is a compound where the -OH group is directly attached to:", options: ["An alkyl chain.", "A carbonyl carbon.", "A benzene ring.", "A nitrogen atom."], answer: "A benzene ring." },
+            { question: "The IUPAC name for an alcohol ends with the suffix:", options: ["-ane", "-ene", "-ol", "-al"], answer: "-ol" },
+            { question: "Alcohols have higher boiling points than alkanes of similar molecular weight due to:", options: ["Ionic bonding.", "Van der Waals forces.", "Hydrogen bonding.", "Covalent bonding."], answer: "Hydrogen bonding." },
+            { question: "Which of the following is most soluble in water?", options: ["Hexane", "Hexanol", "Ethanol", "Decanol"], answer: "Ethanol" },
+            { question: "The oxidation of a primary alcohol with a strong oxidizing agent (like KMnO₄) produces a:", options: ["Ketone.", "Aldehyde.", "Carboxylic acid.", "No reaction."], answer: "Carboxylic acid." },
+            { question: "The oxidation of a secondary alcohol produces a:", options: ["Ketone.", "Aldehyde.", "Carboxylic acid.", "No reaction."], answer: "Ketone." },
+            { question: "The Lucas test is used to distinguish between:", options: ["Aldehydes and ketones.", "Primary, secondary, and tertiary alcohols.", "Alcohols and phenols.", "Alkanes and alkenes."], answer: "Primary, secondary, and tertiary alcohols." },
+            { question: "The reaction of an alcohol with a carboxylic acid in the presence of an acid catalyst is called:", options: ["Oxidation.", "Reduction.", "Esterification.", "Hydrolysis."], answer: "Esterification." },
+            { question: "Phenols are more acidic than alcohols because:", options: ["The phenoxide ion is stabilized by resonance.", "The alkoxide ion is stabilized by resonance.", "Phenols can form stronger hydrogen bonds.", "Alcohols have a higher molecular weight."], answer: "The phenoxide ion is stabilized by resonance." },
+            { question: "The reaction of phenol with bromine water results in:", options: ["No reaction.", "Substitution at the ortho and meta positions.", "Formation of a white precipitate of 2,4,6-tribromophenol.", "Formation of a purple complex."], answer: "Formation of a white precipitate of 2,4,6-tribromophenol." },
+            { question: "A positive test for phenols is the formation of a purple color with:", options: ["FeCl₃ solution.", "Tollen's reagent.", "Benedict's solution.", "Lucas reagent."], answer: "FeCl₃ solution." },
+            { question: "Amines are organic derivatives of:", options: ["Water (H₂O).", "Methane (CH₄).", "Ammonia (NH₃).", "Hydrogen sulfide (H₂S)."], answer: "Ammonia (NH₃)." },
+            { question: "A primary (1°) amine has:", options: ["One alkyl/aryl group attached to the nitrogen.", "Two alkyl/aryl groups attached to the nitrogen.", "Three alkyl/aryl groups attached to the nitrogen.", "A nitrogen atom double-bonded to a carbon."], answer: "One alkyl/aryl group attached to the nitrogen." },
+            { question: "A secondary (2°) amine has:", options: ["One alkyl/aryl group attached to the nitrogen.", "Two alkyl/aryl groups attached to the nitrogen.", "Three alkyl/aryl groups attached to the nitrogen.", "A nitrogen atom within a ring."], answer: "Two alkyl/aryl groups attached to the nitrogen." },
+            { question: "The IUPAC name for a simple primary amine is formed by changing the -e of the parent alkane to:", options: ["-amine", "-amide", "-imine", "-nitrile"], answer: "-amine" },
+            { question: "The common name for the simplest aromatic amine, C₆H₅NH₂, is:", options: ["Phenylamine.", "Benzamine.", "Aniline.", "Pyridinamine."], answer: "Aniline." },
+            { question: "Primary and secondary amines have higher boiling points than alkanes of similar mass due to:", options: ["Ionic bonding.", "Hydrogen bonding.", "Stronger Van der Waals forces.", "Metallic bonding."], answer: "Hydrogen bonding." },
+            { question: "Why do tertiary amines have lower boiling points than primary or secondary amines of similar mass?", options: ["They are less polar.", "They have weaker Van der Waals forces.", "They cannot act as hydrogen bond donors.", "They are more branched."], answer: "They cannot act as hydrogen bond donors." },
+            { question: "Amines behave as:", options: ["Acids.", "Bases.", "Neutral compounds.", "Oxidizing agents."], answer: "Bases." },
+            { question: "The reaction of an amine with a mineral acid (like HCl) produces:", options: ["An amide.", "A salt.", "An alcohol.", "A nitrile."], answer: "A salt." },
+            { question: "The reaction of a primary or secondary amine with an acyl chloride produces:", options: ["An ester.", "An ether.", "An amide.", "A salt."], answer: "An amide." },
+            { question: "The reaction of a primary aliphatic amine with nitrous acid (HNO₂) at room temperature produces:", options: ["A diazonium salt.", "A nitrosoamine.", "An alcohol and nitrogen gas.", "A stable salt."], answer: "An alcohol and nitrogen gas." },
+            { question: "The reaction of a primary aromatic amine with nitrous acid (HNO₂) at 0-5°C produces:", options: ["A diazonium salt.", "A nitrosoamine.", "A phenol and nitrogen gas.", "A stable salt."], answer: "A diazonium salt." },
+            { question: "Azo compounds, which are often brightly colored dyes, are formed by the coupling reaction of a diazonium salt with:", options: ["An alkane.", "An alcohol.", "An electron-rich aromatic compound like phenol or aniline.", "A carboxylic acid."], answer: "An electron-rich aromatic compound like phenol or aniline." },
+            { question: "The reaction of phenylamine (aniline) with excess bromine water produces:", options: ["No reaction.", "A monobrominated product.", "A dibrominated product.", "A white precipitate of 2,4,6-tribromophenylamine."], answer: "A white precipitate of 2,4,6-tribromophenylamine." },
+            { question: "An amine in which the nitrogen atom is part of a ring is called a:", options: ["Aromatic amine.", "Aliphatic amine.", "Heterocyclic amine.", "Secondary amine."], answer: "Heterocyclic amine." },
+            { question: "The functional group of a carboxylic acid is the:", options: ["Carbonyl group (-C=O).", "Hydroxyl group (-OH).", "Carboxyl group (-COOH).", "Ester group (-COOR)."], answer: "Carboxyl group (-COOH)." },
+            { question: "The IUPAC name for a carboxylic acid is derived by changing the -e of the parent alkane to:", options: ["-al", "-one", "-oic acid", "-ate"], answer: "-oic acid" },
+            { question: "Carboxylic acids have very high boiling points because they can form:", options: ["Ionic bonds.", "Covalent networks.", "Hydrogen-bonded dimers.", "Metallic bonds."], answer: "Hydrogen-bonded dimers." },
+            { question: "Carboxylic acids are weak acids. This means they:", options: ["Do not react with bases.", "Fully dissociate in water.", "Partially dissociate in water.", "Are insoluble in water."], answer: "Partially dissociate in water." },
+            { question: "The reaction of a carboxylic acid with a strong base (like NaOH) produces:", options: ["An ester and water.", "An alcohol and a salt.", "A carboxylate salt and water.", "An aldehyde and water."], answer: "A carboxylate salt and water." },
+            { question: "The reduction of a carboxylic acid with a strong reducing agent like LiAlH₄ produces a:", options: ["Primary alcohol.", "Secondary alcohol.", "Aldehyde.", "Ketone."], answer: "Primary alcohol." },
+            { question: "An acyl chloride is a derivative of a carboxylic acid where the -OH group is replaced by:", options: ["-OR'", "-NH₂", "-Cl", "-H"], answer: "-Cl" },
+            { question: "An ester is a derivative of a carboxylic acid where the -OH group is replaced by:", options: ["-OR'", "-NH₂", "-Cl", "-H"], answer: "-OR'" },
+            { question: "An amide is a derivative of a carboxylic acid where the -OH group is replaced by:", options: ["-OR'", "-NH₂", "-Cl", "-H"], answer: "-NH₂" },
+            { question: "The alkaline hydrolysis of an ester is called:", options: ["Esterification.", "Saponification.", "Oxidation.", "Reduction."], answer: "Saponification." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
