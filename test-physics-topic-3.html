@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Geometrical Optics Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2E7D32 0%, #1565C0 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Geometrical Optics Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on reflection, refraction, and thin lenses. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Physics Quiz: Optics</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Part 1: Reflection at a Plane Mirror
+            { question: "The law of reflection states that the angle of incidence is equal to the:", options: ["Angle of refraction", "Angle of diffraction", "Angle of reflection", "Angle of polarization"], answer: "Angle of reflection" },
+            { question: "An image formed by a plane mirror is always:", options: ["Real, inverted, and magnified", "Virtual, upright, and the same size", "Real, upright, and diminished", "Virtual, inverted, and the same size"], answer: "Virtual, upright, and the same size" },
+            { question: "If you stand 3 meters in front of a plane mirror, how far away does your image appear to be from you?", options: ["1.5 meters", "3 meters", "6 meters", "9 meters"], answer: "6 meters" },
+            { question: "The phenomenon where the left side of an object appears as the right side in its image in a plane mirror is called:", options: ["Lateral inversion", "Specular reflection", "Diffuse reflection", "Total internal reflection"], answer: "Lateral inversion" },
+            { question: "For a plane mirror, if the object distance (u) is 50 cm, what is the image distance (v)?", options: ["+50 cm", "-50 cm", "+25 cm", "-100 cm"], answer: "-50 cm" },
+            { question: "What is the linear magnification (M) produced by a plane mirror?", options: ["M > 1", "M < 1", "M = 1", "M = 0"], answer: "M = 1" },
+            { question: "When a bundle of parallel light rays strikes a smooth, flat surface, the reflection is described as:", options: ["Diffuse", "Specular", "Irregular", "Scattered"], answer: "Specular" },
+            { question: "A ray of light strikes a plane mirror at an angle of 30° to the normal. The reflected ray will make an angle of ______ with the mirror's surface.", options: ["30°", "60°", "90°", "120°"], answer: "60°" },
+            { question: "Which of the following statements about a virtual image is true?", options: ["It can be projected onto a screen.", "Light rays actually converge at the image location.", "It is formed where light rays appear to diverge from.", "It is always inverted."], answer: "It is formed where light rays appear to diverge from." },
+            { question: "To see his full height, a man of height 'H' needs a plane mirror of a minimum vertical length of:", options: ["H", "H/2", "H/4", "2H"], answer: "H/2" },
+            { question: "The incident ray, the reflected ray, and the normal at the point of incidence all lie:", options: ["In different planes", "In the same plane", "Perpendicular to each other", "Parallel to each other"], answer: "In the same plane" },
+            { question: "If an object moves towards a plane mirror with a speed 'v', its image moves towards it with a speed of:", options: ["v/2", "v", "2v", "4v"], answer: "v" },
+            { question: "Diffuse reflection occurs when light is reflected from a:", options: ["Smooth surface", "Polished surface", "Rough surface", "Concave mirror"], answer: "Rough surface" },
+            { question: "The image formed by a plane mirror is located:", options: ["In front of the mirror", "On the surface of the mirror", "Behind the mirror", "At the focal point"], answer: "Behind the mirror" },
+            { question: "If you write the word 'PHYSICS' on a piece of paper and hold it in front of a plane mirror, how will it appear in the mirror?", options: ["PHYSICS", "SƆIƧYHꟼ", "ƧƆIƧYHP", "It will be invisible"], answer: "SƆIƧYHꟼ" },
+            // Part 2: Reflection at a Spherical Mirror (Concave)
+            { question: "A concave mirror is also known as a:", options: ["Diverging mirror", "Converging mirror", "Plane mirror", "Convex mirror"], answer: "Converging mirror" },
+            { question: "The focal length (f) of a spherical mirror is related to its radius of curvature (r) by the formula:", options: ["f = 2r", "f = r", "f = r/2", "f = r²"], answer: "f = r/2" },
+            { question: "An object is placed at the center of curvature (C) of a concave mirror. The image formed is:", options: ["Real, inverted, and magnified", "Real, inverted, and the same size", "Virtual, upright, and magnified", "Real, inverted, and diminished"], answer: "Real, inverted, and the same size" },
+            { question: "When an object is placed at infinity, a concave mirror forms an image at its:", options: ["Center of curvature (C)", "Pole (P)", "Focal point (F)", "Beyond C"], answer: "Focal point (F)" },
+            { question: "To get a virtual, upright, and magnified image with a concave mirror, the object must be placed:", options: ["At F", "Between F and C", "Beyond C", "Between F and the pole (P)"], answer: "Between F and the pole (P)" },
+            { question: "A ray of light parallel to the principal axis of a concave mirror, after reflection, passes through the:", options: ["Pole", "Center of curvature", "Focal point", "It reflects back along the same path"], answer: "Focal point" },
+            { question: "What kind of image is formed when an object is placed between the focal point (F) and the center of curvature (C) of a concave mirror?", options: ["Real, inverted, and magnified", "Real, upright, and magnified", "Virtual, upright, and diminished", "Real, inverted, and diminished"], answer: "Real, inverted, and magnified" },
+            { question: "According to the sign convention, the focal length of a concave mirror is always:", options: ["Positive", "Negative", "Zero", "Infinite"], answer: "Positive" },
+            { question: "An object is placed 15 cm from a concave mirror with a focal length of 10 cm. Where is the image formed?", options: ["30 cm in front of the mirror", "30 cm behind the mirror", "6 cm in front of the mirror", "6 cm behind the mirror"], answer: "30 cm in front of the mirror" },
+            { question: "In the previous question, what is the magnification of the image?", options: ["-2", "+2", "-0.4", "+0.4"], answer: "-2" },
+            { question: "A shaving mirror is an example of a:", options: ["Convex mirror", "Plane mirror", "Concave mirror", "Parabolic mirror"], answer: "Concave mirror" },
+            { question: "When an object is placed at the focal point (F) of a concave mirror, the image is formed at:", options: ["The pole", "The center of curvature", "Infinity", "The focal point itself"], answer: "Infinity" },
+            { question: "The mirror equation is given by:", options: ["1/f = 1/v - 1/u", "1/f = 1/u + 1/v", "f = u + v", "f = v - u"], answer: "1/f = 1/u + 1/v" },
+            { question: "A negative sign for magnification (M) indicates that the image is:", options: ["Upright", "Virtual", "Inverted", "Diminished"], answer: "Inverted" },
+            { question: "A ray passing through the center of curvature (C) of a concave mirror will, after reflection:", options: ["Pass through the focal point", "Become parallel to the principal axis", "Reflect back along its own path", "Pass through the pole"], answer: "Reflect back along its own path" },
+            { question: "A dentist uses a concave mirror to get a magnified view of a tooth. The tooth must be placed:", options: ["Beyond C", "At C", "Between F and P", "At F"], answer: "Between F and P" },
+            { question: "An object of height 4 cm is placed 20 cm in front of a concave mirror of focal length 12 cm. The size of the image is:", options: ["6 cm", "4 cm", "8 cm", "2 cm"], answer: "6 cm" },
+            { question: "For a real image formed by a concave mirror, the image distance (v) is always:", options: ["Positive", "Negative", "Zero", "Equal to the object distance"], answer: "Positive" },
+            { question: "As an object moves from infinity towards the pole of a concave mirror, its real, inverted image moves from:", options: ["F towards infinity", "C towards F", "Infinity towards C", "P towards F"], answer: "F towards infinity" },
+            { question: "The reflectors in car headlights and torches use:", options: ["Convex mirrors", "Plane mirrors", "Concave mirrors", "Cylindrical mirrors"], answer: "Concave mirrors" },
+            // Part 2: Reflection at a Spherical Mirror (Convex)
+            { question: "A convex mirror is also known as a:", options: ["Converging mirror", "Focusing mirror", "Plane mirror", "Diverging mirror"], answer: "Diverging mirror" },
+            { question: "The image formed by a convex mirror is always:", options: ["Real, inverted, and diminished", "Virtual, upright, and magnified", "Virtual, upright, and diminished", "Real, upright, and the same size"], answer: "Virtual, upright, and diminished" },
+            { question: "According to the sign convention, the focal length of a convex mirror is always:", options: ["Positive", "Negative", "Zero", "Dependent on object distance"], answer: "Negative" },
+            { question: "A ray of light parallel to the principal axis of a convex mirror, after reflection, appears to diverge from the:", options: ["Pole", "Center of curvature", "Focal point", "A point behind C"], answer: "Focal point" },
+            { question: "Convex mirrors are commonly used as:", options: ["Shaving mirrors", "Dentist's mirrors", "Rear-view mirrors in vehicles", "Reflectors in solar cookers"], answer: "Rear-view mirrors in vehicles" },
+            { question: "The field of view of a convex mirror is:", options: ["Narrower than a plane mirror of the same size", "The same as a plane mirror of the same size", "Wider than a plane mirror of the same size", "Dependent on the object's position"], answer: "Wider than a plane mirror of the same size" },
+            { question: "An object is placed 20 cm in front of a convex mirror with a focal length of -30 cm. The image is formed at:", options: ["-12 cm", "+12 cm", "-60 cm", "+60 cm"], answer: "-12 cm" },
+            { question: "In the previous question, the magnification of the image is:", options: ["-0.6", "+0.6", "-3.0", "+3.0"], answer: "+0.6" },
+            { question: "A ray of light directed towards the center of curvature (C) of a convex mirror will, after reflection:", options: ["Pass through the focal point", "Become parallel to the principal axis", "Reflect back along its own path", "Pass through the pole"], answer: "Reflect back along its own path" },
+            { question: "The image formed by a convex mirror is always located:", options: ["Between the pole and the focal point", "Between the focal point and the center of curvature", "Beyond the center of curvature", "At the focal point"], answer: "Between the pole and the focal point" },
+            { question: "The radius of curvature of a convex mirror is 40 cm. What is its focal length?", options: ["+20 cm", "-20 cm", "+40 cm", "-40 cm"], answer: "-20 cm" },
+            { question: "Magnification (M) for a convex mirror is always:", options: ["M > 1", "M < 0", "0 < M < 1", "M = 1"], answer: "0 < M < 1" },
+            { question: "A ray directed towards the focal point (F) of a convex mirror will, after reflection:", options: ["Pass through the center of curvature", "Become parallel to the principal axis", "Reflect back along its own path", "Pass through the pole"], answer: "Become parallel to the principal axis" },
+            { question: "Why are convex mirrors used for security in shops?", options: ["They provide a magnified image.", "They provide a wide-angle view of the area.", "They form real images that can be recorded.", "They are cheaper than other types of mirrors."], answer: "They provide a wide-angle view of the area." },
+            { question: "For a convex mirror, as the object moves from infinity towards the pole, the image moves from:", options: ["F towards P", "C towards F", "Infinity towards F", "P towards F"], answer: "F towards P" },
+            // Part 3: Refraction
+            { question: "Refraction is the phenomenon of light bending as it passes from:", options: ["One medium to another", "A smooth surface", "A rough surface", "A narrow slit"], answer: "One medium to another" },
+            { question: "Snell's Law is mathematically expressed as:", options: ["n₁sinθ₁ = n₂sinθ₂", "n₁/sinθ₁ = n₂/sinθ₂", "n₁sinθ₂ = n₂sinθ₁", "n₁ + n₂ = sinθ₁ + sinθ₂"], answer: "n₁sinθ₁ = n₂sinθ₂" },
+            { question: "When light travels from a less dense medium (like air) to a denser medium (like glass), it bends:", options: ["Away from the normal", "Towards the normal", "It does not bend", "It reflects back"], answer: "Towards the normal" },
+            { question: "The refractive index (n) of a medium is defined as the ratio of:", options: ["Speed of light in the medium to the speed of light in a vacuum (v/c)", "Speed of light in a vacuum to the speed of light in the medium (c/v)", "Angle of incidence to the angle of refraction (θ₁/θ₂)", "Angle of refraction to the angle of incidence (θ₂/θ₁)"], answer: "Speed of light in a vacuum to the speed of light in the medium (c/v)" },
+            { question: "The refractive index of a vacuum is:", options: ["0", "1", "Greater than 1", "Less than 1"], answer: "1" },
+            { question: "When light travels from a denser medium (like water) to a less dense medium (like air), it bends:", options: ["Away from the normal", "Towards the normal", "It does not bend", "It undergoes total internal reflection always"], answer: "Away from the normal" },
+            { question: "A fish in water appears to be at a shallower depth than it actually is. This is due to:", options: ["Reflection", "Refraction", "Diffraction", "Dispersion"], answer: "Refraction" },
+            { question: "The relationship between real depth (Dr) and apparent depth (Da) for an object in a medium with refractive index 'n' viewed from air is:", options: ["n = Da / Dr", "n = Dr / Da", "n = Dr + Da", "n = Dr * Da"], answer: "n = Dr / Da" },
+            { question: "Light enters from air (n≈1) into glass (n=1.5) at an angle of incidence of 45°. What is the angle of refraction?", options: ["28.1°", "45°", "70.0°", "30.0°"], answer: "28.1°" },
+            { question: "What property of light changes when it goes from one medium to another?", options: ["Frequency", "Speed and Wavelength", "Color", "Period"], answer: "Speed and Wavelength" },
+            { question: "A swimming pool is 3.0 m deep. If the refractive index of water is 1.33, what is its apparent depth?", options: ["3.0 m", "4.0 m", "2.26 m", "1.5 m"], answer: "2.26 m" },
+            { question: "The incident ray, the refracted ray, and the normal at the point of incidence all lie:", options: ["In different planes", "In the same plane", "Perpendicular to each other", "Parallel to each other"], answer: "In the same plane" },
+            { question: "If a ray of light passes from glass to air, which of the following is true?", options: ["Its speed increases", "Its speed decreases", "Its frequency changes", "Its wavelength decreases"], answer: "Its speed increases" },
+            { question: "A higher refractive index indicates a medium that is:", options: ["Optically less dense", "Optically more dense", "More reflective", "Less reflective"], answer: "Optically more dense" },
+            { question: "If a light ray strikes the boundary between two media perpendicularly (angle of incidence = 0°), the angle of refraction is:", options: ["0°", "90°", "45°", "Dependent on the refractive indices"], answer: "0°" },
+            // Part 3: Total Internal Reflection
+            { question: "Total internal reflection can only occur when light travels from:", options: ["A less dense medium to a denser medium", "A denser medium to a less dense medium", "Air to water", "Any medium to another"], answer: "A denser medium to a less dense medium" },
+            { question: "The critical angle (θc) is the angle of incidence for which the angle of refraction is:", options: ["0°", "45°", "90°", "180°"], answer: "90°" },
+            { question: "For total internal reflection to occur, the angle of incidence (θ₁) must be:", options: ["Less than the critical angle (θ₁ < θc)", "Equal to the critical angle (θ₁ = θc)", "Greater than the critical angle (θ₁ > θc)", "Equal to 90°"], answer: "Greater than the critical angle (θ₁ > θc)" },
+            { question: "The sparkling of a diamond is due to its:", options: ["High refractive index and low critical angle", "Low refractive index and high critical angle", "Property of being a very hard substance", "Ability to absorb light"], answer: "High refractive index and low critical angle" },
+            { question: "The formula relating the critical angle (θc) and the refractive indices of two media (n₁ > n₂) is:", options: ["sin(θc) = n₁/n₂", "sin(θc) = n₂/n₁", "tan(θc) = n₂/n₁", "cos(θc) = n₂/n₁"], answer: "sin(θc) = n₂/n₁" },
+            { question: "Optical fibers work on the principle of:", options: ["Reflection", "Refraction", "Total internal reflection", "Diffraction"], answer: "Total internal reflection" },
+            { question: "The critical angle for water (n=1.33) when light goes from water to air (n≈1) is approximately:", options: ["41.8°", "48.8°", "59.2°", "90°"], answer: "48.8°" },
+            { question: "If the angle of incidence is equal to the critical angle, the refracted ray travels:", options: ["Along the normal", "Back into the denser medium", "Along the boundary of the two media", "Undeviated into the less dense medium"], answer: "Along the boundary of the two media" },
+            { question: "A mirage is a phenomenon caused by:", options: ["Reflection from a water surface", "Diffraction of light in the desert", "Refraction and total internal reflection of light in air layers of different densities", "The scattering of sunlight"], answer: "Refraction and total internal reflection of light in air layers of different densities" },
+            { question: "What happens to the critical angle as the refractive index of the denser medium increases (relative to the less dense medium)?", options: ["It increases", "It decreases", "It remains the same", "It becomes 90°"], answer: "It decreases" },
+            { question: "In a semi-circular glass block experiment to find the critical angle, why is the light ray directed towards the center of the flat face?", options: ["To ensure the ray enters the block without deviation", "To maximize reflection", "To make the ray travel faster", "To make the ray bend more"], answer: "To ensure the ray enters the block without deviation" },
+            { question: "Light travels from a medium with refractive index 1.6 to a medium with refractive index 1.2. What is the critical angle?", options: ["48.6°", "41.4°", "36.9°", "There is no critical angle for this case."], answer: "48.6°" },
+            { question: "Which color of light has the smallest critical angle when going from glass to air?", options: ["Red", "Green", "Violet", "All have the same critical angle"], answer: "Violet" },
+            { question: "Periscopes used in submarines sometimes use prisms instead of mirrors. This is an application of:", options: ["Dispersion", "Total internal reflection", "Specular reflection", "Diffraction"], answer: "Total internal reflection" },
+            { question: "If a light source is placed at the bottom of a pool, light can only emerge from the surface within a circular area. This is limited by:", options: ["The depth of the pool", "The intensity of the light", "The critical angle of water", "The temperature of the water"], answer: "The critical angle of water" },
+            // Part 4: Thin Lenses (Converging)
+            { question: "A converging lens is also known as a:", options: ["Concave lens", "Biconcave lens", "Convex lens", "Plano-concave lens"], answer: "Convex lens" },
+            { question: "A ray of light parallel to the principal axis of a convex lens, after refraction, passes through the:", options: ["Optical center", "Center of curvature", "Principal focus (F)", "It passes undeviated"], answer: "Principal focus (F)" },
+            { question: "To be used as a magnifying glass, an object must be placed:", options: ["At 2F", "Between F and 2F", "Beyond 2F", "Between the optical center and F"], answer: "Between the optical center and F" },
+            { question: "When an object is placed at 2F of a convex lens, the image formed is:", options: ["Real, inverted, and magnified", "Real, inverted, and the same size", "Virtual, upright, and magnified", "Real, inverted, and diminished"], answer: "Real, inverted, and the same size" },
+            { question: "According to sign convention, the focal length of a converging lens is:", options: ["Positive", "Negative", "Zero", "Infinite"], answer: "Positive" },
+            { question: "An object is placed 30 cm from a convex lens of focal length 20 cm. The image is formed at:", options: ["60 cm on the same side as the object", "60 cm on the opposite side of the object", "12 cm on the same side as the object", "12 cm on the opposite side of the object"], answer: "60 cm on the opposite side of the object" },
+            { question: "The lens in a simple camera forms an image that is:", options: ["Real, inverted, and diminished", "Virtual, upright, and magnified", "Real, upright, and diminished", "Virtual, inverted, and magnified"], answer: "Real, inverted, and diminished" },
+            { question: "A ray passing through the optical center of a thin lens will:", options: ["Pass through the focus", "Become parallel to the principal axis", "Emerge without any deviation", "Reflect back"], answer: "Emerge without any deviation" },
+            { question: "When an object is placed between F and 2F of a converging lens, the image is formed:", options: ["Between F and 2F on the other side", "At 2F on the other side", "Beyond 2F on the other side", "Between the optical center and F"], answer: "Beyond 2F on the other side" },
+            { question: "The thin lens formula is identical to the mirror formula and is given by:", options: ["1/f = 1/v - 1/u", "1/f = 1/u + 1/v", "f = u + v", "f = v - u"], answer: "1/f = 1/u + 1/v" },
+            { question: "A positive magnification (M > 0) for a lens indicates that the image is:", options: ["Real", "Inverted", "Upright", "Larger than the object"], answer: "Upright" },
+            { question: "The objective lens of a telescope is a:", options: ["Concave lens with a short focal length", "Convex lens with a long focal length", "Concave lens with a long focal length", "Convex lens with a short focal length"], answer: "Convex lens with a long focal length" },
+            // Part 4: Thin Lenses (Diverging)
+            { question: "A diverging lens is also known as a:", options: ["Convex lens", "Concave lens", "Converging lens", "Biconvex lens"], answer: "Concave lens" },
+            { question: "The image formed by a concave lens is always:", options: ["Real, inverted, and diminished", "Virtual, upright, and magnified", "Virtual, upright, and diminished", "Real, upright, and the same size"], answer: "Virtual, upright, and diminished" },
+            { question: "According to sign convention, the focal length of a diverging lens is:", options: ["Positive", "Negative", "Zero", "Dependent on the medium"], answer: "Negative" },
+            { question: "A ray of light parallel to the principal axis of a concave lens, after refraction, appears to diverge from the:", options: ["Optical center", "Second principal focus (F₂)", "First principal focus (F₁)", "Center of curvature"], answer: "First principal focus (F₁)" },
+            { question: "Concave lenses are used to correct which vision defect?", options: ["Hypermetropia (farsightedness)", "Myopia (nearsightedness)", "Presbyopia", "Astigmatism"], answer: "Myopia (nearsightedness)" },
+            { question: "An object is placed 15 cm from a diverging lens with a focal length of -30 cm. Where is the image formed?", options: ["-10 cm", "+10 cm", "-30 cm", "-6.7 cm"], answer: "-10 cm" },
+            { question: "The magnification for a diverging lens is always:", options: ["Greater than 1", "Negative", "Positive and less than 1", "Equal to 1"], answer: "Positive and less than 1" },
+            { question: "A ray of light directed towards the first principal focus (F₁) of a concave lens will, after refraction:", options: ["Pass through the second principal focus", "Emerge parallel to the principal axis", "Pass through the optical center", "Reflect back along its path"], answer: "Emerge parallel to the principal axis" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
