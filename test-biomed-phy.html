@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biomedical Physics Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biomedical Physics Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge across a wide range of biomedical physics topics. You will have 200 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biomedical Physics Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 200</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 200</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which structure of the eye is described as a 'fixed focus' lens due to its fixed convex curvature?", options: ["Eye lens", "Retina", "Cornea", "Iris"], answer: "Cornea" },
+            { question: "What is the primary function of the ciliary muscles?", options: ["To control the amount of light entering the eye", "To change the thickness of the eye lens", "To hold the eyeball in place", "To detect color"], answer: "To change the thickness of the eye lens" },
+            { question: "The light-sensitive region at the back of the eyeball where images are formed is called the:", options: ["Fovea", "Retina", "Choroid", "Optic nerve"], answer: "Retina" },
+            { question: "Which photoreceptor cells are responsible for vision in low light and do not register color?", options: ["Cones", "Rods", "Bipolar cells", "Ganglion cells"], answer: "Rods" },
+            { question: "Which part of the retina is responsible for the sharpest vision and is used when you look directly at an object?", options: ["The blind spot", "The periphery", "The choroid", "The fovea"], answer: "The fovea" },
+            { question: "How does the iris respond to dim light?", options: ["It contracts, making the pupil larger", "It relaxes, making the pupil smaller", "It becomes thicker", "It becomes thinner"], answer: "It contracts, making the pupil larger" },
+            { question: "The nerve that carries visual information from the retina to the brain is the:", options: ["Ciliary nerve", "Auditory nerve", "Optic nerve", "Trigeminal nerve"], answer: "Optic nerve" },
+            { question: "What kind of image is initially formed on the retina before being processed by the brain?", options: ["Upright and virtual", "Inverted and real", "Upright and real", "Inverted and virtual"], answer: "Inverted and real" },
+            { question: "The power of a lens is measured in which unit?", options: ["Meters (m)", "Watts (W)", "Diopters (D)", "Hertz (Hz)"], answer: "Diopters (D)" },
+            { question: "Myopia, or short-sightedness, is a condition where a person has difficulty seeing:", options: ["Near objects", "Far objects", "In bright light", "In dim light"], answer: "Far objects" },
+            { question: "What type of corrective lens is used for myopia?", options: ["Converging (convex) lens", "Diverging (concave) lens", "Cylindrical lens", "Bifocal lens"], answer: "Diverging (concave) lens" },
+            { question: "Hypermetropia (long-sightedness) occurs when the eyeball is too short or the eye lens cannot become:", options: ["Thin enough", "Thick enough", "Transparent enough", "Flexible enough"], answer: "Thick enough" },
+            { question: "The standard near point for a normal eye is considered to be:", options: ["15 cm", "25 cm", "50 cm", "Infinity"], answer: "25 cm" },
+            { question: "For a person with hypermetropia, the uncorrected near point is:", options: ["Closer than 25 cm", "Exactly at 25 cm", "Further away than 25 cm", "At infinity"], answer: "Further away than 25 cm" },
+            { question: "What type of corrective lens is prescribed for hypermetropia?", options: ["Concave lens", "Convex lens", "Plano-concave lens", "Meniscus lens"], answer: "Convex lens" },
+            { question: "According to the document, cones are mostly located in the:", options: ["Blind spot", "Fovea", "Optic nerve", "Periphery of the retina"], answer: "Fovea" },
+            { question: "To focus on a distant object, how must the eye lens and ciliary muscles change?", options: ["Lens becomes thicker, ciliary muscles contract", "Lens becomes thinner, ciliary muscles contract", "Lens becomes thicker, ciliary muscles relax", "Lens becomes thinner, ciliary muscles relax"], answer: "Lens becomes thinner, ciliary muscles relax" },
+            { question: "What is the 'blind spot' in the eye?", options: ["The area with the highest concentration of cones", "The point where the optic nerve leaves the eye", "The center of the fovea", "A small opaque spot on the cornea"], answer: "The point where the optic nerve leaves the eye" },
+            { question: "The thin, transparent membrane covering the front of the eye is the:", options: ["Sclera", "Choroid", "Conjunctiva", "Aqueous humour"], answer: "Conjunctiva" },
+            { question: "What is the relationship between the focal length (f) and the power (P) of a lens?", options: ["P = f", "P = 1/f", "P = f^2", "P = 1/f^2"], answer: "P = 1/f" },
+            { question: "In myopia, light from a distant object focuses:", options: ["Behind the retina", "Exactly on the retina", "In front of the retina", "On the blind spot"], answer: "In front of the retina" },
+            { question: "A corrective lens for myopia creates a virtual image of a distant object at the eye's:", options: ["Uncorrected near point", "Uncorrected far point", "Retina", "Fovea"], answer: "Uncorrected far point" },
+            { question: "Which photoreceptors are more numerous in the human retina?", options: ["Cones", "Rods", "They are equal in number", "The number varies depending on light conditions"], answer: "Rods" },
+            { question: "The lens equation is given by:", options: ["1/f = 1/u - 1/v", "f = u + v", "1/f = 1/u + 1/v", "P = u + v"], answer: "1/f = 1/u + 1/v" },
+            { question: "An optician's prescription of +2.0 D means the lens is:", options: ["Converging with a focal length of 0.5 m", "Diverging with a focal length of 0.5 m", "Converging with a focal length of 2.0 m", "Diverging with a focal length of 2.0 m"], answer: "Converging with a focal length of 0.5 m" },
+            { question: "The ability of the eye to adjust its focus for viewing objects at different distances is called:", options: ["Refraction", "Diffraction", "Accommodation", "Astigmatism"], answer: "Accommodation" },
+            { question: "In the context of vision, what does 'v' represent in the lens equation?", options: ["The distance from the object to the lens", "The velocity of light", "The distance from the lens to the retina (image distance)", "The power of the lens"], answer: "The distance from the lens to the retina (image distance)" },
+            { question: "A normal eye has a maximum power of approximately +60 D for viewing which objects?", options: ["Nearby objects", "Objects at the near point", "Distant objects", "Objects in dim light"], answer: "Distant objects" },
+            { question: "The process of image formation in the eye involves light passing through which sequence of structures?", options: ["Lens -> Cornea -> Pupil -> Retina", "Cornea -> Pupil -> Lens -> Retina", "Pupil -> Cornea -> Retina -> Lens", "Cornea -> Lens -> Pupil -> Retina"], answer: "Cornea -> Pupil -> Lens -> Retina" },
+            { question: "In hypermetropia, light from a near object focuses:", options: ["Behind the retina", "In front of the retina", "On the optic nerve", "Exactly on the retina"], answer: "Behind the retina" },
+            { question: "A corrective lens for hypermetropia effectively moves the eye's near point from its uncorrected position to:", options: ["Infinity", "50 cm", "25 cm", "15 cm"], answer: "25 cm" },
+            { question: "The fluid-filled space between the cornea and the lens is filled with:", options: ["Vitreous humour", "Blood", "Saline solution", "Aqueous humour"], answer: "Aqueous humour" },
+            { question: "What is the main role of the choroid?", options: ["To focus light", "To provide oxygen and nourishment to the outer layers of the retina", "To control pupil size", "To secrete aqueous humour"], answer: "To provide oxygen and nourishment to the outer layers of the retina" },
+            { question: "The range of electromagnetic wavelengths the human eye is sensitive to is approximately:", options: ["200 nm to 500 nm", "400 nm to 650 nm", "700 nm to 900 nm", "10 nm to 100 nm"], answer: "400 nm to 650 nm" },
+            { question: "If a person's far point is 2.0 m, what power of corrective lens do they need? (Assume lens-retina distance is not needed for this calculation).", options: ["+2.0 D", "-2.0 D", "+0.5 D", "-0.5 D"], answer: "-0.5 D" },
+            { question: "The ear is divided into how many main sections?", options: ["Two", "Three", "Four", "Five"], answer: "Three" },
+            { question: "What is the primary function of the pinna (outer ear)?", options: ["To amplify sound", "To convert sound waves to mechanical vibrations", "To collect sound and channel it into the ear canal", "To balance pressure"], answer: "To collect sound and channel it into the ear canal" },
+            { question: "The eardrum is also known as the:", options: ["Cochlea", "Tympanic membrane", "Oval window", "Eustachian tube"], answer: "Tympanic membrane" },
+            { question: "The three small bones in the middle ear, known as the ossicles, are the hammer, anvil, and:", options: ["Stapes (stirrup)", "Incus (anvil)", "Malleus (hammer)", "Cochlea"], answer: "Stapes (stirrup)" },
+            { question: "What is the main function of the ossicles?", options: ["To protect the inner ear from loud noises", "To amplify the vibrations from the eardrum", "To detect the frequency of sound", "To maintain balance"], answer: "To amplify the vibrations from the eardrum" },
+            { question: "The structure that connects the middle ear to the back of the throat and helps balance pressure is the:", options: ["Auditory canal", "Semicircular canal", "Eustachian tube", "Cochlea"], answer: "Eustachian tube" },
+            { question: "In which part of the ear is the cochlea located?", options: ["Outer ear", "Middle ear", "Inner ear", "Auditory nerve"], answer: "Inner ear" },
+            { question: "What is the function of the cochlea?", options: ["To amplify sound", "To convert mechanical vibrations into electrical signals", "To collect sound waves", "To balance pressure"], answer: "To convert mechanical vibrations into electrical signals" },
+            { question: "The basilar membrane within the cochlea is specialized for:", options: ["Maintaining balance", "Amplifying sound", "Collecting different sound frequencies", "Protecting the hair cells"], answer: "Collecting different sound frequencies" },
+            { question: "What sensitive cells, located on the basilar membrane, are responsible for converting mechanical vibrations into electrical signals?", options: ["Otic cells", "Auditory neurons", "Hair cells", "Stapes cells"], answer: "Hair cells" },
+            { question: "The 'pitch' of a sound is a subjective perception that corresponds to which physical property?", options: ["Intensity", "Frequency", "Wavelength", "Speed"], answer: "Frequency" },
+            { question: "The fluid inside the cochlea is called:", options: ["Aqueous humour", "Vitreous humour", "Cerebrospinal fluid", "Perilymph and endolymph"], answer: "Perilymph and endolymph" },
+            { question: "The typical hearing range for a young person is:", options: ["20 Hz to 20,000 Hz", "10 Hz to 10,000 Hz", "100 Hz to 50,000 Hz", "200 Hz to 15,000 Hz"], answer: "20 Hz to 20,000 Hz" },
+            { question: "Sound intensity is measured in which units?", options: ["Decibels (dB)", "Watts per square meter (W/m^2)", "Hertz (Hz)", "Pascals (Pa)"], answer: "Watts per square meter (W/m^2)" },
+            { question: "The threshold of human hearing, I_0, is defined as:", options: ["1 x 10^-10 W/m^2", "1 x 10^-12 W/m^2", "1 W/m^2", "0 W/m^2"], answer: "1 x 10^-12 W/m^2" },
+            { question: "The intensity level (β) is calculated using which formula?", options: ["β = 10 x log(I x I_0)", "β = log(I / I_0)", "β = 10 x log(I / I_0)", "β = 10 x (I / I_0)"], answer: "β = 10 x log(I / I_0)" },
+            { question: "An intensity level of 0 dB corresponds to:", options: ["Complete silence", "The threshold of pain", "The threshold of hearing", "A normal conversation"], answer: "The threshold of hearing" },
+            { question: "A sound that is perceived as unpleasantly loud and may cause hearing damage is typically in the range of:", options: ["40-60 dB", "60-80 dB", "80-100 dB", "100-120 dB"], answer: "100-120 dB" },
+            { question: "The auditory nerve transmits signals from the cochlea to the:", options: ["Eardrum", "Ossicles", "Brain", "Pinna"], answer: "Brain" },
+            { question: "The conversion of sound waves into mechanical vibrations occurs at the:", options: ["Pinna", "Eardrum", "Cochlea", "Auditory nerve"], answer: "Eardrum" },
+            { question: "If the intensity of a sound is 1 x 10^-5 W/m^2, what is its intensity level in decibels?", options: ["50 dB", "60 dB", "70 dB", "80 dB"], answer: "70 dB" },
+            { question: "The 'loudness' of a sound is a subjective perception that corresponds to which physical property?", options: ["Frequency", "Wavelength", "Intensity", "Speed"], answer: "Intensity" },
+            { question: "As people age, their ability to hear which types of sounds typically diminishes first?", options: ["Low-frequency sounds", "High-frequency sounds", "Low-intensity sounds", "High-intensity sounds"], answer: "High-frequency sounds" },
+            { question: "The Eustachian tube's main purpose is to equalize pressure on both sides of the:", options: ["Cochlea", "Oval window", "Eardrum", "Pinna"], answer: "Eardrum" },
+            { question: "The three bones of the ossicles, in order from the eardrum to the inner ear, are:", options: ["Stapes, Incus, Malleus", "Malleus, Stapes, Incus", "Malleus, Incus, Stapes", "Incus, Malleus, Stapes"], answer: "Malleus, Incus, Stapes" },
+            { question: "What part of the inner ear is primarily responsible for our sense of balance?", options: ["Cochlea", "Basilar membrane", "Vestibular system (including semicircular canals)", "Auditory nerve"], answer: "Vestibular system (including semicircular canals)" },
+            { question: "If one sound has an intensity of 10^-8 W/m^2 and another has an intensity of 10^-6 W/m^2, what is the difference in their intensity levels?", options: ["2 dB", "10 dB", "20 dB", "100 dB"], answer: "20 dB" },
+            { question: "The human ear is most sensitive to frequencies around:", options: ["20 Hz", "500 Hz", "3,000 Hz", "20,000 Hz"], answer: "3,000 Hz" },
+            { question: "What is the unit 'bell' (B) in acoustics?", options: ["A measure of frequency", "A measure of intensity", "Equal to 10 decibels (dB)", "Equal to 0.1 decibels (dB)"], answer: "Equal to 10 decibels (dB)" },
+            { question: "The discomfort level of hearing is generally considered to begin around:", options: ["80 dB", "90 dB", "100 dB", "140 dB"], answer: "100 dB" },
+            { question: "Ultrasound is defined as sound with a frequency:", options: ["Below 20 Hz", "Between 20 Hz and 20,000 Hz", "Above 20,000 Hz", "Equal to the speed of light"], answer: "Above 20,000 Hz" },
+            { question: "What is the key principle that allows an ultrasound transducer to both produce and detect sound waves?", options: ["The Doppler effect", "The photoelectric effect", "The piezoelectric effect", "The Compton effect"], answer: "The piezoelectric effect" },
+            { question: "In the context of ultrasound imaging, what does a piezoelectric crystal do?", options: ["Converts electrical energy to light energy", "Converts mechanical vibrations to light energy", "Converts electrical energy to mechanical vibrations, and vice versa", "Converts heat energy to electrical energy"], answer: "Converts electrical energy to mechanical vibrations, and vice versa" },
+            { question: "When an ultrasound wave travels from one tissue medium to another, what three things can happen at the interface?", options: ["Absorption, scattering, focusing", "Reflection, refraction, transmission", "Amplification, attenuation, diffraction", "Generation, detection, conversion"], answer: "Reflection, refraction, transmission" },
+            { question: "The amount of reflection of an ultrasound beam at a tissue interface depends on the difference in:", options: ["Temperature", "Acoustic impedance", "Electrical conductivity", "Density only"], answer: "Acoustic impedance" },
+            { question: "Acoustic impedance (Z) is calculated as:", options: ["Z = ρ / v (density divided by velocity)", "Z = v / ρ (velocity divided by density)", "Z = ρ x v (density multiplied by velocity)", "Z = ρ + v (density plus velocity)"], answer: "Z = ρ x v (density multiplied by velocity)" },
+            { question: "In a 2D ultrasound image, a structure that appears bright white is described as:", options: ["Anechoic", "Hypoechoic", "Isoechoic", "Hyperechoic"], answer: "Hyperechoic" },
+            { question: "A fluid-filled cyst, which does not reflect ultrasound waves, would appear as what on an image?", options: ["Hyperechoic (white)", "Hypoechoic (grey)", "Anechoic (black)", "Isoechoic (same as surrounding tissue)"], answer: "Anechoic (black)" },
+            { question: "What is the purpose of applying gel to the skin during an ultrasound procedure?", options: ["To cool the skin", "To lubricate the transducer", "To eliminate air pockets and ensure good transmission of sound waves", "To sterilize the skin surface"], answer: "To eliminate air pockets and ensure good transmission of sound waves" },
+            { question: "Which of the following is a major advantage of ultrasound imaging?", options: ["It provides the highest resolution images of bone.", "It does not use ionizing radiation.", "The equipment is inexpensive.", "The scan times are very short."], answer: "It does not use ionizing radiation." },
+            { question: "A significant disadvantage of ultrasound is that:", options: ["It cannot image soft tissues.", "It is harmful to the patient.", "Image quality is highly dependent on the operator's skill.", "It cannot be used to view moving structures."], answer: "Image quality is highly dependent on the operator's skill." },
+            { question: "An ultrasound transducer inserted into the esophagus to obtain images of the heart is called a:", options: ["Transrectal ultrasound", "Transvaginal ultrasound", "Transesophageal echocardiogram", "Cardiac catheterization"], answer: "Transesophageal echocardiogram" },
+            { question: "What type of wave is an ultrasound wave?", options: ["Transverse, electromagnetic", "Longitudinal, electromagnetic", "Transverse, mechanical", "Longitudinal, mechanical"], answer: "Longitudinal, mechanical" },
+            { question: "The intensity reflection coefficient depends on:", options: ["The sum of the acoustic impedances of the two media", "The product of the acoustic impedances of the two media", "The ratio of the acoustic impedances of the two media", "The difference and sum of the acoustic impedances of the two media"], answer: "The difference and sum of the acoustic impedances of the two media" },
+            { question: "Most solid organs in the body typically appear as what on an ultrasound?", options: ["Hyperechoic", "Hypoechoic", "Anechoic", "Transparent"], answer: "Hypoechoic" },
+            { question: "Which type of transducer is typically used for abdominal and general OB applications?", options: ["Linear transducer", "Curvilinear (convex) transducer", "Endo-cavity transducer", "Cardiac transducer"], answer: "Curvilinear (convex) transducer" },
+            { question: "The bending of an ultrasound beam as it passes from one medium to another is called:", options: ["Reflection", "Refraction", "Attenuation", "Scattering"], answer: "Refraction" },
+            { question: "Why is ultrasound not effective for imaging the lungs or intestines?", options: ["These organs are too deep in the body.", "The presence of gas causes almost complete reflection of the ultrasound waves.", "These organs move too much.", "The acoustic impedance of these tissues is too low."], answer: "The presence of gas causes almost complete reflection of the ultrasound waves." },
+            { question: "In the piezoelectric effect, applying an alternating current to the crystal causes it to:", options: ["Heat up", "Vibrate and produce ultrasound", "Emit light", "Become magnetic"], answer: "Vibrate and produce ultrasound" },
+            { question: "What is 'echogenicity'?", options: ["The speed of sound in a tissue", "The ability of a tissue to produce echoes (reflect sound)", "The frequency of the ultrasound wave", "The depth of penetration of the ultrasound wave"], answer: "The ability of a tissue to produce echoes (reflect sound)" },
+            { question: "Which of these materials has the highest acoustic impedance according to the provided table?", options: ["Air", "Water", "Fat", "Bone"], answer: "Bone" },
+            { question: "The 'A-scan' in ultrasound displays:", options: ["A 2D cross-sectional image", "A 3D image", "Echo amplitude versus depth", "Blood flow velocity"], answer: "Echo amplitude versus depth" },
+            { question: "The 'B-scan' in ultrasound displays:", options: ["A 2D cross-sectional image using brightness modulation", "Echo amplitude versus depth", "A graph of sound frequency", "Blood flow velocity"], answer: "A 2D cross-sectional image using brightness modulation" },
+            { question: "A linear array transducer is best suited for imaging:", options: ["Deep abdominal structures", "The heart", "Superficial structures like blood vessels", "The prostate"], answer: "Superficial structures like blood vessels" },
+            { question: "The intensity of an ultrasound beam generally ______ as it penetrates deeper into tissue.", options: ["Increases", "Decreases (attenuates)", "Stays constant", "Fluctuates randomly"], answer: "Decreases (attenuates)" },
+            { question: "Nuclear medicine imaging primarily provides information about:", options: ["The anatomy and structure of organs", "The physiology and function of organs", "The electrical activity of the brain", "The density of bones"], answer: "The physiology and function of organs" },
+            { question: "What is injected into the patient's body for a nuclear medicine procedure?", options: ["A contrast dye", "A sedative", "A radiopharmaceutical or radiotracer", "A saline solution"], answer: "A radiopharmaceutical or radiotracer" },
+            { question: "The radiotracers used in nuclear medicine emit which type of radiation that is detected by the camera?", options: ["Alpha particles", "Beta particles", "Gamma rays", "X-rays"], answer: "Gamma rays" },
+            { question: "PET stands for:", options: ["Positron Emission Tomography", "Proton Emission Tomography", "Photon Emission Tomography", "Paired Electron Tomography"], answer: "Positron Emission Tomography" },
+            { question: "The fundamental event that a PET scanner detects is:", options: ["Radioactive decay", "Positron emission", "Electron capture", "Annihilation of a positron and an electron"], answer: "Annihilation of a positron and an electron" },
+            { question: "When a positron and an electron annihilate, what is produced?", options: ["A single high-energy gamma ray", "A pair of gamma rays traveling in opposite directions", "An X-ray photon", "A neutron and a proton"], answer: "A pair of gamma rays traveling in opposite directions" },
+            { question: "The most commonly used radiotracer molecule for PET scans, especially in oncology, is:", options: ["Radioactive Iodine", "Technetium-99m", "Fluorodeoxyglucose (FDG)", "Gallium-67"], answer: "Fluorodeoxyglucose (FDG)" },
+            { question: "SPECT stands for:", options: ["Single Positron Emission Computed Tomography", "Single Photon Emission Computed Tomography", "Spectral Photon Emission Computed Tomography", "Systemic Positron Emission Computed Tomography"], answer: "Single Photon Emission Computed Tomography" },
+            { question: "What is a key difference between the radiotracers used in PET and SPECT?", options: ["PET tracers emit positrons; SPECT tracers emit gamma rays directly.", "PET tracers are sugars; SPECT tracers are proteins.", "PET tracers have longer half-lives than SPECT tracers.", "PET is used for the brain; SPECT is used for the heart."], answer: "PET tracers emit positrons; SPECT tracers emit gamma rays directly." },
+            { question: "How does a PET scanner detect the annihilation event?", options: ["By detecting a single gamma ray", "By detecting a flash of light", "By detecting two gamma rays in 'coincidence' (at nearly the same time)", "By measuring the patient's temperature change"], answer: "By detecting two gamma rays in 'coincidence' (at nearly the same time)" },
+            { question: "Compared to SPECT, PET generally offers:", options: ["Lower cost and lower image resolution", "Higher cost and higher image resolution", "Longer acquisition time and better anatomical detail", "Shorter acquisition time and lower image resolution"], answer: "Higher cost and higher image resolution" },
+            { question: "Which of these is a similarity between PET and SPECT?", options: ["They both use positron-emitting radiotracers.", "They both directly measure anatomical structures.", "They both use gamma rays to generate an image.", "They both have very low equipment costs."], answer: "They both use gamma rays to generate an image." },
+            { question: "The process of creating a PET image involves a computer reconstructing the data from the detectors into a:", options: ["2D image", "3D image", "Hologram", "Sound wave"], answer: "3D image" },
+            { question: "What is the role of the collimator in a gamma camera (used in SPECT and other nuclear imaging)?", options: ["To amplify the gamma rays", "To focus the gamma rays and determine their direction of origin", "To convert gamma rays into light", "To cool the detector"], answer: "To focus the gamma rays and determine their direction of origin" },
+            { question: "A PET scan is particularly useful for detecting cancer because:", options: ["Cancer cells are denser than normal cells.", "Cancer cells often have a higher metabolic rate and take up more glucose (FDG).", "Cancer cells emit their own radiation.", "Cancer cells are colder than normal cells."], answer: "Cancer cells often have a higher metabolic rate and take up more glucose (FDG)." },
+            { question: "The scintillation crystal in a gamma camera or PET detector has what function?", options: ["To absorb gamma rays and emit a flash of light", "To amplify the electrical signal", "To focus the gamma rays", "To generate the radiotracer"], answer: "To absorb gamma rays and emit a flash of light" },
+            { question: "The photomultiplier tubes (PMTs) in a detector serve to:", options: ["Generate gamma rays", "Detect the flash of light from the scintillator and convert it into an electrical signal", "Reconstruct the image", "Inject the radiotracer"], answer: "Detect the flash of light from the scintillator and convert it into an electrical signal" },
+            { question: "Which imaging modality is often combined with PET to provide both functional and anatomical information in a single scan?", options: ["MRI", "CT", "Ultrasound", "Standard X-ray"], answer: "CT" },
+            { question: "An advantage of PET is its ability to:", options: ["Image bone structure with high detail", "Be performed quickly and cheaply", "Detect diseases like Alzheimer's or epilepsy based on metabolic changes", "Be used on patients with metal implants without issue"], answer: "Detect diseases like Alzheimer's or epilepsy based on metabolic changes" },
+            { question: "The radioactive atoms used in PET tracers (like Fluorine-18) are characterized by having:", options: ["Very long half-lives", "An excess of neutrons", "Very short half-lives", "No electrical charge"], answer: "Very short half-lives" },
+            { question: "What is the name of the process where a positron is emitted from a nucleus?", options: ["Alpha decay", "Negative beta decay", "Positive beta decay (positron emission)", "Gamma emission"], answer: "Positive beta decay (positron emission)" },
+            { question: "After being emitted, a positron travels a short distance in tissue before it:", options: ["Decays into a proton", "Is absorbed by a nucleus", "Loses kinetic energy and annihilates with an electron", "Is detected directly by the PET scanner"], answer: "Loses kinetic energy and annihilates with an electron" },
+            { question: "The line connecting the two detectors that register a coincidence event in PET is called:", options: ["The line of sight", "The line of response", "The annihilation vector", "The gamma path"], answer: "The line of response" },
+            { question: "Compared to CT and MRI, nuclear medicine is generally better at showing:", options: ["Structural detail", "Bone fractures", "Physiological function", "Blood vessel blockages"], answer: "Physiological function" },
+            { question: "A 'hot spot' on a nuclear medicine scan typically indicates:", options: ["An area of decreased radiotracer uptake", "An area of increased radiotracer uptake and high metabolic activity", "A metallic implant", "An area of dead tissue"], answer: "An area of increased radiotracer uptake and high metabolic activity" },
+            { question: "MRI primarily uses a powerful magnetic field and what else to create images?", options: ["X-rays", "Sound waves", "Radio waves", "Gamma rays"], answer: "Radio waves" },
+            { question: "The nucleus of which atom is most commonly targeted in clinical MRI?", options: ["Oxygen", "Carbon", "Nitrogen", "Hydrogen"], answer: "Hydrogen" },
+            { question: "Why is this specific atom (from the previous question) chosen for MRI?", options: ["It is the largest atom in the body.", "It is abundant in water and fat, and has a suitable magnetic moment.", "It is the only atom that responds to radio waves.", "It is naturally radioactive."], answer: "It is abundant in water and fat, and has a suitable magnetic moment." },
+            { question: "What is the main role of the powerful, static magnetic field (B_0) in MRI?", options: ["To heat the patient's body", "To cause the hydrogen nuclei (protons) to align", "To generate the radio waves", "To detect the signals from the body"], answer: "To cause the hydrogen nuclei (protons) to align" },
+            { question: "The radio frequency (RF) pulse in an MRI sequence is used to:", options: ["Align the protons with the main magnetic field", "Cool the magnet", "Knock the aligned protons out of alignment", "Create the image on the computer screen"], answer: "Knock the aligned protons out of alignment" },
+            { question: "What happens immediately after the RF pulse is turned off?", options: ["The protons stay in their new alignment.", "The protons 'relax' and return to their original alignment, emitting a radio signal.", "The main magnet turns off.", "An X-ray is produced."], answer: "The protons 'relax' and return to their original alignment, emitting a radio signal." },
+            { question: "The signal detected by the MRI scanner is a:", options: ["Gamma ray", "Sound wave", "Radio wave", "Light flash"], answer: "Radio wave" },
+            { question: "The process of protons returning to their low-energy state aligned with the main magnetic field is called:", options: ["Excitation", "Resonance", "Relaxation", "Attenuation"], answer: "Relaxation" },
+            { question: "What are the two main types of relaxation in MRI?", options: ["Fast and Slow", "T1 and T2", "Longitudinal and Latitudinal", "Alpha and Beta"], answer: "T1 and T2" },
+            { question: "T1 relaxation (longitudinal relaxation) refers to the time it takes for protons to:", options: ["Realign with the main magnetic field (B_0)", "Lose phase coherence with each other", "Absorb the RF energy", "Vibrate at the Larmor frequency"], answer: "Realign with the main magnetic field (B_0)" },
+            { question: "T2 relaxation (transverse relaxation) refers to the time it takes for protons to:", options: ["Realign with the main magnetic field (B_0)", "Lose phase coherence with each other", "Absorb the RF energy", "Vibrate at the Larmor frequency"], answer: "Lose phase coherence with each other" },
+            { question: "In a T1-weighted image, tissues with a short T1 relaxation time (like fat) appear:", options: ["Dark", "Grey", "Bright", "Invisible"], answer: "Bright" },
+            { question: "In a T2-weighted image, tissues with a long T2 relaxation time (like fluid/water) appear:", options: ["Dark", "Grey", "Bright", "Invisible"], answer: "Bright" },
+            { question: "A major advantage of MRI is its:", options: ["Low cost and portability", "Excellent soft tissue contrast and detail", "Fast scan time", "Ability to image bone better than CT"], answer: "Excellent soft tissue contrast and detail" },
+            { question: "A significant disadvantage of MRI is that:", options: ["It uses harmful ionizing radiation.", "It cannot be used on patients with certain metallic or magnetic implants.", "It provides poor images of the brain.", "The images are always in black and white."], answer: "It cannot be used on patients with certain metallic or magnetic implants." },
+            { question: "The condition that the frequency of the RF pulse must match the precessional frequency of the protons is called:", options: ["Relaxation", "Attenuation", "Resonance", "Coherence"], answer: "Resonance" },
+            { question: "What is the purpose of the gradient coils in an MRI scanner?", options: ["They are the main source of the magnetic field.", "They provide spatial encoding to determine where the signal is coming from.", "They detect the radio signals.", "They cool the main magnet."], answer: "They provide spatial encoding to determine where the signal is coming from." },
+            { question: "Compared to CT, MRI is generally better for imaging:", options: ["Bone fractures", "Lungs", "Soft tissues like the brain, muscles, and ligaments", "The digestive tract"], answer: "Soft tissues like the brain, muscles, and ligaments" },
+            { question: "On an MRI image, an area that emits a high-intensity radio wave signal will appear:", options: ["Dark", "Bright", "Transparent", "Blurred"], answer: "Bright" },
+            { question: "Why might a patient hear a loud banging noise during an MRI scan?", options: ["It's the sound of the radio waves.", "It's the sound of the patient's protons relaxing.", "It's the sound of the gradient coils rapidly switching on and off.", "It's a warning signal that the machine is malfunctioning."], answer: "It's the sound of the gradient coils rapidly switching on and off." },
+            { question: "Which of the following conditions would MRI be particularly good at detecting?", options: ["A broken leg", "A lung infection", "A torn ligament in the knee", "A kidney stone"], answer: "A torn ligament in the knee" },
+            { question: "The precessional frequency of a proton in a magnetic field is described by the:", options: ["Lensmaker's Equation", "Doppler Equation", "Larmor Equation", "Beer-Lambert Law"], answer: "Larmor Equation" },
+            { question: "MRI is an abbreviation for:", options: ["Magnetic Radiation Imaging", "Magnetic Resonance Imaging", "Molecular Resonance Imaging", "Medical Radiation Imaging"], answer: "Magnetic Resonance Imaging" },
+            { question: "What percentage of the human body is composed of hydrogen atoms?", options: ["25%", "48%", "63%", "99%"], answer: "63%" },
+            { question: "The ability to change the image plane in MRI (e.g., from axial to sagittal) is achieved by:", options: ["Physically moving the patient", "Using different RF pulses", "Adjusting the gradient coils electronically", "Changing the main magnetic field strength"], answer: "Adjusting the gradient coils electronically" },
+            { question: "X-rays are a form of:", options: ["Sound waves", "Electromagnetic radiation", "Particulate radiation", "Mechanical waves"], answer: "Electromagnetic radiation" },
+            { question: "In an X-ray tube, X-rays are produced when high-speed _______ strike a metal target.", options: ["Protons", "Neutrons", "Electrons", "Photons"], answer: "Electrons" },
+            { question: "The metal target in an X-ray tube is also known as the:", options: ["Cathode", "Anode", "Filament", "Detector"], answer: "Anode" },
+            { question: "The continuous spectrum of X-rays produced by the slowing down of electrons as they pass near the nuclei of the target atoms is called:", options: ["Characteristic radiation", "Bremsstrahlung (braking radiation)", "Compton scattering", "Photoelectric effect"], answer: "Bremsstrahlung (braking radiation)" },
+            { question: "Characteristic X-rays are produced when:", options: ["An incoming electron is slowed down by the target.", "An incoming electron knocks out an inner-shell electron of a target atom, and a higher-shell electron fills the vacancy.", "The X-ray tube overheats.", "The X-ray beam passes through the patient."], answer: "An incoming electron knocks out an inner-shell electron of a target atom, and a higher-shell electron fills the vacancy." },
+            { question: "The minimum wavelength (or maximum energy) of the X-rays produced is determined by the:", options: ["Temperature of the filament", "Material of the target", "Accelerating voltage between the cathode and anode", "Size of the X-ray tube"], answer: "Accelerating voltage between the cathode and anode" },
+            { question: "The relationship between the energy of a photon (E) and its wavelength (λ) is:", options: ["E = λc", "E = hc/λ", "E = h/λ", "E = λ/hc"], answer: "E = hc/λ" },
+            { question: "The process by which an X-ray beam's intensity is reduced as it passes through matter is called:", options: ["Amplification", "Generation", "Attenuation", "Resonance"], answer: "Attenuation" },
+            { question: "The Beer-Lambert Law (I = I_0 e^-μx) describes the:", options: ["Production of X-rays", "Exponential attenuation of X-rays in a material", "Speed of X-rays in a vacuum", "Relationship between X-ray energy and frequency"], answer: "Exponential attenuation of X-rays in a material" },
+            { question: "In the Beer-Lambert Law, what does the symbol 'μ' represent?", options: ["The thickness of the material", "The initial intensity", "The linear attenuation coefficient", "The speed of light"], answer: "The linear attenuation coefficient" },
+            { question: "Which of the following materials would cause the most attenuation of an X-ray beam?", options: ["Air", "Soft tissue", "Fat", "Bone"], answer: "Bone" },
+            { question: "The photoelectric effect is an interaction where an X-ray photon:", options: ["Scatters off an outer-shell electron", "Is completely absorbed by an inner-shell electron, which is then ejected", "Creates an electron-positron pair", "Passes through the atom without interacting"], answer: "Is completely absorbed by an inner-shell electron, which is then ejected" },
+            { question: "Compton scattering occurs when an X-ray photon interacts with:", options: ["An inner-shell electron, with complete absorption", "The nucleus of an atom", "A loosely bound, outer-shell electron, resulting in a scattered photon of lower energy", "Another photon"], answer: "A loosely bound, outer-shell electron, resulting in a scattered photon of lower energy" },
+            { question: "Pair production can only occur if the incident X-ray photon has an energy greater than:", options: ["1.02 keV", "1.02 MeV", "10.2 eV", "10.2 GeV"], answer: "1.02 MeV" },
+            { question: "CT stands for:", options: ["Cathode Tube Tomography", "Computerized Transmission Tomography", "Computed Tomography", "Central Tomography"], answer: "Computed Tomography" },
+            { question: "What is the primary difference between a standard X-ray and a CT scan?", options: ["CT uses sound waves, while X-ray uses electromagnetic radiation.", "CT uses a single X-ray beam to create a 2D image, while standard X-ray uses multiple beams for a 3D image.", "CT uses multiple X-ray beams from different angles to create cross-sectional, 3D images.", "CT does not use ionizing radiation."], answer: "CT uses multiple X-ray beams from different angles to create cross-sectional, 3D images." },
+            { question: "An advantage of CT over standard X-ray is its ability to:", options: ["Be performed more cheaply", "Use a lower radiation dose", "Provide excellent images of bone only", "Eliminate the overlapping of structures and provide better images of soft tissues"], answer: "Eliminate the overlapping of structures and provide better images of soft tissues" },
+            { question: "A major disadvantage of CT scans is the:", options: ["Poor image quality", "Long scan time", "Relatively high radiation dose compared to a standard X-ray", "Inability to image bone"], answer: "Relatively high radiation dose compared to a standard X-ray" },
+            { question: "The 'half-value thickness' of a material is the thickness that reduces the X-ray beam's intensity by:", options: ["10%", "25%", "50%", "100%"], answer: "50%" },
+            { question: "On a standard X-ray film, dense materials like bone appear white because:", options: ["They emit their own light.", "They allow most X-rays to pass through to the film.", "They absorb or scatter most X-rays, preventing them from reaching the film.", "The film has a chemical reaction with calcium."], answer: "They absorb or scatter most X-rays, preventing them from reaching the film." },
+            { question: "A medical professional who is a doctor specializing in interpreting medical images like X-rays and CT scans is a:", options: ["Radiographer", "Sonographer", "Radiologist", "Physicist"], answer: "Radiologist" },
+            { question: "A medical professional who is a technician trained to operate the X-ray and CT equipment is a:", options: ["Radiographer", "Radiologist", "Pathologist", "Nurse"], answer: "Radiographer" },
+            { question: "The kinetic energy of an electron accelerated across a voltage V in an X-ray tube is given by:", options: ["KE = V/e", "KE = eV", "KE = mc^2", "KE = hf"], answer: "KE = eV" },
+            { question: "What is the main advantage of a standard X-ray machine?", options: ["Superior soft tissue detail", "3D image reconstruction", "It is relatively inexpensive and provides immediate results for bone-related issues.", "No radiation is used."], answer: "It is relatively inexpensive and provides immediate results for bone-related issues." },
+            { question: "The final image in a CT scan is generated by:", options: ["A photographic film", "A fluorescent screen", "A computer processing the data from the detectors", "A Polaroid camera"], answer: "A computer processing the data from the detectors" },
+            { question: "Which of the following imaging techniques does NOT use ionizing radiation?", options: ["CT Scan", "PET Scan", "MRI", "Standard X-ray"], answer: "MRI" },
+            { question: "Which imaging modality is based on detecting emissions from within the body rather than passing energy through the body?", options: ["CT Scan", "MRI", "Ultrasound", "PET Scan"], answer: "PET Scan" },
+            { question: "For imaging fine bone detail, such as a hairline fracture, which modality is generally the first choice and most effective?", options: ["MRI", "Ultrasound", "PET", "X-ray / CT"], answer: "X-ray / CT" },
+            { question: "For imaging a torn ligament or cartilage in a joint, which modality provides the best detail?", options: ["MRI", "CT", "PET", "Standard X-ray"], answer: "MRI" },
+            { question: "Which of these waves requires a medium to travel?", options: ["X-rays", "Gamma rays", "Radio waves", "Sound waves"], answer: "Sound waves" },
+            { question: "The speed of light (and all electromagnetic waves) in a vacuum is approximately:", options: ["3 x 10^6 m/s", "3 x 10^8 m/s", "343 m/s", "1540 m/s"], answer: "3 x 10^8 m/s" },
+            { question: "The relationship v = fλ applies to:", options: ["Only sound waves", "Only light waves", "All wave phenomena", "Only waves in a vacuum"], answer: "All wave phenomena" },
+            { question: "Which of the following lists electromagnetic waves in order of increasing energy?", options: ["X-ray, Radio, Visible Light", "Radio, Visible Light, X-ray", "Visible Light, X-ray, Radio", "X-ray, Visible Light, Radio"], answer: "Radio, Visible Light, X-ray" },
+            { question: "The 'tomography' in PET, SPECT, and CT refers to the process of:", options: ["Using radiation", "Creating an image from slices or cross-sections", "Injecting a substance into the body", "Using a computer to analyze data"], answer: "Creating an image from slices or cross-sections" },
+            { question: "Which two modalities are often combined to create a 'fusion' image showing both function and anatomy?", options: ["MRI and Ultrasound", "PET and CT", "X-ray and Ultrasound", "MRI and X-ray"], answer: "PET and CT" },
+            { question: "The piezoelectric effect is the underlying principle for which modality?", options: ["MRI", "CT", "Ultrasound", "PET"], answer: "Ultrasound" },
+            { question: "The annihilation of matter and antimatter (electron and positron) is the key principle for which modality?", options: ["MRI", "CT", "Ultrasound", "PET"], answer: "PET" },
+            { question: "The phenomenon of nuclear magnetic resonance is the key principle for which modality?", options: ["MRI", "CT", "Ultrasound", "PET"], answer: "MRI" },
+            { question: "The differential absorption of penetrating electromagnetic radiation is the key principle for which modality?", options: ["MRI", "CT / X-ray", "Ultrasound", "PET"], answer: "CT / X-ray" },
+            { question: "Which modality would be the safest choice for imaging a fetus during pregnancy?", options: ["CT Scan", "Ultrasound", "PET Scan", "Standard X-ray"], answer: "Ultrasound" },
+            { question: "An optician's prescription for a lens is -4.0 D. What is the focal length of this lens?", options: ["-4.0 m", "+4.0 m", "-0.25 m", "+0.25 m"], answer: "-0.25 m" },
+            { question: "A sound has an intensity of 1.0 x 10^-2 W/m^2. What is its intensity level? (I_0 = 1 x 10^-12 W/m^2)", options: ["10 dB", "20 dB", "100 dB", "120 dB"], answer: "100 dB" },
+            { question: "An X-ray tube operates at a voltage of 62 kV. What is the minimum wavelength of the X-rays produced? (Use h = 6.63 x 10^-34 Js, c = 3 x 10^8 m/s, e = 1.6 x 10^-19 C)", options: ["2.0 x 10^-11 m", "2.0 x 10^-14 m", "5.0 x 10^10 m", "5.0 x 10^13 m"], answer: "2.0 x 10^-11 m" },
+            { question: "Calculate the acoustic impedance of bone, given its density is 1900 kg/m^3 and the speed of sound in it is 4080 m/s.", options: ["7.75 x 10^6 Rayl", "2.15 x 10^-1 Rayl", "5980 Rayl", "0.46 Rayl"], answer: "7.75 x 10^6 Rayl" },
+            { question: "An ultrasound beam with incident intensity I_i strikes an interface between fat (Z_1 = 1.38 x 10^6 Rayl) and muscle (Z_2 = 1.70 x 10^6 Rayl). What percentage of the intensity is reflected?", options: ["~0.1%", "~1.0%", "~10%", "~50%"], answer: "~1.0%" },
+            { question: "A beam of X-rays passing through 3.0 cm of a material is reduced in intensity to 25% of its initial value. What is the linear attenuation coefficient (μ)? (Hint: ln(0.25) ≈ -1.386)", options: ["0.462 cm⁻¹", "0.083 cm⁻¹", "4.16 cm⁻¹", "1.386 cm⁻¹"], answer: "0.462 cm⁻¹" },
+            { question: "The lens-retina distance of an eye is 2.0 cm (0.02 m). What is the power of the eye when it is focused on a very distant object (unaccommodated)?", options: ["+2.0 D", "+20 D", "+50 D", "+100 D"], answer: "+50 D" },
+            { question: "A long-sighted person has a near point of 1.0 m. What power of corrective lens is needed to allow them to read a book held at the normal near point of 0.25 m?", options: ["+1.0 D", "+3.0 D", "+4.0 D", "+5.0 D"], answer: "+3.0 D" },
+            { question: "The frequency of an ultrasound transducer is 5 MHz. What is its period?", options: ["5.0 s", "0.2 s", "5.0 μs", "0.2 μs"], answer: "0.2 μs" },
+            { question: "What is the primary cause of myopia?", options: ["The eyeball is too short.", "The cornea is too flat.", "The eye lens cannot become thin enough or the eyeball is too long.", "The ciliary muscles are too weak."], answer: "The eye lens cannot become thin enough or the eyeball is too long." },
+            { question: "What is the primary cause of hypermetropia?", options: ["The eyeball is too long.", "The cornea is too curved.", "The eye lens cannot become thick enough or the eyeball is too short.", "The retina is detached."], answer: "The eye lens cannot become thick enough or the eyeball is too short." },
+            { question: "In which part of the ear does the conversion from wave signal to mechanical vibration occur?", options: ["Pinna", "Eardrum", "Cochlea", "Eustachian tube"], answer: "Eardrum" },
+            { question: "In which part of the ear does the conversion from mechanical vibration to electrical signal occur?", options: ["Ossicles", "Eardrum", "Cochlea", "Auditory Canal"], answer: "Cochlea" },
+            { question: "Which of the following statements about PET vs. CT is true?", options: ["PET uses X-rays, while CT uses gamma rays.", "PET measures function, while CT measures structure.", "PET is cheaper than CT.", "PET provides better bone detail than CT."], answer: "PET measures function, while CT measures structure." },
+            { question: "Which of the following statements about MRI vs. CT is true?", options: ["MRI uses ionizing radiation, while CT does not.", "MRI is faster than CT.", "MRI provides superior soft tissue contrast.", "MRI is the preferred method for imaging lungs."], answer: "MRI provides superior soft tissue contrast." },
+            { question: "The term 'anechoic' in ultrasound means:", options: ["Strong reflection", "Weak reflection", "No reflection (echo-free)", "Equal reflection"], answer: "No reflection (echo-free)" },
+            { question: "The term 'Bremsstrahlung' refers to:", options: ["Radiation from electron shell transitions.", "Radiation from the annihilation of a positron.", "Radiation from the slowing down of an electron.", "Radiation used in MRI."], answer: "Radiation from the slowing down of an electron." },
+            { question: "The Larmor frequency in MRI depends on the type of nucleus and the:", options: ["Temperature of the patient", "Strength of the main magnetic field", "Power of the radio frequency pulse", "Speed of the gradient coils"], answer: "Strength of the main magnetic field" },
+            { question: "A short-sighted eye has a far point of 50 cm (0.5 m). What is the power of the corrective lens needed?", options: ["+0.5 D", "-0.5 D", "+2.0 D", "-2.0 D"], answer: "-2.0 D" },
+            { question: "The function of the iris is to:", options: ["Focus light onto the retina", "Control the amount of light entering the eye by adjusting pupil size", "Detect color and detail", "Hold the lens in place"], answer: "Control the amount of light entering the eye by adjusting pupil size" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
