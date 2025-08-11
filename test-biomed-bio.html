@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biomedical Science Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biomedical Science & Medical Biology Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge across a wide range of biomedical topics. You will have 200 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biomedical Science Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 200</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 200</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which category of biotechnology primarily deals with applications in medicine and pharmaceuticals?", options: ["Green biotechnology", "White biotechnology", "Blue biotechnology", "Red biotechnology", "Industrial biotechnology"], answer: "Red biotechnology" },
+            { question: "What is the primary purpose of gene cloning?", options: ["To create a new species", "To produce many identical copies of a single gene", "To sequence the entire genome of an organism", "To diagnose genetic diseases directly", "To create a hybrid organism"], answer: "To produce many identical copies of a single gene" },
+            { question: "What is the function of a restriction enzyme in genetic engineering?", options: ["To join two DNA fragments together", "To replicate DNA in a host cell", "To cut DNA at specific recognition sequences", "To synthesize proteins from a DNA template", "To unwind the DNA double helix"], answer: "To cut DNA at specific recognition sequences" },
+            { question: "The short, single-stranded overhangs created by some restriction enzymes are known as:", options: ["Blunt ends", "Promoters", "Sticky ends", "Plasmids", "Vectors"], answer: "Sticky ends" },
+            { question: "Which of the following is a commonly used vector for cloning small DNA fragments in bacteria?", options: ["Yeast Artificial Chromosome (YAC)", "Human Artificial Chromosome (HAC)", "Plasmid", "Cosmid", "Bacteriophage"], answer: "Plasmid" },
+            { question: "In the process of creating recombinant DNA, which enzyme is used to join the gene of interest and the vector DNA?", options: ["DNA polymerase", "DNA ligase", "Restriction enzyme", "Helicase", "Reverse transcriptase"], answer: "DNA ligase" },
+            { question: "What is the purpose of treating bacteria with a solution of high calcium ion concentration and heat shock?", options: ["To kill the bacteria", "To increase the permeability of the bacterial cell wall to plasmids", "To activate the inserted gene", "To extract plasmids from the bacteria", "To make the bacteria resistant to antibiotics"], answer: "To increase the permeability of the bacterial cell wall to plasmids" },
+            { question: "In the context of the lac operon, what molecule binds to the repressor protein to allow transcription of the structural genes?", options: ["Glucose", "Lactose (or allolactose)", "RNA polymerase", "cAMP", "The operator sequence"], answer: "Lactose (or allolactose)" },
+            { question: "The polymerase chain reaction (PCR) is used to:", options: ["Separate DNA fragments by size", "Insert genes into plasmids", "Cut DNA at specific sites", "Amplify a specific segment of DNA", "Sequence a DNA molecule"], answer: "Amplify a specific segment of DNA" },
+            { question: "What are the three main steps in a single PCR cycle, in the correct order?", options: ["Annealing, Extension, Denaturation", "Extension, Denaturation, Annealing", "Denaturation, Annealing, Extension", "Denaturation, Ligation, Extension", "Annealing, Ligation, Denaturation"], answer: "Denaturation, Annealing, Extension" },
+            { question: "At what stage of PCR do short DNA primers bind to the template DNA?", options: ["Denaturation", "Extension", "Ligation", "Annealing", "Synthesis"], answer: "Annealing" },
+            { question: "What is the key characteristic of the DNA polymerase (Taq polymerase) used in PCR?", options: ["It is derived from human cells", "It is heat-stable and can withstand high temperatures", "It only works at low temperatures", "It can also function as a restriction enzyme", "It synthesizes RNA instead of DNA"], answer: "It is heat-stable and can withstand high temperatures" },
+            { question: "What are VNTRs (Variable Number Tandem Repeats) used for?", options: ["Gene therapy", "Producing vaccines", "Genetic profiling (DNA fingerprinting)", "Cloning organisms", "Creating GM crops"], answer: "Genetic profiling (DNA fingerprinting)" },
+            { question: "In gel electrophoresis, how are DNA fragments separated?", options: ["By their sequence", "By their size", "By their charge-to-mass ratio", "By their origin (e.g., viral or bacterial)", "By their shape"], answer: "By their size" },
+            { question: "What is the goal of gene therapy?", options: ["To create a genetically modified organism", "To introduce a normal copy of a defective gene into a patient's cells", "To diagnose a genetic disease", "To produce large quantities of a specific protein", "To amplify DNA for analysis"], answer: "To introduce a normal copy of a defective gene into a patient's cells" },
+            { question: "The production of human insulin in genetically modified bacteria is an example of creating a:", options: ["Recombinant vaccine", "Monoclonal antibody", "Biopharmaceutical", "Genetically modified crop", "Transgenic animal"], answer: "Biopharmaceutical" },
+            { question: "What was the primary advantage of using GM bacteria to produce human insulin over using insulin from pigs or cattle?", options: ["It was cheaper to produce", "It provided a reliable supply independent of the meat trade", "It was more effective at treating diabetes", "It had fewer side effects", "It could be administered orally"], answer: "It provided a reliable supply independent of the meat trade" },
+            { question: "Golden Rice is a genetically modified crop designed to combat deficiency of which vitamin?", options: ["Vitamin C", "Vitamin D", "Vitamin B12", "Vitamin A", "Vitamin K"], answer: "Vitamin A" },
+            { question: "Monoclonal antibodies are produced by fusing a plasma cell with a:", options: ["Bacterial cell", "Yeast cell", "Cancer cell (myeloma)", "Red blood cell", "Stem cell"], answer: "Cancer cell (myeloma)" },
+            { question: "The CRISPR/Cas9 system is a revolutionary tool used for:", options: ["DNA sequencing", "Gene editing", "Protein synthesis", "Cell division", "DNA amplification"], answer: "Gene editing" },
+            { question: "What is the role of the guide RNA (gRNA) in the CRISPR/Cas9 system?", options: ["It cuts the target DNA", "It directs the Cas9 enzyme to a specific DNA sequence", "It repairs the cut DNA", "It translates the DNA into protein", "It carries the genetic modification"], answer: "It directs the Cas9 enzyme to a specific DNA sequence" },
+            { question: "A vector designed to carry very large DNA fragments (100-300kb) in E. coli, based on the F factor plasmid, is called a:", options: ["Standard plasmid", "Cosmid", "Phage", "Bacterial Artificial Chromosome (BAC)", "Yeast Artificial Chromosome (YAC)"], answer: "Bacterial Artificial Chromosome (BAC)" },
+            { question: "What is the function of a promoter in gene expression?", options: ["It is the region of DNA where translation begins", "It is a protein that binds to DNA to block transcription", "It is the region of DNA where RNA polymerase binds to start transcription", "It is a sequence that signals the end of transcription", "It is the gene that codes for a repressor protein"], answer: "It is the region of DNA where RNA polymerase binds to start transcription" },
+            { question: "In DNA fingerprinting, what is the purpose of using a radioactive or fluorescent probe?", options: ["To cut the DNA into fragments", "To amplify the DNA sample", "To separate the DNA fragments in the gel", "To visualize the specific DNA bands (VNTRs)", "To denature the DNA strands"], answer: "To visualize the specific DNA bands (VNTRs)" },
+            { question: "The use of DNA technology to detect the presence of HIV in a patient's blood is an application in:", options: ["Biopharmaceutical production", "Gene therapy", "Infectious disease diagnosis", "Vaccine development", "Agricultural biotechnology"], answer: "Infectious disease diagnosis" },
+            { question: "Clinical enzymology is primarily concerned with:", options: ["The synthesis of new enzymes in the lab", "Using enzyme analysis for the diagnosis and treatment of disease", "The study of enzyme structure", "The industrial application of enzymes", "The genetic engineering of enzymes"], answer: "Using enzyme analysis for the diagnosis and treatment of disease" },
+            { question: "An International Unit (IU) of enzyme activity is defined as the amount of enzyme that transforms:", options: ["One mole of substrate per second", "One microgram of substrate per minute", "One millimole of substrate per hour", "One micromole of substrate per minute", "One gram of product per second"], answer: "One micromole of substrate per minute" },
+            { question: "Which of the following enzymes is considered more specific to the liver, as its elevation is rarely seen in diseases of other tissues?", options: ["Aspartate transaminase (AST)", "Alanine transaminase (ALT)", "Creatine kinase (CK)", "Lactate dehydrogenase (LDH)", "Amylase"], answer: "Alanine transaminase (ALT)" },
+            { question: "An AST/ALT ratio significantly higher than 2:1 is strongly indicative of which condition?", options: ["Acute viral hepatitis", "Non-alcoholic fatty liver disease", "Alcoholic liver disease", "Drug-related liver toxicity", "Carcinoma of the liver"], answer: "Alcoholic liver disease" },
+            { question: "In which of the following conditions would you expect the activity of AST to be higher than ALT?", options: ["Acute viral hepatitis", "Cirrhosis", "Non-alcoholic fatty liver disease", "Early stage liver damage", "A healthy individual"], answer: "Cirrhosis" },
+            { question: "Elevation of serum Creatine Kinase (CK) activity is a key indicator of damage to which tissues?", options: ["Liver and pancreas", "Kidney and spleen", "Heart muscle and skeletal muscle", "Lungs and skin", "Bone and cartilage"], answer: "Heart muscle and skeletal muscle" },
+            { question: "What is the primary function of Creatine Kinase (CK) in muscle cells?", options: ["To break down glucose for energy", "To synthesize proteins for muscle repair", "To rephosphorylate ADP to ATP during muscle contraction", "To transport oxygen within the muscle", "To catalyze the conversion of lactate to pyruvate"], answer: "To rephosphorylate ADP to ATP during muscle contraction" },
+            { question: "Elevated levels of Lactate Dehydrogenase (LDH) in the blood generally indicate:", options: ["A specific type of cancer", "Some form of tissue damage", "A viral infection only", "An allergic reaction", "A hormonal imbalance"], answer: "Some form of tissue damage" },
+            { question: "A high level of LDH in cerebrospinal fluid (CSF) is more indicative of which type of meningitis?", options: ["Viral meningitis", "Fungal meningitis", "Parasitic meningitis", "Bacterial meningitis", "Aseptic meningitis"], answer: "Bacterial meningitis" },
+            { question: "The majority of the total body fluid is found in which compartment?", options: ["Intracellular fluid (ICF)", "Extracellular fluid (ECF)", "Plasma", "Interstitial fluid", "Lymph"], answer: "Intracellular fluid (ICF)" },
+            { question: "Cerebrospinal fluid (CSF) is primarily produced by the:", options: ["Pituitary gland", "Arachnoid granulations", "Choroid plexus", "Pineal gland", "Neurons in the cerebral cortex"], answer: "Choroid plexus" },
+            { question: "A normal, healthy CSF sample should appear:", options: ["Cloudy and white", "Yellow and viscous", "Red and opaque", "Clear and colorless", "Green and turbid"], answer: "Clear and colorless" },
+            { question: "An elevated CSF protein level can be an indication of:", options: ["A healthy blood-brain barrier", "Dehydration", "Damage to the blood-brain barrier, as seen in meningitis", "Low blood sugar", "Normal brain function"], answer: "Damage to the blood-brain barrier, as seen in meningitis" },
+            { question: "The CSF/Serum Albumin Index is used to assess the integrity of the:", options: ["Liver function", "Kidney function", "Blood-brain barrier", "Myelin sheath", "Immune system"], answer: "Blood-brain barrier" },
+            { question: "In a patient with multiple sclerosis, what would you expect to find in a CSF protein electrophoresis?", options: ["A general decrease in all proteins", "Oligoclonal bands of IgG present in CSF but not in serum", "A high level of albumin only", "No protein bands at all", "A pattern identical to the serum electrophoresis"], answer: "Oligoclonal bands of IgG present in CSF but not in serum" },
+            { question: "Hypoglycorrhachia (low glucose in CSF) is a characteristic finding in:", options: ["Viral meningitis", "A brain tumor", "Bacterial meningitis", "A stroke", "Multiple sclerosis"], answer: "Bacterial meningitis" },
+            { question: "Synovial fluid is found in the:", options: ["Cavities of joints", "Space surrounding the heart", "Ventricles of the brain", "Sac surrounding the fetus", "Abdominal cavity"], answer: "Cavities of joints" },
+            { question: "A large decrease in glucose concentration in synovial fluid compared to blood serum suggests:", options: ["Gout", "Osteoarthritis", "A fracture", "Joint inflammation or infection", "Normal joint function"], answer: "Joint inflammation or infection" },
+            { question: "A high level of uric acid in synovial fluid is a key diagnostic marker for:", options: ["Rheumatoid arthritis", "Gout", "Septic arthritis", "Lupus", "A torn ligament"], answer: "Gout" },
+            { question: "Amniotic fluid analysis is performed to assess the health of the:", options: ["Mother", "Placenta", "Fetus", "Uterus", "Ovaries"], answer: "Fetus" },
+            { question: "An elevated level of Alpha-fetoprotein (AFP) in amniotic fluid is associated with an increased risk of:", options: ["Down syndrome", "Neural tube defects", "Cystic fibrosis", "Gestational diabetes", "Haemolytic Disease of the Newborn (HDN)"], answer: "Neural tube defects" },
+            { question: "The term 'etiology' in pathology refers to the:", options: ["Evolution or mechanism of a disease", "Structural changes caused by a disease", "Cause of a disease", "Signs and symptoms of a disease", "Probable outcome of a disease"], answer: "Cause of a disease" },
+            { question: "The sequence of events from the initial stimulus to the ultimate expression of a disease is known as its:", options: ["Etiology", "Morphology", "Prognosis", "Pathogenesis", "Diagnosis"], answer: "Pathogenesis" },
+            { question: "Which term describes a disease with a sudden onset and a rapid course?", options: ["Chronic", "Intercurrent", "Idiopathic", "Acute", "Teratogenic"], answer: "Acute" },
+            { question: "The etiologic agent for chickenpox is:", options: ["Human Papillomavirus (HPV)", "Human Immunodeficiency Virus (HIV)", "Varicella-zoster virus (VZV)", "Staphylococcus aureus", "Influenza virus"], answer: "Varicella-zoster virus (VZV)" },
+            { question: "Which of the following best defines a carcinoma?", options: ["A benign tumor of connective tissue", "A malignant tumor of epithelial cells", "A benign tumor of glandular tissue", "A malignant tumor of muscle tissue", "A cancer of the blood cells"], answer: "A malignant tumor of epithelial cells" },
+            { question: "A malignant tumor arising from connective tissue, such as bone or muscle, is called a:", options: ["Carcinoma", "Adenoma", "Lymphoma", "Sarcoma", "Leukemia"], answer: "Sarcoma" },
+            { question: "What is the most critical difference between a benign and a malignant tumor?", options: ["The size of the tumor", "The speed of growth", "The ability to invade surrounding tissues and metastasize", "The location of the tumor in the body", "The presence of a capsule"], answer: "The ability to invade surrounding tissues and metastasize" },
+            { question: "How does cancer typically affect the cell cycle?", options: ["It enhances the function of checkpoints", "It forces cells to enter a non-dividing state (G0)", "It dysregulates the cell cycle, leading to uncontrolled proliferation", "It causes all cells to divide at the same rate", "It only affects the M phase (mitosis)"], answer: "It dysregulates the cell cycle, leading to uncontrolled proliferation" },
+            { question: "A normal, non-mutated gene that, when mutated, can become an oncogene is called a:", options: ["Tumor-suppressor gene", "Proto-oncogene", "Carcinogen", "Mutagen", "Apoptosis gene"], answer: "Proto-oncogene" },
+            { question: "The function of a tumor-suppressor gene, like p53, is to:", options: ["Promote cell division", "Limit cell division, repair DNA, and promote apoptosis", "Cause mutations in other genes", "Stimulate the formation of new blood vessels", "Help cancer cells evade the immune system"], answer: "Limit cell division, repair DNA, and promote apoptosis" },
+            { question: "For a tumor-suppressor gene to contribute to cancer development, what usually needs to happen?", options: ["One allele of the gene must be mutated (gain-of-function)", "Both alleles of the gene must be inactivated (loss-of-function)", "The gene must be overexpressed", "The gene must be translocated to a new chromosome", "The gene must be activated by a growth factor"], answer: "Both alleles of the gene must be inactivated (loss-of-function)" },
+            { question: "The process by which cancer cells spread from the primary tumor to other parts of the body is called:", options: ["Angiogenesis", "Apoptosis", "Proliferation", "Metastasis", "Differentiation"], answer: "Metastasis" },
+            { question: "The formation of new blood vessels to supply a growing tumor is known as:", options: ["Metastasis", "Angiogenesis", "Invasiveness", "Apoptosis", "Carcinogenesis"], answer: "Angiogenesis" },
+            { question: "Which of the following is an example of a carcinogen?", options: ["The p53 protein", "A proto-oncogene", "Arsenic in tobacco smoke", "A benign tumor", "An antibody"], answer: "Arsenic in tobacco smoke" },
+            { question: "High-risk strains of which virus are a major cause of cervical cancer?", options: ["Influenza virus", "Varicella-zoster virus (VZV)", "Human Immunodeficiency Virus (HIV)", "Human Papillomavirus (HPV)", "Epstein-Barr virus"], answer: "Human Papillomavirus (HPV)" },
+            { question: "Cancer cells often 'ignore' contact inhibition, which means:", options: ["They stop dividing when they touch other cells", "They continue to divide and pile up on top of each other", "They require contact with other cells to grow", "They are unable to attach to surfaces", "They communicate effectively with neighboring cells"], answer: "They continue to divide and pile up on top of each other" },
+            { question: "Programmed cell death, a process often evaded by cancer cells, is called:", options: ["Necrosis", "Mitosis", "Apoptosis", "Meiosis", "Lysis"], answer: "Apoptosis" },
+            { question: "The p53 gene is often called the 'guardian of the genome' because it can:", options: ["Directly kill cancer cells", "Block the cell cycle if DNA damage is detected", "Mutate other genes to cause cancer", "Promote angiogenesis", "Make cells immortal"], answer: "Block the cell cycle if DNA damage is detected" },
+            { question: "A fibroadenoma is a benign, mixed tumor commonly found in the:", options: ["Lung", "Liver", "Brain", "Breast", "Bone"], answer: "Breast" },
+            { question: "The regulation of an enzyme by the binding of a molecule at a site other than the active site is called:", options: ["Competitive inhibition", "Allosteric regulation", "Covalent modification", "Proteolytic cleavage", "Feedback inhibition"], answer: "Allosteric regulation" },
+            { question: "When an allosteric inhibitor binds to an enzyme, it typically:", options: ["Increases the enzyme's affinity for its substrate", "Stabilizes the active form of the enzyme", "Binds to the active site", "Stabilizes the inactive form of the enzyme", "Is permanently attached to the enzyme"], answer: "Stabilizes the inactive form of the enzyme" },
+            { question: "The activation of an enzyme by the irreversible removal of a part of its polypeptide chain is known as:", options: ["Allosteric activation", "Phosphorylation", "Feedback inhibition", "Proteolytic activation", "Denaturation"], answer: "Proteolytic activation" },
+            { question: "The inactive precursor form of an enzyme, such as pepsinogen, is called a:", options: ["Holoenzyme", "Apoenzyme", "Coenzyme", "Zymogen", "Isozyme"], answer: "Zymogen" },
+            { question: "In a metabolic pathway, when the final product inhibits an earlier enzyme in the pathway, this is an example of:", options: ["Allosteric activation", "Positive feedback", "Feedback inhibition", "Proteolytic cleavage", "Competitive inhibition"], answer: "Feedback inhibition" },
+            { question: "The release of insulin in response to high blood glucose levels is an example of which type of hormone regulation?", options: ["Hormonal stimulus", "Neural stimulus", "Humoral stimulus", "Mechanical stimulus", "Positive feedback"], answer: "Humoral stimulus" },
+            { question: "A tropic hormone is a hormone that:", options: ["Acts on non-endocrine tissues", "Is released in response to neural signals", "Stimulates another endocrine gland to release its hormone", "Is produced by the target organ", "Is only active in tropical climates"], answer: "Stimulates another endocrine gland to release its hormone" },
+            { question: "Hypersecretion of growth hormone in an adult, after the fusion of growth plates, leads to a condition called:", options: ["Gigantism", "Dwarfism", "Acromegaly", "Cretinism", "Cushing's syndrome"], answer: "Acromegaly" },
+            { question: "What is the simplest form of carbohydrate?", options: ["Disaccharide", "Polysaccharide", "Oligosaccharide", "Monosaccharide", "Glycogen"], answer: "Monosaccharide" },
+            { question: "Sucrose, or table sugar, is a disaccharide composed of which two monosaccharides?", options: ["Glucose and glucose", "Glucose and galactose", "Glucose and fructose", "Fructose and galactose", "Fructose and fructose"], answer: "Glucose and fructose" },
+            { question: "In humans, excess glucose is stored in the liver and muscles in the form of a polysaccharide called:", options: ["Starch", "Cellulose", "Glycogen", "Chitin", "Fructose"], answer: "Glycogen" },
+            { question: "Type 1 diabetes is an autoimmune disease characterized by:", options: ["The body's cells becoming resistant to insulin", "The destruction of beta cells in the pancreas, leading to no insulin production", "The overproduction of insulin", "High blood glucose levels only during pregnancy", "A deficiency in glucagon"], answer: "The destruction of beta cells in the pancreas, leading to no insulin production" },
+            { question: "The sequence of amino acids in a polypeptide chain represents its:", options: ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure", "Active site"], answer: "Primary structure" },
+            { question: "The alpha-helix and beta-pleated sheet are examples of which level of protein structure?", options: ["Primary", "Secondary", "Tertiary", "Quaternary", "Pentanary"], answer: "Secondary" },
+            { question: "The overall three-dimensional, folded shape of a single polypeptide chain is its:", options: ["Primary structure", "Secondary structure", "Tertiary structure", "Quaternary structure", "Domain structure"], answer: "Tertiary structure" },
+            { question: "Which type of bond is most important for maintaining the primary structure of a protein?", options: ["Hydrogen bonds", "Ionic bonds", "Disulfide bonds", "Peptide bonds", "Hydrophobic interactions"], answer: "Peptide bonds" },
+            { question: "A disease caused by a severe deficiency of protein in the diet, often characterized by edema (swelling), is:", options: ["Scurvy", "Rickets", "Kwashiorkor", "Pellagra", "Beriberi"], answer: "Kwashiorkor" },
+            { question: "What is the key chemical difference between a saturated and an unsaturated fatty acid?", options: ["The presence of a carboxyl group", "The length of the hydrocarbon chain", "The presence of one or more double bonds in the hydrocarbon chain", "The number of oxygen atoms", "The presence of a phosphate group"], answer: "The presence of one or more double bonds in the hydrocarbon chain" },
+            { question: "A triglyceride is composed of:", options: ["Three fatty acids and one glycerol molecule", "One fatty acid and three glycerol molecules", "Three amino acids and one glycerol molecule", "Three monosaccharides and one fatty acid", "A phosphate group, a glycerol, and two fatty acids"], answer: "Three fatty acids and one glycerol molecule" },
+            { question: "Which of the following is a function of lipids in the body?", options: ["Acting as the primary source of genetic information", "Catalyzing biochemical reactions as enzymes", "Long-term energy storage and insulation", "Forming the structure of muscles and hair", "Transporting oxygen in the blood"], answer: "Long-term energy storage and insulation" },
+            { question: "Which of the following is a fat-soluble vitamin?", options: ["Vitamin C", "Vitamin B1 (Thiamine)", "Vitamin D", "Vitamin B9 (Folic acid)", "Vitamin B12 (Cobalamin)"], answer: "Vitamin D" },
+            { question: "A deficiency in Vitamin C can lead to which disease?", options: ["Rickets", "Scurvy", "Beriberi", "Pellagra", "Night blindness"], answer: "Scurvy" },
+            { question: "Rickets, a condition causing bone deformities in children, is caused by a deficiency in:", options: ["Vitamin A", "Vitamin C", "Calcium and/or Vitamin D", "Vitamin K", "Iron"], answer: "Calcium and/or Vitamin D" },
+            { question: "Which vitamin is essential for the synthesis of visual pigments and the maintenance of epithelial tissues?", options: ["Vitamin E", "Vitamin K", "Vitamin B6", "Vitamin A", "Vitamin B2"], answer: "Vitamin A" },
+            { question: "A deficiency in Vitamin B1 (Thiamine) causes a disease of the nervous system called:", options: ["Scurvy", "Pellagra", "Anemia", "Rickets", "Beriberi"], answer: "Beriberi" },
+            { question: "Which of the following biomolecules are the primary components of cell membranes?", options: ["Polysaccharides", "DNA and RNA", "Phospholipids and proteins", "Triglycerides", "Vitamins"], answer: "Phospholipids and proteins" },
+            { question: "The bond that links two amino acids together in a protein is called a(n):", options: ["Ester bond", "Glycosidic bond", "Peptide bond", "Hydrogen bond", "Phosphodiester bond"], answer: "Peptide bond" },
+            { question: "The bond that links two monosaccharides together in a disaccharide is called a(n):", options: ["Ester bond", "Glycosidic bond", "Peptide bond", "Hydrogen bond", "Phosphodiester bond"], answer: "Glycosidic bond" },
+            { question: "Which of the following is NOT a function of proteins?", options: ["Catalyzing reactions (enzymes)", "Transport (hemoglobin)", "Storing genetic information", "Immune defense (antibodies)", "Structural support (collagen)"], answer: "Storing genetic information" },
+            { question: "Niemann-Pick disease is a lipid storage disorder caused by the harmful accumulation of:", options: ["Glucose and glycogen", "Amino acids and proteins", "Fatty substances and cholesterol", "Vitamins and minerals", "Uric acid"], answer: "Fatty substances and cholesterol" },
+            { question: "Which of the following is a water-soluble vitamin?", options: ["Vitamin A", "Vitamin D", "Vitamin E", "Vitamin K", "Vitamin C"], answer: "Vitamin C" },
+            { question: "Folic acid (Vitamin B9) is particularly important for preventing which type of condition?", options: ["Skin lesions", "Blood clotting disorders", "Neural tube defects in newborns", "Scurvy", "Rickets"], answer: "Neural tube defects in newborns" },
+            { question: "The four main classes of large biomolecules are:", options: ["Water, salts, acids, bases", "Carbohydrates, lipids, proteins, nucleic acids", "Monosaccharides, amino acids, fatty acids, nucleotides", "Protons, neutrons, electrons, ions", "Carbon, hydrogen, oxygen, nitrogen"], answer: "Carbohydrates, lipids, proteins, nucleic acids" },
+            { question: "Hemoglobin demonstrates which level of protein structure because it is composed of four separate polypeptide chains?", options: ["Primary", "Secondary", "Tertiary", "Quaternary", "This is not an example of protein structure"], answer: "Quaternary" },
+            { question: "What is the main function of Vitamin K?", options: ["Antioxidant", "Aiding in calcium absorption", "Important in blood clotting", "Synthesis of collagen", "Energy metabolism"], answer: "Important in blood clotting" },
+            { question: "A DNA tool kit for genetic engineering must contain:", options: ["Vectors and Hormones", "Enzymes and Promoters", "Vectors and Enzymes", "Plasmids and Ribosomes", "Ligase and Helicase"], answer: "Vectors and Enzymes" },
+            { question: "The enzyme EcoRI is isolated from which bacterium?", options: ["Bacillus amyloliquefaciens", "Haemophilus influenzae", "Escherichia coli", "Staphylococcus aureus", "Thermus aquaticus"], answer: "Escherichia coli" },
+            { question: "What is the main advantage of using a Yeast Artificial Chromosome (YAC) as a vector?", options: ["It is very small and easy to manipulate", "It can clone very large DNA fragments (100-1000kb)", "It only infects bacterial cells", "It replicates faster than plasmids", "It does not require restriction enzymes"], answer: "It can clone very large DNA fragments (100-1000kb)" },
+            { question: "In the production of insulin using GM bacteria, the human insulin gene was often inserted next to the gene for β-galactosidase. Why?", options: ["To make the insulin protein larger", "To allow them to share the same promoter for controlled expression", "To make the bacteria resistant to antibiotics", "To help the insulin fold correctly", "To make the insulin blue for easy identification"], answer: "To allow them to share the same promoter for controlled expression" },
+            { question: "The process of using absorbent paper to transfer DNA from a gel to a membrane is known as:", options: ["Northern blotting", "Western blotting", "Eastern blotting", "Southern blotting", "Gel transfer"], answer: "Southern blotting" },
+            { question: "A microarray (DNA chip) is a tool used to:", options: ["Separate proteins by size", "Study the expression of thousands of genes simultaneously", "Sequence a single gene very accurately", "Cut DNA into small fragments", "Clone large pieces of DNA"], answer: "Study the expression of thousands of genes simultaneously" },
+            { question: "In a microarray experiment comparing cancer cells and normal cells, a spot that appears yellow indicates that the gene is:", options: ["Expressed only in cancer cells", "Expressed only in normal cells", "Not expressed in either cell type", "Expressed equally in both cancer and normal cells", "A mutated gene"], answer: "Expressed equally in both cancer and normal cells" },
+            { question: "Tissue Plasminogen Activator (tPA) is a biopharmaceutical used to:", options: ["Treat growth disorders", "Treat anemia", "Treat strokes by dissolving blood clots", "Treat diabetes", "Aid in childbirth"], answer: "Treat strokes by dissolving blood clots" },
+            { question: "Which of the following is NOT a primary function of Cerebrospinal Fluid (CSF)?", options: ["To cushion the brain and spinal cord", "To transport oxygen to brain cells", "To circulate nutrients filtered from the blood", "To remove waste products from the brain", "To act as a mechanical barrier against trauma"], answer: "To transport oxygen to brain cells" },
+            { question: "A disease that is caused by a drug crossing the placental barrier and harming the fetus is described as:", options: ["Idiopathic", "Contagious", "Teratogenic", "Fulminating", "Venereal"], answer: "Teratogenic" },
+            { question: "What is the primary role of the enzyme reverse transcriptase in biotechnology?", options: ["To synthesize DNA from a DNA template", "To synthesize RNA from a DNA template", "To synthesize DNA from an RNA template", "To join two DNA molecules together", "To cut DNA at specific sites"], answer: "To synthesize DNA from an RNA template" },
+            { question: "In the context of gene cloning, what does it mean for a bacterium to be 'transformed'?", options: ["It has been killed by an antibiotic", "It has successfully taken up a recombinant plasmid", "It has divided by binary fission", "Its own chromosome has been altered", "It has produced the protein of interest"], answer: "It has successfully taken up a recombinant plasmid" },
+            { question: "A vector that is a hybrid between a plasmid and a phage, capable of carrying DNA inserts of about 45kb, is a:", options: ["BAC", "YAC", "HAC", "Cosmid", "Standard plasmid"], answer: "Cosmid" },
+            { question: "The AST enzyme catalyzes the interconversion between:", options: ["Pyruvate and Alanine", "Lactate and Pyruvate", "Oxaloacetate and Aspartate", "Creatine and Phosphocreatine", "Glucose and Glycogen"], answer: "Oxaloacetate and Aspartate" },
+            { question: "An AST/ALT ratio equal to one (ALT = AST) is often associated with:", options: ["Alcoholic liver disease", "Cirrhosis", "Acute viral hepatitis or drug-related toxicity", "A healthy liver", "Extrahepatic cholestasis"], answer: "Acute viral hepatitis or drug-related toxicity" },
+            { question: "Which of the following is NOT a compartment of the extracellular fluid (ECF)?", options: ["Plasma", "Interstitial fluid", "Cytosol", "Lymph", "Synovial fluid"], answer: "Cytosol" },
+            { question: "An objective finding of a disease as perceived by an examiner is called a:", options: ["Symptom", "Lesion", "Sign", "Syndrome", "Prognosis"], answer: "Sign" },
+            { question: "A disease with an unknown cause is referred to as:", options: ["Acute", "Chronic", "Infectious", "Idiopathic", "Contagious"], answer: "Idiopathic" },
+            { question: "The term 'oncos', the root for 'oncology', was used by the Roman physician Galen and is Greek for:", options: ["Crab", "Swelling", "Ulcer", "Cell", "Death"], answer: "Swelling" },
+            { question: "A key characteristic of cancer cells is their 'invasiveness'. This refers to their ability to:", options: ["Grow very large in size", "Divide very quickly", "Enter blood or lymphatic vessels and spread", "Resist chemotherapy", "Evade apoptosis"], answer: "Enter blood or lymphatic vessels and spread" },
+            { question: "The gene MDM2 is an oncogene because it codes for a protein that works against:", options: ["The Ki-ras protein", "The PDGF receptor", "The p53 tumor suppressor protein", "The RB protein", "The BRCA1 protein"], answer: "The p53 tumor suppressor protein" },
+            { question: "The RB gene is a tumor-suppressor gene that is critical for obstructing the cell cycle at which checkpoint?", options: ["G1 checkpoint", "S checkpoint", "G2 checkpoint", "M checkpoint", "G0 checkpoint"], answer: "G1 checkpoint" },
+            { question: "The protein products of HPV, E6 and E7, contribute to cancer development by disrupting the function of which key cellular proteins?", options: ["PDGF and Ki-ras", "p53 and pRB", "ALT and AST", "DNA Polymerase and Ligase", "Hemoglobin and Collagen"], answer: "p53 and pRB" },
+            { question: "What type of regulation is exemplified by hemoglobin, where the binding of one oxygen molecule increases the affinity for the next?", options: ["Feedback inhibition", "Covalent modification", "Cooperativity (a form of allosteric regulation)", "Proteolytic activation", "Competitive inhibition"], answer: "Cooperativity (a form of allosteric regulation)" },
+            { question: "The covalent attachment of a phosphate group to an enzyme, which can alter its activity, is called:", options: ["Methylation", "Adenylation", "Glycosylation", "Phosphorylation", "Hydrolysis"], answer: "Phosphorylation" },
+            { question: "The hormone that plays a key role in calcium homeostasis by increasing blood calcium levels is:", options: ["Insulin", "Glucagon", "Calcitonin", "Parathyroid hormone (PTH)", "Growth hormone"], answer: "Parathyroid hormone (PTH)" },
+            { question: "The adrenal medulla releases adrenaline in response to stimulation from the sympathetic nervous system. This is an example of:", options: ["Humoral regulation", "Hormonal regulation", "Neural regulation", "Negative feedback", "Positive feedback"], answer: "Neural regulation" },
+            { question: "What is the structural polysaccharide found in plant cell walls?", options: ["Glycogen", "Starch", "Chitin", "Cellulose", "Peptidoglycan"], answer: "Cellulose" },
+            { question: "Which of the following diseases is NOT directly related to protein misfolding?", options: ["Alzheimer's disease", "Parkinson's disease", "Type 1 Diabetes", "Huntington's disease", "Creutzfeldt-Jakob disease"], answer: "Type 1 Diabetes" },
+            { question: "Steroids, such as cholesterol and testosterone, belong to which class of biomolecules?", options: ["Carbohydrates", "Proteins", "Nucleic Acids", "Lipids", "Vitamins"], answer: "Lipids" },
+            { question: "Which vitamin is also known as ascorbic acid?", options: ["Vitamin A", "Vitamin B1", "Vitamin C", "Vitamin D", "Vitamin E"], answer: "Vitamin C" },
+            { question: "Pellagra, characterized by dermatitis, diarrhea, and dementia, is caused by a deficiency in which vitamin?", options: ["Vitamin B1 (Thiamine)", "Vitamin B2 (Riboflavin)", "Vitamin B3 (Niacin)", "Vitamin B6 (Pyridoxine)", "Vitamin C"], answer: "Vitamin B3 (Niacin)" },
+            { question: "The process of modifying and recombining DNA to create organisms with desired traits is called:", options: ["DNA sequencing", "Gene manipulation (Genetic Engineering)", "Polymerase Chain Reaction", "Gel electrophoresis", "DNA profiling"], answer: "Gene manipulation (Genetic Engineering)" },
+            { question: "Which vector would be most appropriate for cloning a 500kb fragment of human DNA?", options: ["Plasmid", "Bacteriophage lambda", "Cosmid", "Yeast Artificial Chromosome (YAC)", "pBR322"], answer: "Yeast Artificial Chromosome (YAC)" },
+            { question: "The 'lacZ' gene is often used as a genetic marker in cloning. If a foreign gene is successfully inserted into the lacZ gene, the resulting bacterial colony will:", options: ["Turn blue on X-gal medium", "Be unable to grow on the medium", "Be resistant to ampicillin", "Remain white on X-gal medium", "Glow green under UV light"], answer: "Remain white on X-gal medium" },
+            { question: "A patient presents with jaundice and highly elevated levels of both AST and ALT, with ALT being significantly higher than AST. What is the most likely diagnosis?", options: ["Alcoholic liver disease", "Acute viral hepatitis", "Myocardial infarction", "Muscle injury", "Cirrhosis"], answer: "Acute viral hepatitis" },
+            { question: "Which of the following body fluids is an ultrafiltrate of plasma?", options: ["Blood", "Urine", "Saliva", "Cerebrospinal Fluid (CSF)", "Semen"], answer: "Cerebrospinal Fluid (CSF)" },
+            { question: "A sudden increase in the severity of signs and symptoms during the course of a disease is called a(n):", options: ["Remission", "Exacerbation", "Lesion", "Symptom", "Prognosis"], answer: "Exacerbation" },
+            { question: "Which of the following is a characteristic of a benign tumor?", options: ["Frequent metastasis", "Extensive necrosis", "Abnormal and numerous mitoses", "Lack of invasion into surrounding tissue", "Rapid growth speed"], answer: "Lack of invasion into surrounding tissue" },
+            { question: "A mutation that converts a proto-oncogene into an oncogene is typically a:", options: ["Loss-of-function mutation", "Silent mutation", "Gain-of-function mutation", "Deletion of the entire gene", "Recessive mutation"], answer: "Gain-of-function mutation" },
+            { question: "The BRCA1 gene is a tumor suppressor gene associated with an increased risk for which types of cancer?", options: ["Lung and colon cancer", "Brain and bone cancer", "Breast and ovarian cancer", "Leukemia and lymphoma", "Skin and liver cancer"], answer: "Breast and ovarian cancer" },
+            { question: "The enzyme glycogen phosphorylase is regulated by both allosteric mechanisms and covalent modification (phosphorylation). This demonstrates that:", options: ["Enzymes can only be regulated by one method at a time", "Enzyme regulation is a simple on/off switch", "Multiple regulatory mechanisms can work together to control enzyme activity", "Allosteric regulation is always irreversible", "Covalent modification only involves adding methyl groups"], answer: "Multiple regulatory mechanisms can work together to control enzyme activity" },
+            { question: "Gestational diabetes occurs in:", options: ["Children with a genetic predisposition", "Elderly individuals", "Pregnant women without a previous diagnosis of diabetes", "Patients with Type 1 diabetes", "Patients with pancreatic cancer"], answer: "Pregnant women without a previous diagnosis of diabetes" },
+            { question: "Hydrophobic interactions are crucial for maintaining which level of protein structure?", options: ["Primary structure", "Secondary structure", "Tertiary structure", "All levels of structure", "They are not involved in protein structure"], answer: "Tertiary structure" },
+            { question: "Which vitamin deficiency is associated with defective blood clotting?", options: ["Vitamin A", "Vitamin D", "Vitamin E", "Vitamin K", "Vitamin C"], answer: "Vitamin K" },
+            { question: "A bacteriophage is a type of:", options: ["Bacterium that infects viruses", "Plasmid found in bacteria", "Virus that infects bacteria", "Artificial chromosome", "Restriction enzyme"], answer: "Virus that infects bacteria" },
+            { question: "A patient's CSF analysis shows a normal glucose level but elevated protein with oligoclonal bands. This pattern is most suggestive of:", options: ["Bacterial meningitis", "Viral meningitis", "Multiple sclerosis", "A subarachnoid hemorrhage", "A brain tumor"], answer: "Multiple sclerosis" },
+            { question: "The primary pathogenic event in chickenpox is the:", options: ["Infection of skin cells leading to a vesicular rash", "Replication of the virus in the liver and spleen", "Initial infection of the upper respiratory tract mucosa", "Secondary viremia spreading the virus throughout the body", "The entire sequence from infection to rash constitutes pathogenesis"], answer: "The entire sequence from infection to rash constitutes pathogenesis" },
+            { question: "Cancer cells can be considered 'immortal' in culture because they often activate the enzyme ______, which maintains the length of chromosomes.", options: ["DNA polymerase", "Ligase", "Helicase", "Telomerase", "p53"], answer: "Telomerase" },
+            { question: "Which type of hormone can freely pass through the cell membrane to bind to intracellular receptors?", options: ["Peptide hormones (like insulin)", "Amino acid-derived hormones (like adrenaline)", "Steroid hormones (like testosterone)", "All hormones", "No hormones"], answer: "Steroid hormones (like testosterone)" },
+            { question: "What is the function of DNA polymerase in both PCR and DNA replication?", options: ["To unwind the DNA", "To join DNA fragments", "To synthesize a new DNA strand using an existing template", "To cut the DNA at specific sequences", "To add a primer to the DNA strand"], answer: "To synthesize a new DNA strand using an existing template" },
+            { question: "What is the term for a collection of clones containing different DNA fragments from a single source, stored and propagated in a population of microorganisms?", options: ["A microarray", "A DNA library", "A PCR product", "A vector map", "A genetic profile"], answer: "A DNA library" },
+            { question: "In the Lucas test, which type of alcohol reacts fastest to form a cloudy solution?", options: ["Primary alcohol", "Secondary alcohol", "Tertiary alcohol", "Phenol", "All react at the same rate"], answer: "Tertiary alcohol" },
+            { question: "The reaction of a carboxylic acid with an alcohol in the presence of an acid catalyst produces an:", options: ["Amide", "Ether", "Aldehyde", "Ester", "Anhydride"], answer: "Ester" },
+            { question: "Which of the following is a key feature of phenols that makes them more acidic than aliphatic alcohols?", options: ["The presence of a longer carbon chain", "The ability to form stronger hydrogen bonds", "The resonance stabilization of the resulting phenoxide ion", "The higher molecular weight", "The -OH group is attached to an sp2 hybridized carbon"], answer: "The resonance stabilization of the resulting phenoxide ion" },
+            { question: "Amines are organic derivatives of which inorganic compound?", options: ["Water (H₂O)", "Methane (CH₄)", "Ammonia (NH₃)", "Hydrogen sulfide (H₂S)", "Carbon dioxide (CO₂)"], answer: "Ammonia (NH₃)" },
+            { question: "The reaction of a primary aromatic amine with cold nitrous acid (0-5°C) produces a:", options: ["Phenol", "Diazonium salt", "Nitrosoamine", "Aniline salt", "Azo dye"], answer: "Diazonium salt" },
+            { question: "The alkaline hydrolysis of an ester is commonly known as:", options: ["Esterification", "Saponification", "Neutralization", "Oxidation", "Reduction"], answer: "Saponification" },
+            { question: "Which of the following functional groups is present in all amino acids?", options: ["A hydroxyl group and a carbonyl group", "An amino group and a carboxyl group", "A thiol group and an ether group", "A phosphate group and a methyl group", "An aldehyde group and a ketone group"], answer: "An amino group and a carboxyl group" },
+            { question: "A peptide bond is chemically a type of ______ bond.", options: ["Ester", "Ether", "Amide", "Glycosidic", "Anhydride"], answer: "Amide" },
+            { question: "Brady's test, using 2,4-dinitrophenylhydrazine, is a chemical test for which functional group?", options: ["Hydroxyl group", "Carboxyl group", "Amino group", "Carbonyl group (in aldehydes and ketones)", "Alkene double bond"], answer: "Carbonyl group (in aldehydes and ketones)" },
+            { question: "Tollen's test (the 'silver mirror' test) can be used to distinguish between:", options: ["Primary and secondary alcohols", "Alcohols and phenols", "Aldehydes and ketones", "Alkanes and alkenes", "Carboxylic acids and esters"], answer: "Aldehydes and ketones" },
+            { question: "The reduction of a ketone will produce a:", options: ["Primary alcohol", "Secondary alcohol", "Tertiary alcohol", "Carboxylic acid", "Aldehyde"], answer: "Secondary alcohol" },
+            { question: "What is the primary information obtained from a ¹³C NMR spectrum?", options: ["The number and types of hydrogen environments", "The number and types of carbon environments", "The molecular weight of the compound", "The connectivity between adjacent protons", "The functional groups present via infrared absorption"], answer: "The number and types of carbon environments" },
+            { question: "In paper chromatography, a substance with a high Rf value indicates that it is:", options: ["Highly soluble in the stationary phase and moves slowly", "Highly soluble in the mobile phase and moves quickly", "Insoluble in both phases", "Very strongly adsorbed to the stationary phase", "The same substance as the solvent"], answer: "Highly soluble in the mobile phase and moves quickly" },
+            { question: "A zwitterion is a molecule that contains:", options: ["No charges", "Only positive charges", "Only negative charges", "Both a positive and a negative charge", "A double bond and a triple bond"], answer: "Both a positive and a negative charge" },
+            { question: "The end of a polypeptide chain with a free amino group (-NH₂) is called the:", options: ["C-terminus", "N-terminus", "Alpha-terminus", "Zwitterion end", "Peptide end"], answer: "N-terminus" },
+            { question: "The iodoform test gives a positive result for compounds containing which structural feature?", options: ["A terminal alkyne", "A benzene ring", "A methyl ketone (CH₃CO-) group or a group that can be oxidized to it", "A carboxyl group", "A primary amine"], answer: "A methyl ketone (CH₃CO-) group or a group that can be oxidized to it" },
+            { question: "What is the main reason for the high boiling points of carboxylic acids compared to other molecules of similar size?", options: ["Strong London dispersion forces", "The ability to form hydrogen-bonded dimers", "Ionic bonding between molecules", "The presence of a carbonyl group", "Their linear molecular shape"], answer: "The ability to form hydrogen-bonded dimers" },
+            { question: "Which of the following statements about enzymes is true?", options: ["They are consumed during the reaction they catalyze", "They increase the activation energy of a reaction", "They are highly specific for their substrate", "They are always made of lipids", "They work equally well at all temperatures and pH values"], answer: "They are highly specific for their substrate" },
+            { question: "In the context of enzyme kinetics, what does Km (the Michaelis constant) represent?", options: ["The maximum rate of the reaction", "The concentration of the enzyme", "The substrate concentration at which the reaction rate is half of Vmax", "The rate constant for the formation of product", "The number of active sites on the enzyme"], answer: "The substrate concentration at which the reaction rate is half of Vmax" },
+            { question: "A competitive inhibitor affects an enzyme by:", options: ["Binding to the allosteric site and changing the enzyme's shape", "Binding to the active site and preventing the substrate from binding", "Permanently destroying the enzyme", "Increasing the Vmax of the reaction", "Decreasing the Km of the reaction"], answer: "Binding to the active site and preventing the substrate from binding" },
+            { question: "A non-competitive inhibitor affects an enzyme by:", options: ["Binding to the active site", "Increasing the Km of the reaction", "Binding to a site other than the active site (allosteric site) and reducing Vmax", "Only binding to the enzyme-substrate complex", "Having a structure very similar to the substrate"], answer: "Binding to a site other than the active site (allosteric site) and reducing Vmax" },
+            { question: "The 'lock and key' model of enzyme action describes the:", options: ["Flexible nature of the enzyme's active site", "Irreversible binding of the substrate", "Specific, rigid fit between the substrate and the active site", "Inhibition of the enzyme by a product", "Requirement of a cofactor for the reaction"], answer: "Specific, rigid fit between the substrate and the active site" },
+            { question: "The 'induced fit' model of enzyme action suggests that:", options: ["The enzyme is a rigid structure", "The binding of the substrate induces a conformational change in the enzyme for a better fit", "Only the substrate changes its shape upon binding", "The enzyme can bind to any substrate", "The reaction product cannot leave the active site"], answer: "The binding of the substrate induces a conformational change in the enzyme for a better fit" },
+            { question: "Which of the following factors can cause an enzyme to denature?", options: ["Low substrate concentration", "The presence of a competitive inhibitor", "Extreme changes in pH or temperature", "The presence of a cofactor", "Optimal temperature"], answer: "Extreme changes in pH or temperature" },
+            { question: "A cofactor that is an organic molecule is called a:", options: ["Holoenzyme", "Apoenzyme", "Coenzyme", "Zymogen", "Metal ion activator"], answer: "Coenzyme" },
+            { question: "The part of the enzyme where the substrate binds and the reaction occurs is called the:", options: ["Allosteric site", "Regulatory site", "Active site", "Binding pocket", "Catalytic domain"], answer: "Active site" },
+            { question: "The building blocks of nucleic acids (DNA and RNA) are:", options: ["Amino acids", "Monosaccharides", "Fatty acids", "Nucleotides", "Glycerol"], answer: "Nucleotides" },
+            { question: "A nucleotide consists of which three components?", options: ["A sugar, a fatty acid, and a phosphate group", "A sugar, a phosphate group, and a nitrogenous base", "An amino acid, a sugar, and a phosphate group", "A glycerol, a phosphate group, and a nitrogenous base", "Two sugars and a phosphate group"], answer: "A sugar, a phosphate group, and a nitrogenous base" },
+            { question: "In the DNA double helix, adenine (A) always pairs with:", options: ["Guanine (G)", "Cytosine (C)", "Uracil (U)", "Thymine (T)", "Adenine (A)"], answer: "Thymine (T)" },
+            { question: "Which of the following is a key difference between DNA and RNA?", options: ["DNA is single-stranded, while RNA is double-stranded", "DNA contains the sugar ribose, while RNA contains deoxyribose", "DNA contains the base uracil (U), while RNA contains thymine (T)", "DNA contains the sugar deoxyribose, while RNA contains ribose", "DNA is found in the cytoplasm, while RNA is only in the nucleus"], answer: "DNA contains the sugar deoxyribose, while RNA contains ribose" },
+            { question: "The process of synthesizing an RNA molecule from a DNA template is called:", options: ["Translation", "Replication", "Transcription", "Transformation", "Transduction"], answer: "Transcription" },
+            { question: "The process of synthesizing a protein from an mRNA template is called:", options: ["Translation", "Replication", "Transcription", "Conjugation", "Mutation"], answer: "Translation" },
+            { question: "A set of three consecutive nucleotides in an mRNA molecule that specifies a particular amino acid is called a:", options: ["Gene", "Codon", "Anticodon", "Exon", "Intron"], answer: "Codon" },
+            { question: "Which type of RNA is responsible for carrying amino acids to the ribosome during protein synthesis?", options: ["Messenger RNA (mRNA)", "Ribosomal RNA (rRNA)", "Transfer RNA (tRNA)", "Small nuclear RNA (snRNA)", "MicroRNA (miRNA)"], answer: "Transfer RNA (tRNA)" },
+            { question: "The central dogma of molecular biology states that the flow of genetic information is generally:", options: ["Protein -> RNA -> DNA", "RNA -> DNA -> Protein", "DNA -> RNA -> Protein", "Protein -> DNA -> RNA", "DNA -> Protein -> RNA"], answer: "DNA -> RNA -> Protein" },
+            { question: "Which of the following is NOT a pyrimidine base found in nucleic acids?", options: ["Cytosine", "Thymine", "Uracil", "Guanine", "All of the above are pyrimidines"], answer: "Guanine" },
+            { question: "The two strands of the DNA double helix are held together by:", options: ["Covalent bonds", "Peptide bonds", "Ionic bonds", "Hydrogen bonds", "Phosphodiester bonds"], answer: "Hydrogen bonds" },
+            { question: "The backbone of a single DNA or RNA strand is composed of alternating:", options: ["Sugar and base units", "Sugar and phosphate units", "Base and phosphate units", "Amino acids", "Sugars only"], answer: "Sugar and phosphate units" },
+            { question: "If a DNA sample contains 20% guanine (G), what is the percentage of adenine (A)?", options: ["20%", "30%", "40%", "60%", "80%"], answer: "30%" },
+            { question: "The complete set of genetic material in an organism is called its:", options: ["Proteome", "Genome", "Transcriptome", "Phenotype", "Genotype"], answer: "Genome" },
+            { question: "A mutation that results in a codon being changed to a stop codon is called a:", options: ["Silent mutation", "Missense mutation", "Nonsense mutation", "Frameshift mutation", "Insertion mutation"], answer: "Nonsense mutation" },
+            { question: "The enzyme that unwinds the DNA double helix during replication is:", options: ["DNA polymerase", "Ligase", "Primase", "Helicase", "Telomerase"], answer: "Helicase" },
+            { question: "Okazaki fragments are found on the:", options: ["Leading strand during DNA replication", "Lagging strand during DNA replication", "mRNA molecule during transcription", "tRNA molecule", "Ribosome during translation"], answer: "Lagging strand during DNA replication" },
+            { question: "The process of removing introns and joining exons in a pre-mRNA molecule is called:", options: ["Splicing", "Capping", "Tailing", "Translation", "Replication"], answer: "Splicing" },
+            { question: "Which organelle is the primary site of protein synthesis in a eukaryotic cell?", options: ["Nucleus", "Mitochondrion", "Golgi apparatus", "Ribosome", "Lysosome"], answer: "Ribosome" },
+            { question: "An anticodon is found on which molecule?", options: ["DNA", "mRNA", "rRNA", "tRNA", "A protein"], answer: "tRNA" },
+            { question: "The genetic code is said to be 'degenerate' or 'redundant' because:", options: ["It is different in different organisms", "More than one codon can specify the same amino acid", "There are more amino acids than there are codons", "It contains stop codons", "It is read in groups of three bases"], answer: "More than one codon can specify the same amino acid" },
+            { question: "What is the role of the ribosome in protein synthesis?", options: ["It carries the genetic code from the nucleus", "It brings amino acids to the growing polypeptide chain", "It catalyzes the formation of peptide bonds between amino acids", "It unwinds the DNA template", "It proofreads the newly synthesized protein"], answer: "It catalyzes the formation of peptide bonds between amino acids" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerHTML = `${score} / ${quizData.length} <span class="text-2xl">(${percentage}%)</span>`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        function initializeQuiz() {
+            quizData.forEach((_, index) => {
+                const navBtn = document.createElement('button');
+                navBtn.innerText = index + 1;
+                navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+                navBtn.dataset.index = index;
+                navBtn.addEventListener('click', (e) => {
+                    currentQuestionIndex = parseInt(e.target.dataset.index);
+                    loadQuiz();
+                });
+                questionNav.appendChild(navBtn);
+            });
+        }
+        
+        initializeQuiz();
+    </script>
+</body>
+</html>
