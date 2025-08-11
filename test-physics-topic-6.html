@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test: Capacitors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Physics Test: Capacitors & Dielectrics</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on capacitors, capacitance, RC circuits, and dielectrics. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Physics Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is the primary function of a capacitor in an electronic circuit?", options: ["To amplify electric current", "To store electric charge", "To create resistance", "To generate voltage"], answer: "To store electric charge" },
+            { question: "Capacitance is defined as the ratio of:", options: ["Voltage to charge (V/Q)", "Charge to potential difference (Q/V)", "Energy to charge (U/Q)", "Resistance to voltage (R/V)"], answer: "Charge to potential difference (Q/V)" },
+            { question: "The standard unit of capacitance is the:", options: ["Volt (V)", "Coulomb (C)", "Ohm (Ω)", "Farad (F)"], answer: "Farad (F)" },
+            { question: "A capacitor typically consists of:", options: ["A single conducting plate and a power source", "Two insulators separated by a conductor", "Two conducting plates separated by an insulator", "A resistor and an inductor connected in series"], answer: "Two conducting plates separated by an insulator" },
+            { question: "The insulating material placed between the plates of a capacitor is known as a:", options: ["Conductor", "Semiconductor", "Dielectric", "Resistor"], answer: "Dielectric" },
+            { question: "If the charge stored on a capacitor is doubled, what happens to the potential difference across it, assuming the capacitance is constant?", options: ["It is halved.", "It remains the same.", "It is doubled.", "It is quadrupled."], answer: "It is doubled." },
+            { question: "A capacitor has a capacitance of 10 μF. How much charge is stored on it when a potential difference of 5 V is applied?", options: ["2 μC", "5 μC", "50 μC", "500 μC"], answer: "50 μC" },
+            { question: "1 Farad is equivalent to:", options: ["1 Coulomb per Volt", "1 Volt per Coulomb", "1 Joule per Coulomb", "1 Ampere per second"], answer: "1 Coulomb per Volt" },
+            { question: "Which of the following is NOT a typical shape for a capacitor?", options: ["Cylindrical", "Spherical", "Parallel plate", "Toroidal"], answer: "Toroidal" },
+            { question: "A capacitor is charged to 12 V and has a charge of 60 μC. What is its capacitance?", options: ["0.2 F", "5 μF", "720 F", "5 F"], answer: "5 μF" },
+            { question: "The capacitance of a parallel-plate capacitor is directly proportional to:", options: ["The distance between the plates", "The charge on the plates", "The area of the plates", "The voltage across the plates"], answer: "The area of the plates" },
+            { question: "The capacitance of a parallel-plate capacitor is inversely proportional to:", options: ["The area of the plates", "The distance between the plates", "The permittivity of free space", "The charge on the plates"], answer: "The distance between the plates" },
+            { question: "If the distance between the plates of a parallel-plate capacitor is doubled, what happens to its capacitance?", options: ["It is quadrupled", "It is doubled", "It is halved", "It remains the same"], answer: "It is halved" },
+            { question: "If the area of the plates of a parallel-plate capacitor is halved, what happens to its capacitance?", options: ["It is quadrupled", "It is doubled", "It remains the same", "It is halved"], answer: "It is halved" },
+            { question: "The formula for the capacitance of a parallel-plate capacitor in a vacuum is:", options: ["C = ε₀d/A", "C = Ad/ε₀", "C = ε₀A/d", "C = Qd/A"], answer: "C = ε₀A/d" },
+            { question: "What does the symbol ε₀ represent in the context of capacitors?", options: ["The dielectric constant", "The electric field strength", "The permittivity of free space", "The charge density"], answer: "The permittivity of free space" },
+            { question: "The magnitude of the electric field (E) between the plates of a charged parallel-plate capacitor is given by:", options: ["E = Vd", "E = V/d", "E = Q/d", "E = C/A"], answer: "E = V/d" },
+            { question: "A parallel-plate capacitor has plates of area A separated by a distance d. If the area is doubled and the distance is doubled, the new capacitance will be:", options: ["Half the original capacitance", "The same as the original capacitance", "Double the original capacitance", "Four times the original capacitance"], answer: "The same as the original capacitance" },
+            { question: "A parallel-plate capacitor with air between the plates is connected to a 12 V battery. If the plates are moved closer together, the charge on the plates will:", options: ["Decrease", "Increase", "Remain the same", "Become zero"], answer: "Increase" },
+            { question: "A parallel-plate capacitor is charged and then disconnected from the battery. If the plates are then pulled further apart, the potential difference between the plates will:", options: ["Decrease", "Increase", "Remain the same", "Become zero"], answer: "Increase" },
+            { question: "For capacitors connected in series, which of the following quantities is the same for all capacitors?", options: ["Voltage", "Capacitance", "Charge", "Energy stored"], answer: "Charge" },
+            { question: "For capacitors connected in parallel, which of the following quantities is the same for all capacitors?", options: ["Charge", "Capacitance", "Energy stored", "Voltage"], answer: "Voltage" },
+            { question: "The formula for the equivalent capacitance (C_T) of capacitors connected in series is:", options: ["C_T = C₁ + C₂ + C₃", "1/C_T = 1/C₁ + 1/C₂ + 1/C₃", "C_T = (C₁C₂)/(C₁+C₂)", "Q_T = Q₁ + Q₂ + Q₃"], answer: "1/C_T = 1/C₁ + 1/C₂ + 1/C₃" },
+            { question: "The formula for the equivalent capacitance (C_T) of capacitors connected in parallel is:", options: ["C_T = C₁ + C₂ + C₃", "1/C_T = 1/C₁ + 1/C₂ + 1/C₃", "C_T = C₁ = C₂ = C₃", "V_T = V₁ + V₂ + V₃"], answer: "C_T = C₁ + C₂ + C₃" },
+            { question: "Three 30 μF capacitors are connected in series. What is the total capacitance?", options: ["90 μF", "30 μF", "10 μF", "3 μF"], answer: "10 μF" },
+            { question: "Three 30 μF capacitors are connected in parallel. What is the total capacitance?", options: ["90 μF", "30 μF", "10 μF", "3 μF"], answer: "90 μF" },
+            { question: "When capacitors are connected in series, the total capacitance is always:", options: ["Greater than the largest individual capacitance", "Less than the smallest individual capacitance", "Equal to the sum of the individual capacitances", "Equal to the average of the individual capacitances"], answer: "Less than the smallest individual capacitance" },
+            { question: "When capacitors are connected in parallel, the total capacitance is always:", options: ["Greater than the largest individual capacitance", "Less than the smallest individual capacitance", "Equal to the reciprocal sum of the capacitances", "Equal to the average of the individual capacitances"], answer: "Greater than the largest individual capacitance" },
+            { question: "A 2 μF capacitor and a 4 μF capacitor are connected in series to a 12 V battery. What is the total charge stored in the combination?", options: ["8 μC", "16 μC", "24 μC", "72 μC"], answer: "16 μC" },
+            { question: "A 2 μF capacitor and a 4 μF capacitor are connected in parallel to a 12 V battery. What is the total charge stored in the combination?", options: ["8 μC", "16 μC", "24 μC", "72 μC"], answer: "72 μC" },
+            { question: "In a series circuit with capacitors C₁ and C₂ (C₁ > C₂), which capacitor has the larger voltage across it?", options: ["C₁", "C₂", "The voltage is the same across both", "It depends on the battery voltage"], answer: "C₂" },
+            { question: "In a parallel circuit with capacitors C₁ and C₂ (C₁ > C₂), which capacitor stores more charge?", options: ["C₁", "C₂", "They store the same amount of charge", "It depends on the battery voltage"], answer: "C₁" },
+            { question: "What is the equivalent capacitance of a 10 μF capacitor and a 20 μF capacitor connected in series?", options: ["30 μF", "15 μF", "6.67 μF", "0.15 μF"], answer: "6.67 μF" },
+            { question: "A circuit consists of a 10 μF capacitor in series with a parallel combination of a 5 μF and a 15 μF capacitor. What is the equivalent capacitance of the entire circuit?", options: ["30 μF", "10 μF", "6.67 μF", "5 μF"], answer: "6.67 μF" },
+            { question: "For a series combination of capacitors, the total voltage across the combination is the ____ of the voltages across each capacitor.", options: ["sum", "product", "average", "same as"], answer: "sum" },
+            { question: "Which of the following is a correct formula for the energy (U) stored in a charged capacitor?", options: ["U = ½ C²V", "U = ½ QV²", "U = ½ CV²", "U = ½ V²/C"], answer: "U = ½ CV²" },
+            { question: "A 100 μF capacitor is charged to a potential difference of 20 V. How much energy is stored in it?", options: ["0.01 J", "0.02 J", "1000 J", "2000 J"], answer: "0.02 J" },
+            { question: "If the voltage across a capacitor is doubled, the energy stored in it is:", options: ["Halved", "Doubled", "Quadrupled", "Unchanged"], answer: "Quadrupled" },
+            { question: "The area under a charge-voltage (Q-V) graph for a capacitor represents:", options: ["The capacitance", "The charge stored", "The voltage", "The energy stored"], answer: "The energy stored" },
+            { question: "The gradient of a charge-voltage (Q-V) graph for a capacitor represents:", options: ["The capacitance", "The charge stored", "The voltage", "The energy stored"], answer: "The capacitance" },
+            { question: "A capacitor stores 10 J of energy when charged to 5 V. What is its capacitance?", options: ["0.4 F", "0.8 F", "2 F", "4 F"], answer: "0.8 F" },
+            { question: "Two identical capacitors are connected in series to a battery. Compared to one capacitor alone, the total energy stored in the series combination is:", options: ["Four times as much", "Twice as much", "The same", "Half as much"], answer: "Half as much" },
+            { question: "Two identical capacitors are connected in parallel to a battery. Compared to one capacitor alone, the total energy stored in the parallel combination is:", options: ["Four times as much", "Twice as much", "The same", "Half as much"], answer: "Twice as much" },
+            { question: "A capacitor is charged and then disconnected from the battery. The stored energy is U. If a second identical but uncharged capacitor is then connected in parallel, what is the total energy stored in the system?", options: ["U", "U/2", "U/4", "2U"], answer: "U/2" },
+            { question: "The work done to charge a capacitor is stored as:", options: ["Kinetic energy", "Magnetic potential energy", "Electric potential energy", "Thermal energy"], answer: "Electric potential energy" },
+            { question: "In an RC circuit, what is the time constant (τ)?", options: ["τ = R/C", "τ = C/R", "τ = RC", "τ = 1/RC"], answer: "τ = RC" },
+            { question: "During the charging of a capacitor in an RC circuit, the current in the circuit:", options: ["Increases linearly with time", "Increases exponentially with time", "Decreases exponentially with time", "Remains constant"], answer: "Decreases exponentially with time" },
+            { question: "After one time constant (τ), a charging capacitor has reached approximately what percentage of its maximum charge?", options: ["37%", "50%", "63%", "100%"], answer: "63%" },
+            { question: "During the discharging of a capacitor in an RC circuit, the voltage across the capacitor:", options: ["Increases exponentially with time", "Decreases linearly with time", "Remains constant", "Decreases exponentially with time"], answer: "Decreases exponentially with time" },
+            { question: "After one time constant (τ), a discharging capacitor's charge has dropped to approximately what percentage of its initial charge?", options: ["63%", "50%", "37%", "0%"], answer: "37%" },
+            { question: "The equation for the charge Q on a charging capacitor as a function of time t is:", options: ["Q = Q₀e⁻ᵗ/ᴿᶜ", "Q = Q₀(1 - e⁻ᵗ/ᴿᶜ)", "Q = Q₀t/RC", "Q = Q₀(1 + e⁻ᵗ/ᴿᶜ)"], answer: "Q = Q₀(1 - e⁻ᵗ/ᴿᶜ)" },
+            { question: "The equation for the voltage V across a discharging capacitor as a function of time t is:", options: ["V = V₀(1 - e⁻ᵗ/ᴿᶜ)", "V = V₀ / (t/RC)", "V = V₀e⁻ᵗ/ᴿᶜ", "V = V₀(1 + e⁻ᵗ/ᴿᶜ)"], answer: "V = V₀e⁻ᵗ/ᴿᶜ" },
+            { question: "What is the initial current (I₀) in an RC circuit when the switch is first closed to charge the capacitor?", options: ["I₀ = 0", "I₀ = V₀/R", "I₀ = V₀C", "I₀ = V₀/C"], answer: "I₀ = V₀/R" },
+            { question: "After a very long time (t → ∞), what is the current in a charging RC circuit?", options: ["V₀/R", "Infinite", "Zero", "V₀/C"], answer: "Zero" },
+            { question: "The time constant (τ) is a measure of how _______ a capacitor charges or discharges.", options: ["slowly", "quickly", "powerfully", "efficiently"], answer: "quickly" },
+            { question: "The unit of the time constant (RC) is:", options: ["Farad / Ohm", "Ohm / Farad", "Seconds", "Coulombs"], answer: "Seconds" },
+            { question: "In the equation for discharging current, I = -I₀e⁻ᵗ/ᴿᶜ, what does the negative sign indicate?", options: ["The current is decreasing", "The charge is negative", "The current flows in the opposite direction to the charging current", "The power is being dissipated"], answer: "The current flows in the opposite direction to the charging current" },
+            { question: "Looking at the graph of charge vs. time for a charging capacitor, the curve is:", options: ["A straight line with a positive slope", "A straight line with a negative slope", "An exponential curve that flattens out", "A parabolic curve"], answer: "An exponential curve that flattens out" },
+            { question: "Looking at the graph of current vs. time for a discharging capacitor, the curve:", options: ["Starts at a maximum value and decreases exponentially to zero", "Starts at zero and increases exponentially to a maximum value", "Is a horizontal line", "Is a straight line with a negative slope"], answer: "Starts at a maximum value and decreases exponentially to zero" },
+            { question: "To increase the time it takes for a capacitor to charge, you should:", options: ["Decrease the resistance and decrease the capacitance", "Increase the resistance and increase the capacitance", "Increase the resistance and decrease the capacitance", "Decrease the resistance and increase the capacitance"], answer: "Increase the resistance and increase the capacitance" },
+            { question: "What happens to the capacitance of a parallel-plate capacitor when a dielectric material is inserted between the plates?", options: ["It decreases", "It increases", "It remains the same", "It becomes zero"], answer: "It increases" },
+            { question: "The dielectric constant (κ) of a material is defined as the ratio of:", options: ["The capacitance with the dielectric to the capacitance in a vacuum (C/C₀)", "The capacitance in a vacuum to the capacitance with the dielectric (C₀/C)", "The voltage with the dielectric to the voltage in a vacuum (V/V₀)", "The charge with the dielectric to the charge in a vacuum (Q/Q₀)"], answer: "The capacitance with the dielectric to the capacitance in a vacuum (C/C₀)" },
+            { question: "The value of the dielectric constant (κ) is always:", options: ["Less than 1", "Equal to 1", "Greater than or equal to 1", "Equal to zero"], answer: "Greater than or equal to 1" },
+            { question: "A charged capacitor is isolated from the battery. A dielectric is then inserted between the plates. What happens to the potential difference across the capacitor?", options: ["It increases", "It decreases", "It remains the same", "It becomes zero"], answer: "It decreases" },
+            { question: "A charged capacitor is isolated from the battery. A dielectric is then inserted between the plates. What happens to the electric field between the plates?", options: ["It increases", "It remains the same", "It decreases", "It becomes zero"], answer: "It decreases" },
+            { question: "A capacitor remains connected to a battery. A dielectric is then inserted between the plates. What happens to the charge stored on the capacitor?", options: ["It decreases", "It remains the same", "It increases", "It becomes zero"], answer: "It increases" },
+            { question: "The formula for the capacitance of a parallel-plate capacitor with a dielectric is:", options: ["C = (εᵣε₀d)/A", "C = (ε₀A)/(εᵣd)", "C = A/(εᵣε₀d)", "C = (εᵣε₀A)/d"], answer: "C = (εᵣε₀A)/d" },
+            { question: "Why does inserting a dielectric increase capacitance?", options: ["It increases the distance between the plates.", "The dielectric molecules polarize, creating an opposing electric field that reduces the net field.", "It increases the conductivity of the plates.", "It decreases the area of the plates."], answer: "The dielectric molecules polarize, creating an opposing electric field that reduces the net field." },
+            { question: "The dielectric constant is also known as:", options: ["Permittivity of free space", "Relative permittivity", "Electric susceptibility", "Capacitive reactance"], answer: "Relative permittivity" },
+            { question: "For a capacitor connected to a battery, inserting a dielectric with constant κ = 4 will change the stored energy by a factor of:", options: ["1/4", "1/2", "2", "4"], answer: "4" },
+            { question: "For an isolated charged capacitor, inserting a dielectric with constant κ = 4 will change the stored energy by a factor of:", options: ["1/4", "1/2", "2", "4"], answer: "1/4" },
+            { question: "The term E₀/E is a valid expression for the dielectric constant, where E₀ is the electric field in a vacuum and E is the field with the dielectric.", options: ["True", "False"], answer: "True" },
+            { question: "A parallel-plate capacitor has a capacitance of 10 pF. If a dielectric material with a dielectric constant of 5 is inserted between the plates, what is the new capacitance?", options: ["2 pF", "10 pF", "15 pF", "50 pF"], answer: "50 pF" },
+            { question: "A capacitor is charged to 12 V and then disconnected. A dielectric slab is inserted, and the voltage drops to 4 V. What is the dielectric constant of the slab?", options: ["1/3", "3", "8", "48"], answer: "3" },
+            { question: "Besides increasing capacitance, what is another practical advantage of using a dielectric in a capacitor?", options: ["It makes the capacitor lighter", "It allows the plates to be placed closer together without touching", "It makes the capacitor transparent", "It reverses the polarity of the plates"], answer: "It allows the plates to be placed closer together without touching" },
+            { question: "A 12 V battery is connected to a circuit containing a 3 μF and a 6 μF capacitor in series. What is the voltage across the 3 μF capacitor?", options: ["4 V", "6 V", "8 V", "12 V"], answer: "8 V" },
+            { question: "A 10 μF capacitor is charged to 50 V. The energy stored is then used to light a small bulb. What is the total energy dissipated by the bulb?", options: ["0.0125 J", "0.025 J", "2500 J", "5000 J"], answer: "0.0125 J" },
+            { question: "In an RC circuit with R = 1 MΩ and C = 5 μF, what is the time constant?", options: ["0.2 s", "1 s", "5 s", "5,000,000 s"], answer: "5 s" },
+            { question: "A capacitor is fully charged. If the switch in an RC circuit is moved to the discharge position at t=0, what is the charge on the capacitor at t = 2τ?", options: ["Q₀/e", "Q₀/e²", "Q₀(1 - 1/e)", "Q₀(1 - 1/e²)"], answer: "Q₀/e²" },
+            { question: "A capacitor with capacitance C has a charge Q. A dielectric with κ = 2 is inserted. If the capacitor is connected to the battery during this process, the new charge is:", options: ["Q/2", "Q", "2Q", "4Q"], answer: "2Q" },
+            { question: "A capacitor is charged by a 10V battery and stores 200 μC of charge. It is then disconnected. How much energy does it store?", options: ["0.001 J", "0.002 J", "1 J", "2 J"], answer: "0.001 J" },
+            { question: "An air-filled capacitor has C = 5 pF. A dielectric of κ=4 is inserted, and the plate separation is halved. What is the new capacitance?", options: ["10 pF", "20 pF", "40 pF", "5 pF"], answer: "40 pF" },
+            { question: "When a capacitor is being charged, electrons flow from:", options: ["The positive plate to the negative plate through the battery", "The negative battery terminal to one plate, and from the other plate to the positive battery terminal", "The positive battery terminal, through the capacitor, to the negative terminal", "The capacitor plates to the battery terminals simultaneously"], answer: "The negative battery terminal to one plate, and from the other plate to the positive battery terminal" },
+            { question: "The product RC, the time constant, has units equivalent to:", options: ["(Volt / Ampere) * (Coulomb / Volt)", "(Joule / Coulomb) * (Ampere / Second)", "(Ohm * Farad)", "Both a and c are correct"], answer: "Both a and c are correct" },
+            { question: "A 2 F capacitor and a 4 F capacitor are in parallel. This combination is in series with a 1 F capacitor. The total capacitance is:", options: ["7 F", "6/7 F", "7/6 F", "1/7 F"], answer: "6/7 F" },
+            { question: "What is the initial voltage across the resistor in a charging RC circuit with battery voltage V₀?", options: ["0", "V₀/2", "V₀", "It's undefined"], answer: "V₀" },
+            { question: "What is the final voltage across the capacitor in a charging RC circuit with battery voltage V₀?", options: ["0", "V₀/2", "V₀", "It depends on R and C"], answer: "V₀" },
+            { question: "The presence of a dielectric _______ the maximum operating voltage of a capacitor.", options: ["Increases", "Decreases", "Does not affect", "Reverses"], answer: "Increases" },
+            { question: "A 5 μF capacitor is connected in series with a 10 μF capacitor. The combination is connected across a 9V supply. What is the charge on the 5 μF capacitor?", options: ["15 μC", "30 μC", "45 μC", "90 μC"], answer: "30 μC" },
+            { question: "An RC circuit is used in a camera flash. The capacitor is charged by a battery. What happens during the flash?", options: ["The capacitor is slowly charged.", "The capacitor is rapidly discharged through the flashbulb.", "The resistor heats up to produce light.", "The battery directly powers the flashbulb."], answer: "The capacitor is rapidly discharged through the flashbulb." },
+            { question: "A parallel plate capacitor has a certain capacitance. If a conducting slab is inserted between the plates, what happens to the capacitance?", options: ["It becomes zero", "It decreases", "It remains the same", "It becomes infinite (or very large)"], answer: "It becomes infinite (or very large)" },
+            { question: "The maximum charge a capacitor can hold is 100 C. The time constant of its charging circuit is 2 seconds. How long does it take for the capacitor to hold a charge of 63 C?", options: ["1 second", "2 seconds", "4 seconds", "6.3 seconds"], answer: "2 seconds" },
+            { question: "A fully charged capacitor is discharged through a resistor. The energy stored decreases to half its initial value in time 't'. The charge on the capacitor at this time 't' is:", options: ["Q₀/2", "Q₀/√2", "Q₀/4", "Q₀/e"], answer: "Q₀/√2" },
+            { question: "Which statement is true for the discharging process of a capacitor?", options: ["The current is maximum initially and the voltage is zero.", "The voltage is maximum initially and the current is maximum initially.", "Both current and voltage are zero initially.", "The current is zero initially and the voltage is maximum."], answer: "The voltage is maximum initially and the current is maximum initially." },
+            { question: "A capacitor is a component that stores energy in:", options: ["A magnetic field", "An electric field", "A gravitational field", "Its resistance"], answer: "An electric field" },
+            { question: "A 200 pF capacitor is charged to 1 kV. What is the charge on it?", options: ["2 x 10⁻⁷ C", "2 x 10⁻¹⁰ C", "0.2 C", "200 C"], answer: "2 x 10⁻⁷ C" },
+            { question: "If three capacitors are in parallel, the total charge stored is the ____ of the charges on each capacitor.", options: ["average", "sum", "product", "same as"], answer: "sum" },
+            { question: "The potential difference across a discharging capacitor at time t = τ is:", options: ["0.63 V₀", "0.50 V₀", "0.37 V₀", "0"], answer: "0.37 V₀" },
+            { question: "When inserting a dielectric into an isolated charged capacitor, the energy stored:", options: ["Increases because work is done on the capacitor", "Decreases because the electric field does work pulling the dielectric in", "Stays the same because charge is conserved", "Becomes zero because the field is cancelled"], answer: "Decreases because the electric field does work pulling the dielectric in" },
+            { question: "In a charging RC circuit, when is the rate of charge accumulation the greatest?", options: ["At t=0", "At t=τ", "At t=5τ", "The rate is constant"], answer: "At t=0" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
