@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test: Physical Optics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Physical Optics Quiz</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on wavefronts, interference, diffraction, and more. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Physical Optics</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8 max-h-[50vh] overflow-y-auto pr-4">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Huygens's Principle and Wavefronts
+            { question: "According to Huygens's principle, each point on a wavefront acts as a source of:", options: ["New primary waves", "Secondary wavelets", "Reflected rays", "Refracted rays"], answer: "Secondary wavelets" },
+            { question: "A wavefront is defined as a line or surface connecting points of:", options: ["Constant velocity", "Constant phase", "Constant frequency", "Constant amplitude"], answer: "Constant phase" },
+            { question: "The direction of wave propagation is always _________ to the wavefront.", options: ["Parallel", "Perpendicular", "At a 45-degree angle", "In the opposite direction"], answer: "Perpendicular" },
+            { question: "How does Huygens's principle explain the diffraction of light passing through a narrow slit?", options: ["It states that light always travels in a straight line.", "It suggests the new wavefront bends around the edges of the slit.", "It describes the particle nature of light.", "It explains the quantization of light energy."], answer: "It suggests the new wavefront bends around the edges of the slit." },
+            { question: "What is the shape of the wavefronts generated by a point source of light?", options: ["Plane", "Circular/Spherical", "Cylindrical", "Elliptical"], answer: "Circular/Spherical" },
+            // Interference of Light
+            { question: "Interference is the phenomenon that occurs when:", options: ["Two or more waves overlap at a point.", "A single wave splits into two.", "A wave changes direction as it passes through a medium.", "A wave bounces off a surface."], answer: "Two or more waves overlap at a point." },
+            { question: "For a stable and clear interference pattern to be observed, the two light sources must be:", options: ["Incoherent", "Of different frequencies", "Coherent", "Polarized"], answer: "Coherent" },
+            { question: "What is the defining characteristic of coherent light sources?", options: ["They have the same amplitude.", "They emit light of the same color.", "They have a constant phase relationship.", "They are both point sources."], answer: "They have a constant phase relationship." },
+            { question: "Constructive interference occurs when the path difference between two coherent waves is:", options: ["An odd multiple of half a wavelength", "An integer multiple of the wavelength", "Zero only", "A quarter of the wavelength"], answer: "An integer multiple of the wavelength" },
+            { question: "Destructive interference results in a dark fringe. This occurs when the path difference is:", options: ["mλ", "(m + 1/2)λ", "2mλ", "(m + 1/4)λ"], answer: "(m + 1/2)λ" },
+            { question: "In the formula ΔL = mλ for constructive interference, what does 'm' represent?", options: ["The mass of the light particle", "The order of the bright fringe", "The medium's refractive index", "The magnification factor"], answer: "The order of the bright fringe" },
+            { question: "If two waves are in phase and have the same amplitude, what will be the amplitude of the resultant wave at a point of constructive interference?", options: ["Zero", "The same as the original amplitude", "Double the original amplitude", "Half the original amplitude"], answer: "Double the original amplitude" },
+            { question: "The principle of superposition states that the resultant displacement at any point is the _________ sum of the individual displacements.", options: ["Algebraic", "Vector", "Arithmetic mean", "Product"], answer: "Vector" },
+            { question: "What is meant by 'path difference' in the context of interference?", options: ["The difference in the frequencies of the two waves.", "The time difference between the arrivals of the two waves.", "The difference in the distances traveled from two sources to a point.", "The difference in the amplitudes of the two waves."], answer: "The difference in the distances traveled from two sources to a point." },
+            { question: "For the first-order dark fringe in an interference pattern, what is the value of 'm' in the destructive interference equation?", options: ["0", "1", "1/2", "-1"], answer: "0" },
+            // Young's Double-Slit Experiment
+            { question: "In Young's double-slit experiment, what is the purpose of the initial single slit?", options: ["To filter out unwanted wavelengths", "To create a coherent light source for the double slits", "To increase the intensity of the light", "To polarize the light"], answer: "To create a coherent light source for the double slits" },
+            { question: "The pattern observed on the screen in a double-slit experiment consists of:", options: ["A single bright spot", "A uniform illumination", "A series of alternating bright and dark fringes", "A rainbow spectrum"], answer: "A series of alternating bright and dark fringes" },
+            { question: "The central fringe in a Young's double-slit experiment is always:", options: ["Dark", "Bright", "The same color as the slits", "Invisible"], answer: "Bright" },
+            { question: "In the equation for the position of bright fringes, yₘ = (mλD)/d, what does 'D' represent?", options: ["The diameter of the slits", "The distance between the double slits and the screen", "The density of the medium", "The duration of the experiment"], answer: "The distance between the double slits and the screen" },
+            { question: "To increase the separation between the fringes (Δy) in a double-slit experiment, one could:", options: ["Decrease the distance to the screen (D)", "Decrease the wavelength of light (λ)", "Increase the separation between the slits (d)", "Increase the distance to the screen (D)"], answer: "Increase the distance to the screen (D)" },
+            { question: "The formula for the position of the mᵗʰ dark fringe from the central maximum is given by:", options: ["xₘ = (mλD)/d", "xₘ = (m + 1/2)(λD)/d", "xₘ = d/(mλD)", "xₘ = mλDd"], answer: "xₘ = (m + 1/2)(λD)/d" },
+            { question: "If the distance between the slits is doubled, the fringe separation will:", options: ["Double", "Be halved", "Remain the same", "Be quadrupled"], answer: "Be halved" },
+            { question: "If blue light is used instead of red light in a double-slit experiment, the fringes will be:", options: ["More widely spaced", "More closely spaced", "The same distance apart", "Brighter"], answer: "More closely spaced" },
+            { question: "What is the path difference for the third-order bright fringe?", options: ["1.5λ", "2λ", "2.5λ", "3λ"], answer: "3λ" },
+            { question: "The separation between two consecutive dark fringes is given by:", options: ["(λD)/(2d)", "(2λD)/d", "(λD)/d", "(λd)/D"], answer: "(λD)/d" },
+            // Diffraction
+            { question: "Diffraction is the phenomenon of:", options: ["Light bending as it passes from one medium to another.", "Light separating into its constituent colors.", "Light bending as it passes around an obstacle or through an aperture.", "Light being completely absorbed by a surface."], answer: "Light bending as it passes around an obstacle or through an aperture." },
+            { question: "For diffraction to be most noticeable, the size of the obstacle or aperture should be:", options: ["Much larger than the wavelength of the wave.", "Much smaller than the wavelength of the wave.", "Comparable to the wavelength of the wave.", "Exactly equal to the amplitude of the wave."], answer: "Comparable to the wavelength of the wave." },
+            { question: "The central bright fringe in a single-slit diffraction pattern is:", options: ["The same width as the other bright fringes.", "Narrower than the other bright fringes.", "Wider and much brighter than the other bright fringes.", "Completely dark."], answer: "Wider and much brighter than the other bright fringes." },
+            { question: "The condition for the minima (dark fringes) in a single-slit diffraction pattern is given by:", options: ["dsinθ = mλ", "asinθ = mλ", "asinθ = (m + 1/2)λ", "dsinθ = (m + 1/2)λ"], answer: "asinθ = mλ" },
+            { question: "In the single-slit diffraction formula, what does 'a' represent?", options: ["The amplitude of the wave", "The area of the slit", "The width of the slit", "The angle of diffraction"], answer: "The width of the slit" },
+            { question: "In a single-slit diffraction pattern, what value of 'm' is excluded for the minima?", options: ["m = 1", "m = -1", "m = 0", "m = 2"], answer: "m = 0" },
+            { question: "The width of the central maximum in a single-slit diffraction pattern is:", options: ["Half the width of the other maxima", "The same width as the other maxima", "Twice the width of the other maxima", "Four times the width of the other maxima"], answer: "Twice the width of the other maxima" },
+            { question: "To find the maximum number of orders of minima that can be observed in a single-slit diffraction pattern, one should set the angle θ to:", options: ["0°", "45°", "90°", "180°"], answer: "90°" },
+            // Diffraction Grating
+            { question: "A diffraction grating consists of a large number of:", options: ["Equally spaced parallel slits.", "Randomly spaced pinholes.", "Parallel mirrors.", "Prisms arranged in a series."], answer: "Equally spaced parallel slits." },
+            { question: "The bright fringes produced by a diffraction grating are _________ and _________ than those from a double slit.", options: ["Dimmer and wider", "Brighter and wider", "Dimmer and narrower", "Brighter and narrower"], answer: "Brighter and narrower" },
+            { question: "The condition for constructive interference (maxima) for a diffraction grating is given by:", options: ["dsinθₙ = (n + 1/2)λ", "dsinθₙ = nλ", "nsinθₙ = dλ", "dcosθₙ = nλ"], answer: "dsinθₙ = nλ" },
+            { question: "In the context of a diffraction grating, 'd' represents:", options: ["The width of a single line", "The total width of the grating", "The separation between adjacent slits", "The distance to the screen"], answer: "The separation between adjacent slits" },
+            { question: "If a diffraction grating has N lines per unit length, the slit separation 'd' can be calculated as:", options: ["d = N", "d = 1/N", "d = Nλ", "d = λ/N"], answer: "d = 1/N" },
+            { question: "For a given diffraction grating, which color of visible light will be diffracted the most (have the largest angle)?", options: ["Violet", "Blue", "Green", "Red"], answer: "Red" },
+            { question: "What is the order number 'n' for the central maximum in a diffraction grating pattern?", options: ["1", "-1", "0", "It has no order number."], answer: "0" },
+            // Problem Solving and Conceptual Questions
+            { question: "A student performs Young's double-slit experiment and observes a pattern of red and dark fringes. If they cover one of the slits, what will happen to the pattern on the screen?", options: ["The fringes will become brighter and more widely spaced.", "The interference pattern will disappear, and a single, wider bright band will be seen.", "The pattern will remain unchanged.", "The dark fringes will become bright, and the bright fringes will become dark."], answer: "The interference pattern will disappear, and a single, wider bright band will be seen." },
+            { question: "Imagine you are in a dark room with two small, coherent light bulbs, one red and one blue. If you place them close together and shine them on a wall, will you see a clear interference pattern?", options: ["Yes, a pattern of red, blue, and purple fringes will appear.", "Yes, but only if the bulbs are very bright.", "No, because the light sources are not monochromatic (they have different wavelengths).", "No, because light bulbs are never coherent."], answer: "No, because the light sources are not monochromatic (they have different wavelengths)." },
+            { question: "If Young's double-slit experiment were performed with white light, what would the central fringe look like?", options: ["White", "Black", "A rainbow with red on the inside", "A rainbow with violet on the inside"], answer: "White" },
+            { question: "Why can you hear someone talking from around a corner, but you cannot see them?", options: ["Sound waves travel faster than light waves.", "The wavelength of sound is much larger than the wavelength of light, so it diffracts more around the corner.", "Light waves are transverse, while sound waves are longitudinal.", "The human eye is less sensitive than the human ear."], answer: "The wavelength of sound is much larger than the wavelength of light, so it diffracts more around the corner." },
+            { question: "In a single-slit diffraction experiment, if the width of the slit is made smaller, the central maximum will become:", options: ["Narrower and dimmer", "Narrower and brighter", "Wider and dimmer", "Wider and brighter"], answer: "Wider and dimmer" },
+            { question: "Two slits are separated by a distance 'd'. Light of wavelength λ is shone through them. For the first-order bright fringe to appear at an angle of 30°, what must be the relationship between d and λ?", options: ["d = λ", "d = 2λ", "d = λ/2", "d = 3λ"], answer: "d = 2λ" },
+            { question: "A diffraction grating is used to separate the colors of white light. Which color will have its first-order maximum closest to the central maximum?", options: ["Red", "Yellow", "Green", "Violet"], answer: "Violet" },
+            { question: "The path difference between two waves arriving at a point is 2.5λ. What will be observed at this point?", options: ["A bright fringe (constructive interference)", "A dark fringe (destructive interference)", "A fringe of intermediate intensity", "No fringe at all"], answer: "A dark fringe (destructive interference)" },
+            { question: "In a double-slit experiment, the fifth-order bright fringe (m=5) of a monochromatic light source is located 1.2 cm from the central maximum. Where would the tenth-order bright fringe be located?", options: ["1.2 cm", "1.8 cm", "2.4 cm", "6.0 cm"], answer: "2.4 cm" },
+            { question: "Which of the following phenomena provides the strongest evidence for the wave nature of light?", options: ["Reflection", "Refraction", "Interference and Diffraction", "The photoelectric effect"], answer: "Interference and Diffraction" },
+            { question: "The distance between the first and fifth minima of a single-slit diffraction pattern is 0.35 mm. What is the distance between the first and second minima? (Assume the screen is far from the slit).", options: ["0.070 mm", "0.0875 mm", "0.175 mm", "0.280 mm"], answer: "0.0875 mm" },
+            { question: "A laser beam is shone through two very narrow slits. If the distance between the slits is less than the wavelength of the laser light, what will be observed?", options: ["A very clear interference pattern.", "Only one broad bright fringe.", "No light will pass through.", "The light will be completely reflected."], answer: "Only one broad bright fringe." },
+            { question: "When a compact disc (CD) is viewed under white light, a rainbow of colors is seen. This is due to:", options: ["Refraction", "Polarization", "The photoelectric effect", "Diffraction by the closely spaced tracks on the CD."], answer: "Diffraction by the closely spaced tracks on the CD." },
+            { question: "The equation for constructive interference in a double-slit experiment is dsinθ = mλ. Why can we approximate this as d(y/D) = mλ for small angles?", options: ["Because for small angles, sinθ ≈ tanθ", "Because for small angles, sinθ ≈ cosθ", "Because the screen is flat.", "Because the light is coherent."], answer: "Because for small angles, sinθ ≈ tanθ" },
+            { question: "In the equation for destructive interference, ΔL = (m + 1/2)λ, the term '1/2' represents a phase shift of:", options: ["90 degrees (π/2 radians)", "180 degrees (π radians)", "270 degrees (3π/2 radians)", "360 degrees (2π radians)"], answer: "180 degrees (π radians)" },
+            { question: "The second-order bright fringe in a double-slit experiment occurs at an angle where the path difference is exactly:", options: ["λ", "1.5λ", "2λ", "2.5λ"], answer: "2λ" },
+            { question: "A student notices that the fringes in a double-slit experiment are too close together to be measured accurately. To spread them out, they should:", options: ["Move the screen closer to the slits.", "Use light with a shorter wavelength.", "Decrease the separation between the slits.", "Increase the intensity of the light."], answer: "Decrease the separation between the slits." },
+            { question: "What is the path difference for a point on the screen exactly halfway between the central maximum and the first dark fringe in a double-slit experiment?", options: ["0", "λ/4", "λ/2", "3λ/4"], answer: "λ/4" },
+            { question: "For a single slit of width 'a', the first minimum occurs at an angle θ such that sinθ = λ/a. The angular width of the central maximum is therefore approximately:", options: ["λ/a", "2λ/a", "λ/(2a)", "a/λ"], answer: "2λ/a" },
+            { question: "A diffraction grating has 1000 lines/mm. What is the slit separation 'd'?", options: ["1000 m", "0.001 m", "1 x 10⁻⁶ m", "1 x 10⁻³ m"], answer: "1 x 10⁻⁶ m" },
+            { question: "Which principle states that every point on a wavefront can be considered as a source of secondary spherical wavelets?", options: ["Principle of Superposition", "Huygens's Principle", "Fermat's Principle", "Snell's Law"], answer: "Huygens's Principle" },
+            { question: "For two light waves to interfere destructively, they must meet:", options: ["Crest to crest", "Trough to trough", "Crest to trough", "In the same phase"], answer: "Crest to trough" },
+            { question: "The bright fringes in an interference pattern are also known as:", options: ["Minima", "Maxima", "Nodes", "Antinodes"], answer: "Maxima" },
+            { question: "What happens to the interference pattern if the entire Young's double-slit apparatus is submerged in water (refractive index ~1.33)?", options: ["The fringes get closer together.", "The fringes get farther apart.", "The fringe pattern disappears.", "The fringe pattern is unchanged."], answer: "The fringes get closer together." },
+            { question: "The condition for the third dark fringe in a double-slit experiment corresponds to a path difference of:", options: ["2λ", "2.5λ", "3λ", "3.5λ"], answer: "2.5λ" },
+            { question: "Why is a laser a good light source for demonstrating interference and diffraction?", options: ["It is very intense.", "It is highly coherent and monochromatic.", "It is easy to align.", "It produces a narrow beam."], answer: "It is highly coherent and monochromatic." },
+            { question: "The central maximum of a single-slit diffraction pattern is flanked immediately by:", options: ["The first-order maxima", "The second-order maxima", "The first-order minima (dark fringes)", "A region of uniform brightness"], answer: "The first-order minima (dark fringes)" },
+            { question: "Two coherent sources emit waves of wavelength λ. At a point where the path difference is λ/4, the interference will be:", options: ["Purely constructive", "Purely destructive", "Neither purely constructive nor purely destructive", "It depends on the amplitude."], answer: "Neither purely constructive nor purely destructive" },
+            { question: "In a diffraction grating spectrum, which order (n) is most spread out?", options: ["The lowest order", "The highest order", "All orders are equally spread out", "The zeroth order"], answer: "The highest order" },
+            { question: "The 'self-interference' that causes the single-slit diffraction pattern is due to interference between:", options: ["The light and the edges of the slit.", "The incident light and the reflected light.", "Wavelets originating from different points within the same slit.", "The light and the screen."], answer: "Wavelets originating from different points within the same slit." },
+            { question: "A screen is placed 2.0 m away from a double slit. If light of wavelength 500 nm is used and the second-order bright fringe is 4.0 mm from the center, what is the separation of the slits?", options: ["0.25 mm", "0.50 mm", "1.0 mm", "2.0 mm"], answer: "0.50 mm" },
+            { question: "Light of wavelength 600 nm is incident on a single slit of width 3.0 x 10⁻⁶ m. What is the angle of the first dark fringe?", options: ["sin⁻¹(0.1)", "sin⁻¹(0.2)", "sin⁻¹(0.3)", "sin⁻¹(0.5)"], answer: "sin⁻¹(0.2)" },
+            { question: "A diffraction grating produces a first-order maximum at an angle of 20° for light of a certain wavelength. At what angle will the second-order maximum be produced?", options: ["Less than 40°", "Exactly 40°", "Greater than 40°", "It cannot be determined without knowing the wavelength."], answer: "It cannot be determined without knowing the wavelength." },
+            { question: "The phenomenon of diffraction places a fundamental limit on the:", options: ["Speed of light", "Power of a light source", "Ability of an optical instrument to resolve fine details", "Color of light"], answer: "Ability of an optical instrument to resolve fine details" },
+            { question: "If the path difference between two interfering waves is 4λ, the phase difference between them is:", options: ["2π radians", "4π radians", "8π radians", "16π radians"], answer: "8π radians" },
+            { question: "In a single-slit diffraction pattern, the intensity of the first-order bright fringe is:", options: ["Equal to the intensity of the central bright fringe.", "Slightly greater than the central bright fringe.", "Significantly less than the central bright fringe.", "Zero."], answer: "Significantly less than the central bright fringe." },
+            { question: "An interference pattern is formed by two coherent sources. The distance between the zeroth and the third bright fringe is 9 mm. What is the fringe separation (Δy)?", options: ["1.5 mm", "3 mm", "4.5 mm", "9 mm"], answer: "3 mm" },
+            { question: "A monochromatic light source of wavelength λ is incident on a diffraction grating with slit separation d. The maximum order of bright fringe that can be observed is limited by the condition:", options: ["n ≤ d/λ", "n > d/λ", "n < λ/d", "n > λ/d"], answer: "n ≤ d/λ" },
+            { question: "According to Huygens, the new position of a wavefront is the _________ of the secondary wavelets.", options: ["Sum", "Product", "Envelope (tangent surface)", "Average"], answer: "Envelope (tangent surface)" },
+            { question: "What would be observed on the screen if the single slit in Young's experiment was replaced by a very large opening?", options: ["A sharper interference pattern.", "A dimmer interference pattern.", "The interference pattern would vanish, leaving just the geometric shadow of the double slits.", "The pattern would spread out more."], answer: "The interference pattern would vanish, leaving just the geometric shadow of the double slits." },
+            { question: "A plane wavefront is incident on a narrow slit. According to Huygens' principle, the wavefront that passes through the slit will be:", options: ["Still a plane wave", "A cylindrical or circular wave", "A single point", "Completely absorbed"], answer: "A cylindrical or circular wave" },
+            { question: "The condition for the second minimum (dark fringe) in a single-slit diffraction pattern is:", options: ["asinθ = λ", "asinθ = 1.5λ", "asinθ = 2λ", "asinθ = 2.5λ"], answer: "asinθ = 2λ" },
+            { question: "In the double-slit experiment, the path difference from the two slits to the central point on the screen is:", options: ["λ", "λ/2", "Zero", "Dependent on the slit separation"], answer: "Zero" },
+            { question: "The angular separation between the bright fringes in a diffraction grating experiment is greater for:", options: ["Higher orders", "Lower orders", "It is the same for all orders", "The zeroth order"], answer: "Higher orders" },
+            { question: "Why are interference effects for light not commonly observed in everyday life?", options: ["Light travels too fast.", "Most common light sources are incoherent.", "The wavelength of light is too large.", "The human eye cannot detect interference."], answer: "Most common light sources are incoherent." },
+            { question: "For a diffraction grating, if the number of lines per centimeter is doubled, the angle of diffraction for a given order and wavelength will:", options: ["Decrease", "Increase", "Remain the same", "Be halved"], answer: "Increase" },
+            { question: "A bright fringe is observed at a point P in a double-slit experiment. This means that at point P:", options: ["The waves from the two slits arrive out of phase.", "The waves from the two slits cancel each other out.", "The waves from the two slits arrive in phase.", "Only one wave reaches point P."], answer: "The waves from the two slits arrive in phase." },
+            { question: "If the distance 'D' to the screen in a single-slit experiment is doubled, the width of the central maximum on the screen will:", options: ["Be halved", "Remain the same", "Double", "Be quadrupled"], answer: "Double" },
+            { question: "A key difference between the interference pattern from a double slit and the diffraction pattern from a single slit is that:", options: ["The double-slit pattern has dark fringes, while the single-slit does not.", "The fringes in the double-slit pattern are all of equal intensity (approximately).", "The single-slit pattern has a much wider central maximum.", "Both b and c are correct."], answer: "Both b and c are correct." },
+            { question: "The third-order maximum for a diffraction grating is observed at an angle of 90°. What is the relationship between the slit separation d and the wavelength λ?", options: ["d = λ", "d = 2λ", "d = 3λ", "No third-order maximum can be observed."], answer: "d = 3λ" },
+            { question: "Which of these is NOT a necessary condition to observe a clear and stable interference pattern from two sources?", options: ["The sources must be coherent.", "The waves must have the same wavelength.", "The waves must have the same amplitude.", "The sources must be polarized."], answer: "The sources must be polarized." },
+            { question: "The path difference for the second order minimum in a double-slit experiment is:", options: ["1.0λ", "1.5λ", "2.0λ", "2.5λ"], answer: "1.5λ" },
+            { question: "If a student measures the distance from the central bright fringe to the 3rd dark fringe in a double-slit experiment, which formula should they use?", options: ["yₘ = (mλD)/d with m=3", "xₘ = (m + 1/2)(λD)/d with m=2", "xₘ = (m + 1/2)(λD)/d with m=3", "yₘ = (mλD)/d with m=2.5"], answer: "xₘ = (m + 1/2)(λD)/d with m=2" },
+            { question: "Light with a wavelength of 400 nm passes through a single slit of width 2.0 x 10⁻⁶ m. The distance to the screen is 1.5 m. What is the width of the central bright fringe?", options: ["0.30 m", "0.45 m", "0.60 m", "0.90 m"], answer: "0.60 m" },
+            { question: "In a double-slit experiment, the separation between the slits is 0.1 mm, and the screen is 1 m away. The fringe separation is found to be 6 mm. What is the wavelength of the light used?", options: ["400 nm", "500 nm", "600 nm", "700 nm"], answer: "600 nm" },
+            { question: "A diffraction grating has 600 lines/mm. It is illuminated with light of wavelength 500 nm. What is the angle of the first-order maximum?", options: ["sin⁻¹(0.1)", "sin⁻¹(0.2)", "sin⁻¹(0.3)", "sin⁻¹(0.4)"], answer: "sin⁻¹(0.3)" },
+            { question: "The term 'monochromatic' means the light consists of:", options: ["A single color or wavelength.", "A single ray.", "A single intensity.", "A single polarization."], answer: "A single color or wavelength." },
+            { question: "In a single-slit diffraction pattern, where does the third dark fringe appear?", options: ["asinθ = 2λ", "asinθ = 2.5λ", "asinθ = 3λ", "asinθ = 3.5λ"], answer: "asinθ = 3λ" },
+            { question: "The 'order' of an interference or diffraction fringe refers to:", options: ["The brightness of the fringe.", "The integer multiple of the wavelength in the path difference formula.", "The distance of the fringe from the center.", "The color of the fringe."], answer: "The integer multiple of the wavelength in the path difference formula." },
+            { question: "Huygens' principle was a crucial step in developing the:", options: ["Particle theory of light", "Wave theory of light", "Quantum theory of light", "Corpuscular theory of light"], answer: "Wave theory of light" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
