@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test: Electrostatics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Electrostatics MCQ Challenge</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge of electrostatics. This is a comprehensive, 100-question quiz. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Electrostatics Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Electrostatics is the study of:", options: ["Electric charges in motion.", "Magnetic fields.", "Electric charges at rest.", "The flow of electrons in a conductor."], answer: "Electric charges at rest." },
+            { question: "Two positive point charges are brought near each other. The force between them is:", options: ["Attractive.", "Repulsive.", "Zero.", "Dependent on their mass."], answer: "Repulsive." },
+            { question: "An object becomes negatively charged when it:", options: ["Loses protons.", "Gains protons.", "Loses electrons.", "Gains electrons."], answer: "Gains electrons." },
+            { question: "The principle of conservation of charge states that:", options: ["The net charge of an isolated system can be created or destroyed.", "The net charge of an isolated system remains constant.", "Positive and negative charges can be created from nothing.", "Charge is only conserved in conductors."], answer: "The net charge of an isolated system remains constant." },
+            { question: "The elementary charge, e, has a magnitude of approximately:", options: ["1.60 x 10¹⁹ C", "9.11 x 10⁻³¹ C", "1.60 x 10⁻¹⁹ C", "6.25 x 10¹⁸ C"], answer: "1.60 x 10⁻¹⁹ C" },
+            { question: "A neutral object contains:", options: ["No charges at all.", "Only positive charges.", "Only negative charges.", "An equal number of positive and negative charges."], answer: "An equal number of positive and negative charges." },
+            { question: "The SI unit of electric charge is the:", options: ["Ampere (A)", "Volt (V)", "Newton (N)", "Coulomb (C)"], answer: "Coulomb (C)" },
+            { question: "When a glass rod is rubbed with silk, the glass rod becomes positively charged. This is because it:", options: ["Gained protons from the silk.", "Lost electrons to the silk.", "Gained neutrons from the air.", "Lost protons to the silk."], answer: "Lost electrons to the silk." },
+            { question: "Which of the following is NOT a fundamental property of electric charge?", options: ["Charge is quantized.", "Charge is conserved.", "Like charges repel, opposite charges attract.", "Charge is dependent on the object's velocity."], answer: "Charge is dependent on the object's velocity." },
+            { question: "A charged rod is brought near a pile of neutral paper scraps. The scraps are attracted to the rod. This phenomenon is called:", options: ["Conduction.", "Induction.", "Conservation.", "Repulsion."], answer: "Induction." },
+            { question: "Coulomb's Law states that the electric force between two point charges is:", options: ["Directly proportional to the distance between them.", "Inversely proportional to the distance between them.", "Directly proportional to the square of the distance between them.", "Inversely proportional to the square of the distance between them."], answer: "Inversely proportional to the square of the distance between them." },
+            { question: "If the distance between two point charges is doubled, the electric force between them will be:", options: ["Doubled.", "Halved.", "Quartered.", "Quadrupled."], answer: "Quartered." },
+            { question: "If the magnitude of one of two point charges is doubled, the electric force between them will be:", options: ["Doubled.", "Halved.", "Quartered.", "Unchanged."], answer: "Doubled." },
+            { question: "Two charges, +Q and -Q, are separated by a distance r. The force between them is F. If the distance is halved to r/2, what is the new force?", options: ["F/4", "F/2", "2F", "4F"], answer: "4F" },
+            { question: "The Coulomb constant, k, is approximately:", options: ["9.0 x 10⁹ N·m²/C²", "8.85 x 10⁻¹² C²/N·m²", "1.60 x 10⁻¹⁹ N·m²/C²", "6.67 x 10⁻¹¹ N·m²/C²"], answer: "9.0 x 10⁹ N·m²/C²" },
+            { question: "Calculate the magnitude of the force between a +5 μC charge and a -3 μC charge separated by 10 cm.", options: ["13.5 N", "1.35 N", "135 N", "0.135 N"], answer: "13.5 N" },
+            { question: "The force between two point charges is F. If the magnitude of both charges is doubled and the distance between them is also doubled, the new force will be:", options: ["F/2", "F", "2F", "4F"], answer: "F" },
+            { question: "The 'principle of superposition' for electrostatic forces means that the net force on a charge is the:", options: ["Product of the individual forces.", "Algebraic sum of the individual forces.", "Vector sum of the individual forces.", "Average of the individual forces."], answer: "Vector sum of the individual forces." },
+            { question: "Three charges are placed on a line: q₁ = +2C at x=0, q₂ = -1C at x=1m, and q₃ = +3C at x=2m. What is the direction of the net force on charge q₂?", options: ["To the left.", "To the right.", "The net force is zero.", "Upwards."], answer: "To the left." },
+            { question: "In the setup from the previous question, which force on q₂ is stronger?", options: ["The force from q₁.", "The force from q₃.", "The forces are equal in magnitude.", "It cannot be determined."], answer: "The force from q₃." },
+            { question: "The permittivity of free space, ε₀, is related to Coulomb's constant k by the equation:", options: ["k = 4πε₀", "k = 1 / (4πε₀)", "k = ε₀ / 4π", "k = 4π / ε₀"], answer: "k = 1 / (4πε₀)" },
+            { question: "The nature of the electrostatic force is:", options: ["Always attractive.", "Always repulsive.", "A central force, acting along the line connecting the charges.", "A short-range force, only acting at nuclear distances."], answer: "A central force, acting along the line connecting the charges." },
+            { question: "Two identical small conducting spheres are charged with +10 C and -4 C. They are brought into contact and then separated. What is the charge on each sphere?", options: ["+10 C and -4 C", "+6 C and 0 C", "+3 C and +3 C", "+7 C and +7 C"], answer: "+3 C and +3 C" },
+            { question: "After the two spheres in the previous question are separated by their original distance, the force between them will be:", options: ["Attractive.", "Repulsive.", "Zero.", "The same as the initial attractive force."], answer: "Repulsive." },
+            { question: "The unit N/C is equivalent to:", options: ["V·m", "J/C", "V/m", "J·m"], answer: "V/m" },
+            { question: "An electric field is defined as:", options: ["The force per unit mass.", "The force per unit positive charge.", "The work done per unit charge.", "The region around a magnet."], answer: "The force per unit positive charge." },
+            { question: "The direction of the electric field at a point is:", options: ["The direction of the force on a negative test charge placed at that point.", "The direction of the force on a positive test charge placed at that point.", "Always towards a positive source charge.", "Tangent to the equipotential line at that point."], answer: "The direction of the force on a positive test charge placed at that point." },
+            { question: "Electric field lines originate from __ charges and terminate on __ charges.", options: ["positive, negative", "negative, positive", "positive, positive", "negative, negative"], answer: "positive, negative" },
+            { question: "The density of electric field lines in a region represents the:", options: ["Direction of the field.", "Magnitude of the charge.", "Strength of the electric field.", "Potential energy in the field."], answer: "Strength of the electric field." },
+            { question: "What is the magnitude of the electric field at a distance of 3.0 m from a +2.0 C point charge?", options: ["2.0 x 10⁹ N/C", "6.0 x 10⁹ N/C", "18.0 x 10⁹ N/C", "0.67 x 10⁹ N/C"], answer: "2.0 x 10⁹ N/C" },
+            { question: "A charge of +4 μC is placed in an electric field of strength 500 N/C. What is the magnitude of the force on the charge?", options: ["2.0 x 10⁻³ N", "1.25 x 10⁸ N", "0.008 N", "2000 N"], answer: "2.0 x 10⁻³ N" },
+            { question: "For a single positive point charge, the electric field lines:", options: ["Are concentric circles.", "Point radially inward.", "Point radially outward.", "Form a uniform grid."], answer: "Point radially outward." },
+            { question: "In a uniform electric field, the field lines are:", options: ["Parallel, equally spaced, and point in the same direction.", "Converging to a single point.", "Radiating outwards from a single point.", "Curved and unequally spaced."], answer: "Parallel, equally spaced, and point in the same direction." },
+            { question: "If the distance from a point charge is tripled, the electric field strength at that point becomes:", options: ["1/3 of the original value.", "1/9 of the original value.", "3 times the original value.", "9 times the original value."], answer: "1/9 of the original value." },
+            { question: "Two point charges, +Q and -4Q, are placed on the x-axis. Where is the electric field most likely to be zero?", options: ["Between the two charges.", "To the right of the -4Q charge.", "To the left of the +Q charge.", "The electric field is never zero."], answer: "To the left of the +Q charge." },
+            { question: "An electric dipole consists of:", options: ["Two equal positive charges.", "Two equal negative charges.", "Two equal and opposite charges separated by a small distance.", "A single isolated charge."], answer: "Two equal and opposite charges separated by a small distance." },
+            { question: "The electric field inside a hollow conducting sphere with a net charge on its surface is:", options: ["Zero.", "Uniform and non-zero.", "Radially outward.", "Dependent on the charge's magnitude."], answer: "Zero." },
+            { question: "What is the electric field strength at a point P located 2m from charge q₁ = +8C and 2m from charge q₂ = -8C, if P is equidistant from both?", options: ["The vector sum of the fields from q₁ and q₂.", "The algebraic sum of the fields from q₁ and q₂.", "Zero.", "The field due to q₁ only."], answer: "The vector sum of the fields from q₁ and q₂." },
+            { question: "The unit of electric field strength, N/C, is also equivalent to:", options: ["J/C", "V/m", "A/s", "Wb/m²"], answer: "V/m" },
+            { question: "A force of 0.08 N is exerted on a charge of 4 x 10⁻⁶ C. The magnitude of the electric field is:", options: ["2 x 10⁴ N/C", "3.2 x 10⁻⁷ N/C", "5 x 10⁴ N/C", "20 N/C"], answer: "2 x 10⁴ N/C" },
+            { question: "A positive charge q is placed in a uniform electric field E pointing to the right. The force on the charge is:", options: ["To the left.", "To the right.", "Upwards.", "Zero."], answer: "To the right." },
+            { question: "An electron is placed in a uniform electric field E pointing to the right. The force on the electron is:", options: ["To the left.", "To the right.", "Downwards.", "Zero."], answer: "To the left." },
+            { question: "The acceleration of a particle of charge q and mass m in a uniform electric field E is given by:", options: ["a = mE/q", "a = qm/E", "a = qE/m", "a = qB/m"], answer: "a = qE/m" },
+            { question: "An electron enters a uniform electric field perpendicularly to the field lines. Its path will be:", options: ["A straight line.", "A circle.", "A helix.", "A parabola."], answer: "A parabola." },
+            { question: "A proton and an electron are placed in the same uniform electric field. Which statement is true?", options: ["They experience forces of equal magnitude and direction.", "They experience forces of equal magnitude but opposite directions.", "The force on the proton is much stronger.", "The force on the electron is much stronger."], answer: "They experience forces of equal magnitude but opposite directions." },
+            { question: "A proton and an electron are placed in the same uniform electric field. Which particle experiences the greater acceleration?", options: ["The proton.", "The electron.", "They experience the same acceleration.", "Neither accelerates."], answer: "The electron." },
+            { question: "If a charged particle is moving parallel to the electric field lines, its speed will:", options: ["Remain constant.", "Increase if positive, decrease if negative (assuming it moves with the field).", "Decrease regardless of charge.", "Increase regardless of charge."], answer: "Increase if positive, decrease if negative (assuming it moves with the field)." },
+            { question: "The work done by the electric field on a charge q moving a distance d in a uniform field E is:", options: ["W = qEd", "W = qE/d", "W = Ed/q", "W = 0"], answer: "W = qEd" },
+            { question: "A particle with charge q and mass m is released from rest in a uniform field E. After a time t, its velocity is:", options: ["v = (mE/q)t", "v = (qE/m)t", "v = (q/mE)t", "v = qt/m"], answer: "v = (qE/m)t" },
+            { question: "To make a charged particle move in a straight line through perpendicular electric and magnetic fields, the magnetic force must:", options: ["Be in the same direction as the electric force.", "Be zero.", "Be equal in magnitude and opposite in direction to the electric force.", "Be perpendicular to the electric force."], answer: "Be equal in magnitude and opposite in direction to the electric force." },
+            { question: "Electric potential is defined as:", options: ["Electric force per unit charge.", "Electric potential energy per unit charge.", "Electric force times distance.", "Electric potential energy times charge."], answer: "Electric potential energy per unit charge." },
+            { question: "The SI unit for electric potential is the:", options: ["Joule (J)", "Newton (N)", "Watt (W)", "Volt (V)"], answer: "Volt (V)" },
+            { question: "Electric potential is a:", options: ["Vector quantity.", "Scalar quantity.", "Phasor.", "Tensor."], answer: "Scalar quantity." },
+            { question: "What is the electric potential at a distance of 2.0 m from a +4.0 C point charge?", options: ["18 x 10⁹ V", "9 x 10⁹ V", "2 x 10⁹ V", "8 x 10⁹ V"], answer: "18 x 10⁹ V" },
+            { question: "The total electric potential at a point due to a system of charges is the:", options: ["Vector sum of the potentials from each charge.", "Algebraic sum of the potentials from each charge.", "Product of the potentials from each charge.", "Highest potential value among all charges."], answer: "Algebraic sum of the potentials from each charge." },
+            { question: "A positive charge is moved from a point of low potential to a point of high potential. The work done on the charge by the electric field is:", options: ["Positive.", "Negative.", "Zero.", "Infinite."], answer: "Negative." },
+            { question: "The potential difference between two points is 10 V. How much work is required to move a 2 C charge from one point to the other?", options: ["5 J", "0.2 J", "12 J", "20 J"], answer: "20 J" },
+            { question: "For a uniform electric field E, the potential difference V between two points separated by a distance d parallel to the field is:", options: ["V = E/d", "V = d/E", "V = Ed", "V = E/d²"], answer: "V = Ed" },
+            { question: "An equipotential surface is a surface where:", options: ["The electric field is constant.", "The electric force is constant.", "The electric potential is constant.", "The charge is constant."], answer: "The electric potential is constant." },
+            { question: "Electric field lines are always __ to equipotential surfaces.", options: ["Parallel", "Perpendicular", "At a 45° angle", "Tangent"], answer: "Perpendicular" },
+            { question: "A charge of -5 μC is located at the origin. What is the electric potential at the point x = 5 m?", options: ["-9 x 10³ V", "+9 x 10³ V", "-45 x 10³ V", "+45 x 10³ V"], answer: "-9 x 10³ V" },
+            { question: "The electric potential at an infinite distance from a point charge is defined to be:", options: ["Infinite.", "Zero.", "Equal to the charge's potential.", "Undefined."], answer: "Zero." },
+            { question: "A 12 V battery does 36 J of work on a charge. What is the magnitude of the charge?", options: ["3 C", "0.33 C", "432 C", "48 C"], answer: "3 C" },
+            { question: "Two points, A and B, are in an electric field. The potential at A is +100V and the potential at B is +50V. A positive charge released from rest at A will:", options: ["Move towards B.", "Move towards A.", "Remain at rest.", "Move perpendicular to the line connecting A and B."], answer: "Move towards B." },
+            { question: "The unit Volt (V) is equivalent to:", options: ["Joule / Coulomb", "Newton / Coulomb", "Coulomb / second", "Joule / second"], answer: "Joule / Coulomb" },
+            { question: "A point P is located 3m from a charge q₁ = +2C and 4m from a charge q₂ = -2C. What is the net potential at point P?", options: ["(k · 2/3) + (k · (-2)/4)", "(k · 2/3) - (k · (-2)/4)", "√((k · 2/3)² + (k · (-2)/4)²)", "Zero."], answer: "(k · 2/3) + (k · (-2)/4)" },
+            { question: "A uniform electric field of 2000 V/m exists between two parallel plates. What is the potential difference if the plates are 5 cm apart?", options: ["40,000 V", "100 V", "400 V", "10 V"], answer: "100 V" },
+            { question: "If the potential is constant throughout a region of space, the electric field in that region is:", options: ["Constant and non-zero.", "Zero.", "Increasing.", "Decreasing."], answer: "Zero." },
+            { question: "A negative charge will naturally move from a region of __ potential to a region of __ potential.", options: ["high, low", "low, high", "zero, non-zero", "It will not move."], answer: "low, high" },
+            { question: "The work done moving a charge between two points on the same equipotential surface is:", options: ["Positive.", "Negative.", "Zero.", "Dependent on the path taken."], answer: "Zero." },
+            { question: "Electric potential energy (U) of a system of two point charges is:", options: ["The work done to bring the charges from infinity to their current positions.", "The force between the charges.", "The potential of one charge.", "The charge divided by the distance."], answer: "The work done to bring the charges from infinity to their current positions." },
+            { question: "The formula for the electric potential energy of two point charges q₁ and q₂ separated by distance r is:", options: ["U = k |q₁q₂| / r²", "U = k q₁q₂ / r", "U = k q₁q₂ / r²", "U = k |q₁q₂| / r"], answer: "U = k q₁q₂ / r" },
+            { question: "Electric potential energy is a:", options: ["Vector quantity.", "Scalar quantity.", "Phasor.", "Tensor."], answer: "Scalar quantity." },
+            { question: "The SI unit for electric potential energy is the:", options: ["Volt (V)", "Coulomb (C)", "Joule (J)", "Newton (N)"], answer: "Joule (J)" },
+            { question: "If two positive charges are brought closer together, the potential energy of the system:", options: ["Increases.", "Decreases.", "Remains the same.", "Becomes zero."], answer: "Increases." },
+            { question: "If a positive and a negative charge are brought closer together, the potential energy of the system:", options: ["Increases.", "Decreases (becomes more negative).", "Remains the same.", "Becomes zero."], answer: "Decreases (becomes more negative)." },
+            { question: "What is the potential energy of a system consisting of a +2 μC charge and a +3 μC charge separated by 3 m?", options: ["1.8 x 10⁻² J", "6 x 10⁻³ J", "18 x 10³ J", "2 x 10⁻³ J"], answer: "1.8 x 10⁻² J" },
+            { question: "What is the potential energy of the electron in a hydrogen atom, at a distance of 5.3 x 10⁻¹¹ m from the proton? (Charge of electron = -e, proton = +e)", options: ["+4.35 x 10⁻¹⁸ J", "-4.35 x 10⁻¹⁸ J", "+8.20 x 10⁻⁸ J", "-8.20 x 10⁻⁸ J"], answer: "-4.35 x 10⁻¹⁸ J" },
+            { question: "To calculate the total potential energy of a system of three charges, you must sum the potential energies of:", options: ["The two strongest pairs.", "The two weakest pairs.", "All three possible pairs of charges.", "The charge in the middle with the other two."], answer: "All three possible pairs of charges." },
+            { question: "The relationship between electric potential energy (U), charge (q), and electric potential (V) is:", options: ["U = V/q", "U = q/V", "U = qV", "U = qV²"], answer: "U = qV" },
+            { question: "A system of two charges has negative potential energy. This implies that the charges are:", options: ["Both positive.", "Both negative.", "Of opposite sign.", "Both zero."], answer: "Of opposite sign." },
+            { question: "If the distance between two positive charges is increased, the work done by the electric field is:", options: ["Positive.", "Negative.", "Zero.", "It depends on the path."], answer: "Positive." },
+            { question: "Three equal positive charges q are placed at the corners of an equilateral triangle of side a. The total potential energy of the system is:", options: ["k q² / a", "2k q² / a", "3k q² / a", "k q² / a²"], answer: "3k q² / a" },
+            { question: "An electronvolt (eV) is a unit of:", options: ["Potential.", "Force.", "Energy.", "Charge."], answer: "Energy." },
+            { question: "How much energy is 1 eV?", options: ["1 Joule", "1.60 x 10⁻¹⁹ Joules", "1.60 x 10¹⁹ Joules", "1 Volt"], answer: "1.60 x 10⁻¹⁹ Joules" },
+            { question: "Which statement correctly distinguishes between electric potential and electric field?", options: ["Field is a scalar, potential is a vector.", "Field is energy per charge, potential is force per charge.", "Field is a vector representing force per charge, potential is a scalar representing energy per charge.", "They are two different names for the same quantity."], answer: "Field is a vector representing force per charge, potential is a scalar representing energy per charge." },
+            { question: "A charge is moved from point A to point B in an electric field. The work done is independent of the path taken. This indicates that the electrostatic force is:", options: ["Frictional.", "Non-conservative.", "Conservative.", "Centripetal."], answer: "Conservative." },
+            { question: "What is the net force on a charge of -2μC placed at the exact center of a square with charges of +1μC at each of the four corners?", options: ["Towards the top corner.", "Towards the bottom corner.", "Diagonally.", "Zero."], answer: "Zero." },
+            { question: "What is the net electric potential at the exact center of the square in the previous question?", options: ["Zero.", "Positive.", "Negative.", "It cannot be determined without the side length."], answer: "Positive." },
+            { question: "A hollow metal sphere is given a positive charge. The electric potential inside the sphere is:", options: ["Zero.", "Constant and equal to the potential at the surface.", "Varies inversely with distance from the center.", "Varies directly with distance from the center."], answer: "Constant and equal to the potential at the surface." },
+            { question: "A proton is accelerated from rest through a potential difference of 5000 V. What is its final kinetic energy?", options: ["5000 J", "5000 eV", "5000 C", "5000 N"], answer: "5000 eV" },
+            { question: "Two parallel plates are separated by 2 cm and have a potential difference of 100 V. The magnitude of the electric field between them is:", options: ["50 N/C", "200 N/C", "5000 N/C", "2 N/C"], answer: "5000 N/C" },
+            { question: "The force on a current-carrying wire in a magnetic field is an example of:", options: ["Electrostatics.", "The Lorentz force acting on many moving charges.", "Gravitational force.", "Nuclear force."], answer: "The Lorentz force acting on many moving charges." },
+            { question: "Which of the following quantities has the same units as the electric field (N/C)?", options: ["J/m", "V/m", "C/s", "T·m/s"], answer: "V/m" },
+            { question: "Two charges, q₁ and q₂, exert a force F on each other. If a third charge q₃ is brought nearby, the force between q₁ and q₂:", options: ["Increases.", "Decreases.", "Remains F.", "Becomes zero."], answer: "Remains F." },
+            { question: "In a diagram of an electric dipole, the electric field is strongest:", options: ["Far away from the dipole.", "On the perpendicular bisector of the dipole axis.", "In the region directly between the two charges.", "At a point equidistant from both charges."], answer: "In the region directly between the two charges." },
+            { question: "Calculate the work done to bring a +1 C charge from infinity to a point 1 m away from a +1 C charge.", options: ["k Joules", "k/2 Joules", "2k Joules", "Zero"], answer: "k Joules" },
+            { question: "If the net electric flux through a closed surface is zero, what can be concluded about the net charge inside?", options: ["The net charge is positive.", "The net charge is negative.", "The net charge is zero.", "There are no charges inside."], answer: "The net charge is zero." },
+            { question: "A particle has a charge of +e and another has a charge of +2e. How does the electric field created by the first particle at distance r compare to the field created by the second particle at the same distance?", options: ["It is the same.", "It is twice as strong.", "It is half as strong.", "It is four times as strong."], answer: "It is half as strong." },
+            { question: "The concept that electric charge occurs in discrete amounts (multiples of e) is known as:", options: ["Conservation of charge.", "Quantization of charge.", "Superposition of charge.", "Induction of charge."], answer: "Quantization of charge." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
