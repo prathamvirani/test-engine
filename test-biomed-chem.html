@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biomedical Chemistry Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biomedical Chemistry Examination</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on key concepts in medical chemistry. This quiz contains 200 questions. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biomedical Chemistry Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 200</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 200</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which of the following is defined as an ionized salt present in body fluids that carries an electrical charge?", options: ["Non-electrolyte", "Electrolyte", "Compound", "Element"], answer: "Electrolyte" },
+            { question: "What percentage of the human body's mass is made up of the major elements like Oxygen, Carbon, and Hydrogen?", options: ["75%", "88%", "96%", "99%"], answer: "96%" },
+            { question: "Which of the following is the most abundant cation in the extracellular fluid (ECF)?", options: ["Potassium (K+)", "Magnesium (Mg2+)", "Calcium (Ca2+)", "Sodium (Na+)"], answer: "Sodium (Na+)" },
+            { question: "A patient is suffering from hyponatremia. This means they have:", options: ["Higher than normal sodium levels in the blood.", "Lower than normal potassium levels in the blood.", "Lower than normal sodium levels in the blood.", "Higher than normal chloride levels in the blood."], answer: "Lower than normal sodium levels in the blood." },
+            { question: "The mnemonic 'YOU ARE FRIED' is used to remember the signs and symptoms of which condition?", options: ["Hypokalemia", "Hypernatremia", "Hypochloremia", "Hypercalcemia"], answer: "Hypernatremia" },
+            { question: "Which of the following is a primary function of the potassium ion (K+) in the body?", options: ["Forming the structure of bones and teeth.", "Regulating neuromuscular function and osmotic pressure.", "Constituting hydrochloric acid in the stomach.", "Facilitating blood clotting."], answer: "Regulating neuromuscular function and osmotic pressure." },
+            { question: "A patient with chronic kidney failure is at high risk for which electrolyte imbalance?", options: ["Hypokalemia", "Hyperkalemia", "Hyponatremia", "Hypochloremia"], answer: "Hyperkalemia" },
+            { question: "What is the main function of the chloride ion (Cl-) in the body?", options: ["Regulating water balance and forming hydrochloric acid.", "Aiding in muscle contraction and nerve transmission.", "Building proteins and nucleic acids.", "Transporting oxygen in the blood."], answer: "Regulating water balance and forming hydrochloric acid." },
+            { question: "Intramolecular forces are best described as:", options: ["Weak attractive forces between different molecules.", "Forces that hold atoms together within a compound, like ionic and covalent bonds.", "Forces responsible for the high boiling point of water.", "The forces that determine the physical state of a substance."], answer: "Forces that hold atoms together within a compound, like ionic and covalent bonds." },
+            { question: "How many hydrogen bonds are formed between guanine and cytosine in a DNA molecule?", options: ["One", "Two", "Three", "Four"], answer: "Three" },
+            { question: "What is the primary goal of Therapeutic Drug Monitoring (TDM)?", options: ["To diagnose diseases using drug concentrations.", "To find new therapeutic uses for existing drugs.", "To maintain a constant drug concentration in the bloodstream to optimize dosage.", "To exclusively study the toxic effects of drugs."], answer: "To maintain a constant drug concentration in the bloodstream to optimize dosage." },
+            { question: "Valproic acid is a therapeutic drug classified as an:", options: ["Analgesic", "Antibiotic", "Antiepileptic", "Bronchodilator"], answer: "Antiepileptic" },
+            { question: "The study of poisons and their adverse effects on biological organisms is known as:", options: ["Pharmacology", "Physiology", "Toxicology", "Pathology"], answer: "Toxicology" },
+            { question: "Ingestion of the poison mushroom *Amanita phalloides* typically causes considerable damage to which organ?", options: ["Brain", "Lungs", "Heart", "Liver"], answer: "Liver" },
+            { question: "A patient is brought to the emergency room after ingesting antifreeze. Which organ is at the most immediate risk of damage from ethylene glycol toxicity?", options: ["Liver", "Kidney", "Brain", "Heart"], answer: "Kidney" },
+            { question: "What is the first goal in the treatment of acute poisoning?", options: ["To administer a strong antidote immediately.", "To keep the poison concentration low by preventing absorption and increasing elimination.", "To perform surgery to remove the poison.", "To focus solely on counteracting effects at the effector site."], answer: "To keep the poison concentration low by preventing absorption and increasing elimination." },
+            { question: "Which substance is commonly used to adsorb poisons in the stomach, preventing their absorption?", options: ["Normal saline", "Water", "Activated charcoal", "Sodium bicarbonate"], answer: "Activated charcoal" },
+            { question: "A chelating agent works by:", options: ["Digesting heavy metals in the stomach.", "Combining with metallic ions to form stable, non-toxic, and excretable complexes.", "Neutralizing the charge of all ions in the body.", "Directly repairing enzyme function hampered by metals."], answer: "Combining with metallic ions to form stable, non-toxic, and excretable complexes." },
+            { question: "Which of the following is a key characteristic of an ideal chelating agent?", options: ["It should be highly lipid-soluble.", "It should be resistant to biotransformation and highly water-soluble.", "It must be administered orally.", "It should form toxic complexes to be effective."], answer: "It should be resistant to biotransformation and highly water-soluble." },
+            { question: "Edetate Calcium Disodium (EDTA) is a highly successful chelating agent for poisoning with which heavy metal?", options: ["Mercury", "Gold", "Lead", "Arsenic"], answer: "Lead" },
+            { question: "Dimercaprol was originally developed as an antidote for:", options: ["Lead poisoning", "Nerve gas (Lewisite)", "Mercury poisoning", "Iron overdose"], answer: "Nerve gas (Lewisite)" },
+            { question: "Which heavy metal is associated with Alzheimer's disease?", options: ["Cadmium", "Lead", "Mercury", "Aluminium"], answer: "Aluminium" },
+            { question: "Chronic exposure to which heavy metal can lead to kidney damage and hypertension?", options: ["Arsenic", "Cadmium", "Nickel", "Zinc"], answer: "Cadmium" },
+            { question: "A metal complex used in therapy consists of a central metal ion bonded to atoms or molecules called:", options: ["Acids", "Bases", "Ligands", "Salts"], answer: "Ligands" },
+            { question: "The most widely used metal-based anti-cancer drug, which contains no carbon atoms, is:", options: ["Carboplatin", "Oxaliplatin", "Cisplatin", "Nedaplatin"], answer: "Cisplatin" },
+            { question: "What is the primary mechanism of action for Cisplatin as an anti-cancer drug?", options: ["It inhibits protein synthesis in cancer cells.", "It causes platination of DNA, disrupting cell division.", "It blocks blood supply to the tumor.", "It boosts the immune system to attack cancer cells."], answer: "It causes platination of DNA, disrupting cell division." },
+            { question: "A major side effect of Cisplatin therapy that requires careful monitoring is:", options: ["Hair loss", "Kidney toxicity", "Loss of taste", "Diarrhea"], answer: "Kidney toxicity" },
+            { question: "Leukemia is a cancer primarily affecting the:", options: ["Brain and spinal cord.", "Lungs and respiratory system.", "Liver and digestive system.", "Blood-forming tissues like bone marrow."], answer: "Blood-forming tissues like bone marrow." },
+            { question: "What is the primary mode of action for the anti-viral drug Azidothymidine (AZT)?", options: ["It prevents the virus from entering the host cell.", "It inhibits the viral enzyme reverse transcriptase.", "It destroys the protein coat of the virus.", "It strengthens the host cell's membrane."], answer: "It inhibits the viral enzyme reverse transcriptase." },
+            { question: "The key difference between an antimicrobial and an antibiotic is that:", options: ["All antimicrobials are antibiotics, but not all antibiotics are antimicrobials.", "Antibiotics are synthetic, while antimicrobials are natural.", "All antibiotics are antimicrobials, but not all antimicrobials are antibiotics.", "Antimicrobials only target bacteria, while antibiotics target all microbes."], answer: "All antibiotics are antimicrobials, but not all antimicrobials are antibiotics." },
+            { question: "The first class of therapeutic agents used for the prevention and cure of bacterial infections in humans was:", options: ["Penicillins", "Tetracyclines", "Sulfonamides", "Quinolones"], answer: "Sulfonamides" },
+            { question: "Which of the following elements is classified as a trace element in the human body?", options: ["Calcium", "Sodium", "Zinc", "Sulphur"], answer: "Zinc" },
+            { question: "An example of a diatomic element is:", options: ["Helium (He)", "Oxygen gas (O2)", "Ozone (O3)", "Phosphorus (P4)"], answer: "Oxygen gas (O2)" },
+            { question: "A deficiency in which major element can lead to bronchial problems and poor digestion?", options: ["Carbon", "Hydrogen", "Nitrogen", "Oxygen"], answer: "Oxygen" },
+            { question: "A patient presents with anxiety and muscle tension. A deficiency in which element, which is a basic building block for proteins and fats, could be a contributing factor?", options: ["Oxygen", "Carbon", "Hydrogen", "Nitrogen"], answer: "Carbon" },
+            { question: "A deficiency in which element, a key component of proteins and nucleic acids, can lead to an increased danger of blood clots?", options: ["Hydrogen", "Oxygen", "Carbon", "Nitrogen"], answer: "Nitrogen" },
+            { question: "Osteoporosis in adults is often linked to a deficiency in which minor element?", options: ["Iron", "Sodium", "Calcium", "Potassium"], answer: "Calcium" },
+            { question: "Which minor element is crucial for the formation of ATP, the primary energy carrier molecule?", options: ["Sulphur", "Phosphorus", "Chlorine", "Iron"], answer: "Phosphorus" },
+            { question: "Anemia, a condition where the body cannot produce enough healthy oxygen-carrying red blood cells, is caused by a deficiency in:", options: ["Calcium", "Iron", "Zinc", "Copper"], answer: "Iron" },
+            { question: "Hypokalemia, a condition of low potassium levels, can lead to:", options: ["Goiter", "Anemia", "Muscle weakness and abnormal heartbeat", "Dwarfism"], answer: "Muscle weakness and abnormal heartbeat" },
+            { question: "The body's fluid is primarily divided into which two main compartments?", options: ["Blood and Urine", "Intracellular fluid (ICF) and Extracellular fluid (ECF)", "Plasma and Interstitial fluid", "Cytoplasm and Nucleoplasm"], answer: "Intracellular fluid (ICF) and Extracellular fluid (ECF)" },
+            { question: "The bicarbonate buffer system in the blood works to:", options: ["Regulate body temperature.", "Maintain a stable pH balance.", "Transport oxygen to tissues.", "Clot blood at injury sites."], answer: "Maintain a stable pH balance." },
+            { question: "A blood pH of 7.50 would be classified as:", options: ["Acidosis", "Neutral", "Alkalosis", "Normal"], answer: "Alkalosis" },
+            { question: "A patient experiencing hyperventilation due to anxiety is at risk for which condition?", options: ["Respiratory Acidosis", "Metabolic Acidosis", "Respiratory Alkalosis", "Metabolic Alkalosis"], answer: "Respiratory Alkalosis" },
+            { question: "Diabetic ketoacidosis is a common cause of which acid-base imbalance?", options: ["Metabolic Alkalosis", "Respiratory Alkalosis", "Respiratory Acidosis", "Metabolic Acidosis"], answer: "Metabolic Acidosis" },
+            { question: "The characteristic yellow color of urine is due to a pigment called:", options: ["Hemoglobin", "Bilirubin", "Urochrome", "Melanin"], answer: "Urochrome" },
+            { question: "The presence of significant amounts of glucose in a urinalysis dipstick test is a strong indicator of:", options: ["Kidney infection", "Dehydration", "Uncontrolled diabetes", "Liver disease"], answer: "Uncontrolled diabetes" },
+            { question: "The presence of nitrites in urine is a common sign of:", options: ["High protein intake", "Bacterial infection", "Kidney stones", "Muscle breakdown"], answer: "Bacterial infection" },
+            { question: "Dehydration occurs when:", options: ["Water intake equals water loss.", "The body has a positive fluid balance.", "Water loss exceeds water intake.", "The body's cells swell with excess fluid."], answer: "Water loss exceeds water intake." },
+            { question: "Edema is the medical term for:", options: ["Swelling caused by excess fluid trapped in body tissues.", "A severe lack of body fluid.", "High blood pressure due to fluid overload.", "A decrease in the number of red blood cells."], answer: "Swelling caused by excess fluid trapped in body tissues." },
+            { question: "Which of the following is NOT considered a major electrolyte in the body?", options: ["Sodium (Na+)", "Glucose", "Potassium (K+)", "Chloride (Cl-)"], answer: "Glucose" },
+            { question: "The condition characterized by an obsessive desire to lose weight by refusing to eat is:", options: ["Bulimia Nervosa", "Anorexia Nervosa", "Pica", "Binge Eating Disorder"], answer: "Anorexia Nervosa" },
+            { question: "Which of the following is a potential cause of electrolyte imbalance?", options: ["A balanced diet", "Drinking adequate water", "Sickness with vomiting and diarrhea", "Moderate exercise"], answer: "Sickness with vomiting and diarrhea" },
+            { question: "A patient with imbalanced water and sodium levels, specifically low sodium, is diagnosed with:", options: ["Hypernatremia", "Hyponatremia", "Hyperkalemia", "Hypokalemia"], answer: "Hyponatremia" },
+            { question: "Drinking too much water during endurance sports without replenishing electrolytes can lead to:", options: ["Hypernatremia", "Dehydration", "Hyponatremia", "Edema"], answer: "Hyponatremia" },
+            { question: "A patient with hypernatremia might exhibit flushed skin and a low-grade fever. This corresponds to which letter in the 'FRIED' mnemonic?", options: ["F", "R", "I", "E"], answer: "F" },
+            { question: "Diabetes Insipidus, a cause of hypernatremia, is characterized by:", options: ["Insufficient production of insulin.", "Insufficient production of Antidiuretic Hormone (ADH).", "Excessive production of ADH.", "Excessive production of glucagon."], answer: "Insufficient production of Antidiuretic Hormone (ADH)." },
+            { question: "Which ion is the major cation within the intracellular fluid (ICF)?", options: ["Sodium", "Calcium", "Chloride", "Potassium"], answer: "Potassium" },
+            { question: "Excessive sweating can be a cause of which electrolyte disorder?", options: ["Hyperkalemia", "Hypokalemia", "Hyperchloremia", "Hyponatremia"], answer: "Hypokalemia" },
+            { question: "A patient taking diuretic drugs ('water pills') needs to be monitored for which potential electrolyte imbalance?", options: ["Hypokalemia", "Hyperkalemia", "Hypernatremia", "Hypercalcemia"], answer: "Hypokalemia" },
+            { question: "Which force is responsible for holding the two strands of a DNA molecule together?", options: ["Covalent bonds", "Ionic bonds", "Van der Waals forces", "Hydrogen bonds"], answer: "Hydrogen bonds" },
+            { question: "The process for reaching dosage decisions that involves measuring specific drugs at designated intervals is called:", options: ["Clinical Toxicology", "Pharmacodynamics", "Therapeutic Drug Monitoring (TDM)", "Drug Discovery"], answer: "Therapeutic Drug Monitoring (TDM)" },
+            { question: "Theophylline is a therapeutic drug used primarily as a:", options: ["Pain reliever", "Bronchodilator for asthma", "Seizure medication", "Blood thinner"], answer: "Bronchodilator for asthma" },
+            { question: "A substance produced within living cells or organisms that is poisonous is specifically called a:", options: ["Toxicant", "Toxin", "Poison", "Chemical agent"], answer: "Toxin" },
+            { question: "Inhalation of the herbicide Paraquat is known to cause severe damage to the:", options: ["Lungs", "Kidneys", "Liver", "Heart"], answer: "Lungs" },
+            { question: "What is the purpose of gastric lavage in treating poisoning?", options: ["To neutralize the poison chemically.", "To wash out the stomach to remove unabsorbed poison.", "To coat the stomach lining to prevent absorption.", "To induce vomiting."], answer: "To wash out the stomach to remove unabsorbed poison." },
+            { question: "Why is the calcium salt of EDTA used for chelation therapy instead of the sodium salt?", options: ["The calcium salt is more effective against mercury.", "To prevent a dangerous drop in the body's calcium levels.", "The sodium salt is not water-soluble.", "The calcium salt has a longer half-life."], answer: "To prevent a dangerous drop in the body's calcium levels." },
+            { question: "Succimer is a chelating agent that is considered less toxic than dimercaprol because it has:", options: ["Higher lipid solubility", "Lower lipid solubility", "A stronger affinity for iron", "A faster rate of excretion"], answer: "Lower lipid solubility" },
+            { question: "A key physical property of heavy metals is that they:", options: ["Are non-degradable and have a relatively high density.", "Have low melting points.", "Are poor conductors of electricity.", "Are not ductile."], answer: "Are non-degradable and have a relatively high density." },
+            { question: "Neurotoxicity, or damage to the brain and nervous system, is a characteristic effect of which two heavy metals?", options: ["Zinc and Copper", "Cadmium and Chromium", "Mercury and Lead", "Arsenic and Aluminium"], answer: "Mercury and Lead" },
+            { question: "In a metal complex, the central metal ion acts as a:", options: ["Lewis base, donating electrons.", "Lewis acid, accepting electrons.", "Brønsted-Lowry acid.", "Brønsted-Lowry base."], answer: "Lewis acid, accepting electrons." },
+            { question: "Why are researchers seeking replacements for Cisplatin?", options: ["It is not effective against any cancers.", "It is too expensive to produce.", "Its poor water solubility and toxic side effects like kidney damage.", "It can only be administered in tablet form."], answer: "Its poor water solubility and toxic side effects like kidney damage." },
+            { question: "What is a common symptom of leukemia?", options: ["Weight gain", "High energy levels", "Bleeding easily and swollen lymph nodes", "Darkening of the skin"], answer: "Bleeding easily and swollen lymph nodes" },
+            { question: "The virus responsible for causing Acquired Immunodeficiency Syndrome (AIDS) is:", options: ["Human Papillomavirus (HPV)", "Hepatitis B Virus (HBV)", "Influenza Virus", "Human Immunodeficiency Virus (HIV)"], answer: "Human Immunodeficiency Virus (HIV)" },
+            { question: "Sulfamethoxazole, an antimicrobial agent, should NOT be used in patients with:", options: ["A common cold", "A history of low blood platelet levels caused by trimethoprim", "A headache", "Mild allergies"], answer: "A history of low blood platelet levels caused by trimethoprim" },
+            { question: "Which of the following is an example of a monoatomic element?", options: ["Nitrogen gas (N2)", "Neon (Ne)", "Ozone (O3)", "Sulfur (S8)"], answer: "Neon (Ne)" },
+            { question: "A deficiency of which element can cause cretinism, a condition of stunted physical and mental growth?", options: ["Zinc", "Iron", "Iodine", "Copper"], answer: "Iodine" },
+            { question: "Dwarfism and skin lesions are potential signs of a deficiency in which trace element?", options: ["Iodine", "Copper", "Iron", "Zinc"], answer: "Zinc" },
+            { question: "The fluid compartment that surrounds cells but is outside of the blood vessels is called:", options: ["Plasma", "Cytoplasm", "Intracellular fluid", "Interstitial fluid"], answer: "Interstitial fluid" },
+            { question: "A patient with severe, prolonged vomiting is at risk for losing stomach acid, leading to which condition?", options: ["Metabolic Acidosis", "Respiratory Acidosis", "Metabolic Alkalosis", "Respiratory Alkalosis"], answer: "Metabolic Alkalosis" },
+            { question: "Which of the following is a sign, not a symptom, of an electrolyte imbalance?", options: ["Anxiety", "Nausea", "Changes in Heartbeat (as seen on an ECG)", "Trouble sleeping"], answer: "Changes in Heartbeat (as seen on an ECG)" },
+            { question: "A person suffering from bulimia nervosa is at high risk for electrolyte imbalances due to:", options: ["Refusing to eat.", "Self-induced vomiting or purging.", "Excessive exercise.", "A diet high in sodium."], answer: "Self-induced vomiting or purging." },
+            { question: "Edema, or swelling, particularly in the legs and feet, is a classic sign of:", options: ["Hyponatremia", "Hypokalemia", "Hypernatremia", "Hypochloremia"], answer: "Hypernatremia" },
+            { question: "The treatment for hypervolemic hypernatremia involves:", options: ["Replacing free water.", "Administering isotonic saline.", "Removal of excess Na+ through diuretics or dialysis.", "Giving oral potassium supplements."], answer: "Removal of excess Na+ through diuretics or dialysis." },
+            { question: "A patient with burns and traumatic injuries is experiencing cellular destruction. This puts them at high risk for:", options: ["Hypokalemia", "Hyperkalemia", "Hyponatremia", "Hypocalcemia"], answer: "Hyperkalemia" },
+            { question: "The formation of a double helix in DNA is an application of which type of force?", options: ["Intramolecular forces (covalent bonds)", "Intermolecular forces (hydrogen bonds)", "Ionic forces", "Metallic bonds"], answer: "Intermolecular forces (hydrogen bonds)" },
+            { question: "Salicylates, a type of analgesic, are commonly known as:", options: ["Acetaminophen", "Ibuprofen", "Aspirin", "Morphine"], answer: "Aspirin" },
+            { question: "Domoic acid, a neurotoxin found in certain shellfish, causes considerable damage to the:", options: ["Liver", "Heart", "Brain", "Kidneys"], answer: "Brain" },
+            { question: "What is the purpose of assessing vital signs in the initial examination of a poisoned patient?", options: ["To determine the exact poison ingested.", "To identify immediate life-threatening conditions.", "To decide on the type of chelating agent to use.", "To estimate the time of poison ingestion."], answer: "To identify immediate life-threatening conditions." },
+            { question: "Dimercaprol is administered in peanut oil primarily because it is:", options: ["Unstable and has a pungent odor.", "A water-soluble compound.", "Most effective when mixed with lipids.", "Less toxic in an oil base."], answer: "Unstable and has a pungent odor." },
+            { question: "Which of the following is NOT a heavy metal commonly associated with toxicity?", options: ["Lead (Pb)", "Mercury (Hg)", "Cadmium (Cd)", "Sodium (Na)"], answer: "Sodium (Na)" },
+            { question: "Hepatotoxicity refers to toxic damage to which organ?", options: ["Heart", "Lungs", "Kidney", "Liver"], answer: "Liver" },
+            { question: "Cisplatin is administered intravenously (IV) because:", options: ["It is not effective if taken orally.", "There is no tablet form, and it can damage tissue if it leaks.", "It works faster when injected.", "It has fewer side effects when given IV."], answer: "There is no tablet form, and it can damage tissue if it leaks." },
+            { question: "A key preventive measure against many viral infections like polio and smallpox is:", options: ["Antibiotic therapy", "Good hygiene", "Vaccination", "Antiviral medication"], answer: "Vaccination" },
+            { question: "The life cycle of a virus begins with which step?", options: ["Penetration", "Biosynthesis", "Attachment to a host cell", "Lysis"], answer: "Attachment to a host cell" },
+            { question: "A key property of carbon is that:", options: ["It is the primary solvent in the body.", "It is the basic building block for proteins, carbohydrates, and fats.", "It is essential for carrying oxygen in the blood.", "It helps in building strong bones."], answer: "It is the basic building block for proteins, carbohydrates, and fats." },
+            { question: "A patient with a crampy tendons and a strong appetite for salty foods may have a deficiency in:", options: ["Oxygen", "Carbon", "Hydrogen", "Nitrogen"], answer: "Hydrogen" },
+            { question: "Which minor element is a component of two amino acids and helps give proteins their functional shape?", options: ["Phosphorus", "Sulphur", "Chlorine", "Sodium"], answer: "Sulphur" },
+            { question: "A low white blood cell count (Leukopenia) can be a sign of a deficiency in which trace element?", options: ["Zinc", "Iodine", "Iron", "Copper"], answer: "Copper" },
+            { question: "The normal pH range of human blood is tightly regulated between:", options: ["7.25 and 7.35", "7.35 and 7.45", "7.45 and 7.55", "7.00 and 7.50"], answer: "7.35 and 7.45" },
+            { question: "Which condition results from an accumulation of acid or a loss of bicarbonate?", options: ["Metabolic Alkalosis", "Respiratory Alkalosis", "Metabolic Acidosis", "Respiratory Acidosis"], answer: "Metabolic Acidosis" },
+            { question: "An ammonia-like odor in urine is considered:", options: ["A sign of diabetes.", "A sign of kidney disease.", "Normal.", "A sign of a bacterial infection."], answer: "Normal." },
+            { question: "Which of the following is NOT a primary function of water in the human body?", options: ["Regulating body temperature.", "Transporting nutrients and oxygen.", "Providing a primary source of energy.", "Lubricating joints."], answer: "Providing a primary source of energy." },
+            { question: "Which of the following is a major role of Calcium (Ca2+)?", options: ["Regulating heart contractions.", "Maintaining fluid balance.", "Blood clotting and forming bones.", "Being the main component of cellular fluid."], answer: "Blood clotting and forming bones." },
+            { question: "A patient with a history of an eating disorder who engages in self-induced vomiting is most at risk for which chloride imbalance?", options: ["Hyperchloremia", "Hypochloremia", "Both A and B", "Neither A nor B"], answer: "Hypochloremia" },
+            { question: "The bond within a single water molecule (H2O) is an example of:", options: ["An intermolecular force", "A hydrogen bond", "An intramolecular force (covalent bond)", "An ionic bond"], answer: "An intramolecular force (covalent bond)" },
+            { question: "A comatose patient who has been poisoned is at immediate risk of death due to:", options: ["Loss of respiratory drive and protective reflexes.", "Hypovolemia.", "Shock from internal bleeding.", "Organ damage that occurs days later."], answer: "Loss of respiratory drive and protective reflexes." },
+            { question: "Which chelating agent is specifically NOT useful in mercury poisoning because mercury is tightly bound in compartments not penetrated by it?", options: ["Dimercaprol", "Succimer", "EDTA", "Penicillamine"], answer: "EDTA" },
+            { question: "The property of metals that describes their shininess is called:", options: ["Ductility", "Conductivity", "Lustre", "Density"], answer: "Lustre" },
+            { question: "Which of the following is considered a 'precious element' but can also be toxic?", options: ["Iron (Fe)", "Zinc (Zn)", "Silver (Ag)", "Copper (Cu)"], answer: "Silver (Ag)" },
+            { question: "The interaction between a metal ion and a ligand in a metal complex can be described as a:", options: ["Redox reaction", "Precipitation reaction", "Lewis acid-base reaction", "Nuclear reaction"], answer: "Lewis acid-base reaction" },
+            { question: "The development of new anti-cancer drugs like Ormaplatin and JM216 represents an effort to find replacements for Cisplatin by:", options: ["Changing the metal ion.", "Changing the ligand.", "Using a completely different mechanism.", "Increasing the drug's solubility."], answer: "Changing the ligand." },
+            { question: "A common risk factor for developing leukemia is:", options: ["A diet high in fat.", "A family history of heart disease.", "Exposure to high levels of radiation or benzene.", "A sedentary lifestyle."], answer: "Exposure to high levels of radiation or benzene." },
+            { question: "HIV alters the immune system by specifically attacking which type of cells?", options: ["Red blood cells", "Platelets", "B-cells", "T-cells"], answer: "T-cells" },
+            { question: "A patient taking Sulfamethoxazole experiences dizziness, headache, and lethargy. These are known:", options: ["Allergic reactions", "Therapeutic effects", "Side effects", "Overdose symptoms"], answer: "Side effects" },
+            { question: "Which element is found largely in the lungs and bloodstream and is critical for metabolizing food?", options: ["Carbon", "Hydrogen", "Oxygen", "Nitrogen"], answer: "Oxygen" },
+            { question: "What is the primary role of sodium (Na+) in the body?", options: ["Building strong bones.", "Carrying oxygen.", "Maintenance of fluid balance and nerve impulses.", "Regulating metabolic rate."], answer: "Maintenance of fluid balance and nerve impulses." },
+            { question: "Goiter, an abnormal enlargement of the thyroid gland, is a classic sign of deficiency in which element?", options: ["Iron", "Zinc", "Copper", "Iodine"], answer: "Iodine" },
+            { question: "What is the approximate percentage of water in an adult's body?", options: ["50%", "62%", "72%", "80%"], answer: "72%" },
+            { question: "A patient with severe COPD is unable to excrete enough CO2. This will most likely lead to:", options: ["Respiratory Alkalosis", "Metabolic Alkalosis", "Respiratory Acidosis", "Metabolic Acidosis"], answer: "Respiratory Acidosis" },
+            { question: "The fluid found within the cytoplasm and nucleoplasm of cells is known as:", options: ["Interstitial fluid", "Plasma", "Intracellular fluid (ICF)", "Extracellular fluid (ECF)"], answer: "Intracellular fluid (ICF)" },
+            { question: "Which of the following is considered a non-electrolyte?", options: ["Na+", "K+", "Carbohydrates", "Cl-"], answer: "Carbohydrates" },
+            { question: "A patient who is restless and irritable, with increased fluid retention and high blood pressure, may be suffering from:", options: ["Hyponatremia", "Hypernatremia", "Hypokalemia", "Hyperkalemia"], answer: "Hypernatremia" },
+            { question: "The mnemonic 'MACHINE' is used to remember the causes of:", options: ["Hyperkalemia", "Hypokalemia", "Hypernatremia", "Hyponatremia"], answer: "Hyperkalemia" },
+            { question: "A patient with nasogastric suction is at risk for which electrolyte imbalance?", options: ["Hyperchloremia", "Hyperkalemia", "Hypochloremia", "Hyponatremia"], answer: "Hypochloremia" },
+            { question: "The strength of intramolecular forces compared to intermolecular forces is generally:", options: ["Weaker", "Stronger", "Equal", "Variable with no general rule"], answer: "Stronger" },
+            { question: "Kanamycin is an example of which class of therapeutic drug?", options: ["Analgesic", "Antiepileptic", "Bronchodilator", "Antibiotic"], answer: "Antibiotic" },
+            { question: "Exposure to cobalt salts can lead to cardiomyopathy, which is a disease of the:", options: ["Liver", "Kidney", "Brain", "Heart muscle"], answer: "Heart muscle" },
+            { question: "What is the recommended dosage for Succimer in the treatment of lead poisoning?", options: ["10 mg/kg every 8 hours for 5 days, then every 12 hours for 2 weeks.", "30-50 mg/kg/day for 5 consecutive days.", "100 mg/mL solution in peanut oil.", "20 mg/m² intravenously once a day."], answer: "10 mg/kg every 8 hours for 5 days, then every 12 hours for 2 weeks." },
+            { question: "Pulmonotoxicity refers to toxic damage to which organ?", options: ["Kidneys", "Lungs", "Liver", "Blood"], answer: "Lungs" },
+            { question: "Cancer cells are characterized by:", options: ["Normal, controlled growth.", "Abnormal proliferation and variations in size and shape.", "A smaller nucleus than normal cells.", "A well-defined boundary for cell clusters."], answer: "Abnormal proliferation and variations in size and shape." },
+            { question: "The process of using X-rays or other high-energy beams to damage cancer cells is known as:", options: ["Chemotherapy", "Immunotherapy", "Surgery", "Radiotherapy"], answer: "Radiotherapy" },
+            { question: "HIV is primarily transmitted through:", options: ["Air", "Contaminated food or water", "Physical contact like shaking hands", "Bodily fluids like blood and semen"], answer: "Bodily fluids like blood and semen" },
+            { question: "What is a primary property of Hydrogen in the body?", options: ["It is the basic building block of proteins.", "It is a component of water and acts as the primary solvent.", "It is essential for carrying oxygen.", "It is a key component of the genetic code."], answer: "It is a component of water and acts as the primary solvent." },
+            { question: "Which of the following foods is a good source of phosphorus?", options: ["Leafy green vegetables", "Citrus fruits", "Meat and fish", "Table salt"], answer: "Meat and fish" },
+            { question: "A key function of zinc is:", options: ["Regulation of basal metabolic rate.", "Formation of collagen and wound healing.", "Production of hydrochloric acid.", "Maintenance of fluid balance."], answer: "Formation of collagen and wound healing." },
+            { question: "In the bicarbonate buffer system, what happens when excess acid (H+) is present in the blood?", options: ["Carbonic acid dissociates to release more H+.", "Bicarbonate ions react with H+ to form carbonic acid.", "The kidneys excrete more bicarbonate.", "The lungs increase the rate of breathing to expel O2."], answer: "Bicarbonate ions react with H+ to form carbonic acid." },
+            { question: "A fruity or acetone-like smell in the urine can be an indicator of:", options: ["A urinary tract infection.", "Elevated ketones, often associated with diabetes.", "Dehydration.", "High protein intake."], answer: "Elevated ketones, often associated with diabetes." },
+            { question: "Oral rehydration therapy, a treatment for dehydration, typically contains:", options: ["Only water.", "A solution of salts and sugars.", "A solution of proteins and fats.", "A high concentration of electrolytes only."], answer: "A solution of salts and sugars." },
+            { question: "Which of the following is a major role of Magnesium (Mg2+)?", options: ["Forming bones and teeth.", "Keeping a stable protein-fluid balance.", "Regulating heart contractions.", "Maintaining fluid balance."], answer: "Keeping a stable protein-fluid balance." },
+            { question: "The force holding the atoms together in an oxygen molecule (O2) is:", options: ["A hydrogen bond", "An intermolecular force", "A covalent bond (intramolecular)", "An ionic bond"], answer: "A covalent bond (intramolecular)" },
+            { question: "What is the main reason TDM is used for drugs like aminoglycosides?", options: ["They have a wide therapeutic range.", "They have a narrow therapeutic range and a high potential for toxicity.", "They are not effective unless monitored.", "They are only used for diagnosis."], answer: "They have a narrow therapeutic range and a high potential for toxicity." },
+            { question: "Why is Dimercaprol effective in treating arsenic poisoning?", options: ["It binds tightly to the sulfhydryl groups that arsenic targets.", "It displaces calcium from its binding sites.", "It is a water-soluble analogue of arsenic.", "It increases the urinary excretion of arsenic without binding to it."], answer: "It binds tightly to the sulfhydryl groups that arsenic targets." },
+            { question: "Which of the following is NOT a physical property of metals?", options: ["Good conductor of heat", "High melting point", "Degradable", "Ductile"], answer: "Degradable" },
+            { question: "The change of a metal ion from platinum to ruthenium in cancer therapy is an example of:", options: ["A strategy to find a replacement for Cisplatin.", "A change in the ligand.", "A way to increase water solubility.", "A method to decrease side effects."], answer: "A strategy to find a replacement for Cisplatin." },
+            { question: "What is the brand name under which Azidothymidine (AZT) is sold?", options: ["Cisplatin", "Retrovir", "Sulfamethoxazole", "Kanamycin"], answer: "Retrovir" },
+            { question: "Which element is essential for protein regulation and muscle contraction, and is stored primarily in bones?", options: ["Sodium", "Potassium", "Calcium", "Iron"], answer: "Calcium" },
+            { question: "A patient with a blood pH of 7.32, elevated pCO2, and normal bicarbonate would be diagnosed with:", options: ["Uncompensated Respiratory Acidosis", "Compensated Metabolic Alkalosis", "Uncompensated Metabolic Acidosis", "Compensated Respiratory Alkalosis"], answer: "Uncompensated Respiratory Acidosis" },
+            { question: "The presence of protein in the urine, known as proteinuria, can be a sign of:", options: ["A healthy diet", "Dehydration", "Kidney disease", "A bacterial infection"], answer: "Kidney disease" },
+            { question: "A bee sting causing localized swelling is a form of:", options: ["Dehydration", "Systemic infection", "Edema", "Anemia"], answer: "Edema" },
+            { question: "Which of the following is NOT a sign of an electrolyte imbalance?", options: ["Muscle spasms", "Bone pains", "Digestive issues", "Stable heartbeat"], answer: "Stable heartbeat" },
+            { question: "Pitting edema is a specific sign associated with which condition?", options: ["Hyponatremia", "Hypernatremia", "Hypokalemia", "Hyperkalemia"], answer: "Hypernatremia" },
+            { question: "A patient taking ACE inhibitors for blood pressure is at risk for developing:", options: ["Hypokalemia", "Hyperkalemia", "Hyponatremia", "Hypernatremia"], answer: "Hyperkalemia" },
+            { question: "The bonds that are broken during a phase change (e.g., boiling water) are:", options: ["Intramolecular forces", "Intermolecular forces", "Covalent bonds", "Ionic bonds"], answer: "Intermolecular forces" },
+            { question: "Which of the following is NOT a common cause of death in an acutely poisoned patient?", options: ["Hypotension due to depression of cardiac contractility", "Loss of respiratory drive", "Hypovolemia from vomiting or diarrhea", "A delayed allergic reaction"], answer: "A delayed allergic reaction" },
+            { question: "The dosage of EDTA for lead poisoning should NOT exceed:", options: ["100 mg/kg", "250 mg/kg", "500 mg/kg", "1000 mg/kg"], answer: "500 mg/kg" },
+            { question: "Hemotoxicity refers to toxic effects on the:", options: ["Liver", "Kidneys", "Brain", "Blood"], answer: "Blood" },
+            { question: "The adult dosage for Cisplatin in treating testicular cancer is typically:", options: ["20 mg/m² intravenously once a day for 5 days.", "50-70 mg/m² intravenously once every 3 to 4 weeks.", "60 mg/m² once a day for 2 consecutive days.", "75-100 mg/m² intravenously once every 4 weeks."], answer: "20 mg/m² intravenously once a day for 5 days." },
+            { question: "The final stage of the lytic cycle of a virus, where the host cell breaks open, is called:", options: ["Attachment", "Penetration", "Maturation", "Lysis"], answer: "Lysis" },
+            { question: "A deficiency in which element can lead to poor tooth and bone formation and anorexia?", options: ["Calcium", "Phosphorus", "Sulphur", "Iron"], answer: "Phosphorus" },
+            { question: "A patient with delayed healing time after injuries and decreased growth may be deficient in:", options: ["Sodium", "Potassium", "Chlorine", "Calcium"], answer: "Chlorine" },
+            { question: "Which of the following is a key component of the body's primary buffering system?", options: ["Sodium chloride", "Carbonic acid and bicarbonate", "Phosphate and sulfate", "Hemoglobin"], answer: "Carbonic acid and bicarbonate" },
+            { question: "What is the primary cause of respiratory acidosis?", options: ["Hyperventilation", "Hypoventilation", "Excessive loss of bicarbonate", "Increased acid production in the body"], answer: "Hypoventilation" },
+            { question: "What is the most abundant chemical component of urine?", options: ["Urea", "Creatinine", "Water", "Sodium"], answer: "Water" },
+            { question: "A patient with hypoalbuminemia (low albumin in the blood) is likely to develop:", options: ["Dehydration", "Edema", "Anemia", "Goiter"], answer: "Edema" },
+            { question: "Which of the following is a function of electrolytes?", options: ["Storing genetic information.", "Transporting substances like hormones and distributing heat.", "Acting as the primary source of calories.", "Building muscle tissue directly."], answer: "Transporting substances like hormones and distributing heat." },
+            { question: "A patient with heart, kidney, or liver problems is at an increased risk for developing:", options: ["Hyperkalemia", "Hyperchloremia", "Hyponatremia", "Hypercalcemia"], answer: "Hyponatremia" },
+            { question: "The difference between hypovolemic and hypervolemic hypernatremia treatment is:", options: ["One uses diuretics, the other replaces free water.", "Both are treated with isotonic saline.", "One requires oral supplements, the other requires IV.", "There is no difference in treatment."], answer: "One uses diuretics, the other replaces free water." },
+            { question: "What is the primary difference between an atom and an element?", options: ["An atom is a pure substance, while an element is the smallest unit.", "An element is a pure substance consisting of only one type of atom.", "Atoms are always part of molecules, while elements are not.", "There is no difference."], answer: "An element is a pure substance consisting of only one type of atom." },
+            { question: "The primary target for the anti-cancer drug Cisplatin is:", options: ["The cell membrane", "The mitochondria", "The cell's DNA", "The ribosomes"], answer: "The cell's DNA" },
+            { question: "Which heavy metal is known to cause lung damage and cancer when inhaled?", options: ["Nickel", "Chromium", "Lead", "Cadmium"], answer: "Chromium" },
+            { question: "The use of biological therapy in treating leukemia aims to:", options: ["Kill leukemia cells with chemicals.", "Damage cancer cells with high-energy beams.", "Help the immune system recognize and attack leukemia cells.", "Attack specific vulnerabilities within cancer cells."], answer: "Help the immune system recognize and attack leukemia cells." },
+            { question: "What is the primary reason sulfonamides were considered effective therapeutic agents?", options: ["High toxicity and high cost.", "Low toxicity, low cost, and effectiveness against bacteria.", "They were only effective against viruses.", "They had no side effects."], answer: "Low toxicity, low cost, and effectiveness against bacteria." },
+            { question: "Which of the following is a polyatomic element?", options: ["Argon (Ar)", "Hydrogen Gas (H2)", "Sulfur (S8)", "Sodium (Na)"], answer: "Sulfur (S8)" },
+            { question: "Which minor element plays a crucial role in the transmission of nerve impulses and muscle contraction, often balanced with sodium?", options: ["Calcium", "Phosphorus", "Potassium", "Iron"], answer: "Potassium" },
+            { question: "What is the relationship between pH and hydrogen ion (H+) concentration?", options: ["As H+ concentration increases, pH increases.", "As H+ concentration decreases, pH decreases.", "As H+ concentration increases, pH decreases.", "There is no direct relationship."], answer: "As H+ concentration increases, pH decreases." },
+            { question: "A patient who has been on prolonged nasogastric suction is losing large amounts of stomach acid (HCl). This would lead to:", options: ["Metabolic Acidosis", "Metabolic Alkalosis", "Respiratory Acidosis", "Respiratory Alkalosis"], answer: "Metabolic Alkalosis" },
+            { question: "A red or red-brown color in urine could be caused by all of the following EXCEPT:", options: ["Eating fresh beets.", "The presence of hemoglobin.", "A high concentration of urochrome.", "Certain medications."], answer: "A high concentration of urochrome." },
+            { question: "What is the main difference between interstitial fluid and plasma?", options: ["Interstitial fluid is inside cells, while plasma is outside.", "Plasma is the fluid component of blood, while interstitial fluid surrounds the cells.", "Interstitial fluid is rich in protein, while plasma is not.", "There is no difference; they are the same fluid."], answer: "Plasma is the fluid component of blood, while interstitial fluid surrounds the cells." },
+            { question: "A patient with low blood pressure, muscle weakness, and nausea is likely experiencing an imbalance of which electrolyte?", options: ["Calcium", "Magnesium", "Potassium", "Sodium"], answer: "Sodium" },
+            { question: "The bond that holds a sodium ion (Na+) and a chloride ion (Cl-) together in salt is a(n):", options: ["Covalent bond", "Hydrogen bond", "Ionic bond", "Metallic bond"], answer: "Ionic bond" },
+            { question: "Which therapeutic drug is an aminoglycoside antibiotic?", options: ["Theophylline", "Valproic acid", "Kanamycin", "Salicylate"], answer: "Kanamycin" },
+            { question: "The primary reason for conducting an X-ray on a poisoned patient is to:", options: ["Check for lung damage.", "Identify radiopaque substances like iron tablets.", "Assess brain function.", "Look for internal bleeding."], answer: "Identify radiopaque substances like iron tablets." },
+            { question: "Which chelating agent contains two carboxylic acid groups, making it less lipid-soluble and less toxic than dimercaprol?", options: ["EDTA", "Succimer", "Penicillamine", "Deferoxamine"], answer: "Succimer" },
+            { question: "Which of the following is NOT a characteristic of cancer cells?", options: ["They continue to grow and divide uncontrollably.", "They have a nucleus that is larger and darker than normal.", "They maintain the same size and shape as normal cells.", "They form clusters without a clear boundary."], answer: "They maintain the same size and shape as normal cells." },
+            { question: "The first chemical synthesis of the anti-viral drug AZT occurred in:", options: ["1987", "1985", "1974", "1964"], answer: "1964" },
+            { question: "Which major element is a component of water and is involved in regulating body temperature and osmotic pressure?", options: ["Oxygen", "Carbon", "Hydrogen", "Nitrogen"], answer: "Hydrogen" },
+            { question: "Which food is a particularly good source of iron?", options: ["Milk", "Oranges", "Red meat", "White bread"], answer: "Red meat" },
+            { question: "A patient with a blood pH of 7.28 and low bicarbonate levels is suffering from:", options: ["Respiratory Acidosis", "Respiratory Alkalosis", "Metabolic Acidosis", "Metabolic Alkalosis"], answer: "Metabolic Acidosis" },
+            { question: "Which of the following is a disorder of water balance?", options: ["Anemia", "Goiter", "Dehydration", "Leukemia"], answer: "Dehydration" },
+            { question: "The main electrolytes found in body fluids are distinguished from other minerals because they:", options: ["Are only found in solid form.", "Carry an electrical charge when dissolved in water.", "Are organic molecules.", "Do not dissociate in water."], answer: "Carry an electrical charge when dissolved in water." },
+            { question: "A patient with hyperkalemia might present with which of the following symptoms?", options: ["Increased urine output", "A slow, weak, or irregular pulse", "High blood pressure", "Flushed skin"], answer: "A slow, weak, or irregular pulse" },
+            { question: "The attractive forces between two separate HCl molecules are an example of:", options: ["Ionic bonds", "Covalent bonds", "Intramolecular forces", "Intermolecular forces"], answer: "Intermolecular forces" },
+            { question: "Why is TDM particularly important for antiepileptic drugs?", options: ["They are not very effective.", "The therapeutic dose is very close to the toxic dose.", "They are eliminated from the body very quickly.", "They are only used in hospital settings."], answer: "The therapeutic dose is very close to the toxic dose." },
+            { question: "Which heavy metal is correctly paired with its target organ of toxicity?", options: ["Arsenic - Brain", "Lead - Liver", "Cadmium - Kidneys", "Mercury - Blood"], answer: "Cadmium - Kidneys" },
+            { question: "What is the primary difference between HIV and AIDS?", options: ["HIV is a medical condition, while AIDS is a virus.", "HIV is a virus that attacks the immune system, while AIDS is the advanced stage of the infection.", "A person with AIDS does not necessarily have HIV.", "There is no difference; the terms are interchangeable."], answer: "HIV is a virus that attacks the immune system, while AIDS is the advanced stage of the infection." },
+            { question: "Which of the following is a side effect of sulfonamide drugs?", options: ["Increased energy", "Weight gain", "Dizziness and headache", "Improved appetite"], answer: "Dizziness and headache" },
+            { question: "The element sulfur is an important component of which two amino acids?", options: ["Alanine and Glycine", "Leucine and Isoleucine", "Cysteine and Methionine", "Proline and Serine"], answer: "Cysteine and Methionine" },
+            { question: "A person who is profusely sweating after intense exercise is losing water and electrolytes, putting them at risk for:", options: ["Edema", "Dehydration and hyponatremia", "Hyperkalemia", "Respiratory acidosis"], answer: "Dehydration and hyponatremia" },
+            { question: "What is the fundamental purpose of the body's buffer systems?", options: ["To produce energy.", "To fight infection.", "To resist changes in pH.", "To transport nutrients."], answer: "To resist changes in pH." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question.replace(/\(([^)]+)\)/g, '<i>($1)</i>').replace(/\*/g, '<b>*</b>')}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerHTML = optionText.replace(/\(([^)]+)\)/g, '<i>($1)</i>');
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', () => selectAnswer(optionText, button));
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(selectedOption, selectedBtn) {
+            userAnswers[currentQuestionIndex] = selectedOption;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question.replace(/\(([^)]+)\)/g, '<i>($1)</i>').replace(/\*/g, '<b>*</b>')}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerHTML = optionText.replace(/\(([^)]+)\)/g, '<i>($1)</i>');
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                    // Scroll the active button into view
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                // Add a confirmation before submitting
+                if(confirm('Are you sure you want to submit your answers?')) {
+                    showResults();
+                }
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        function initializeQuiz() {
+            quizData.forEach((_, index) => {
+                const navBtn = document.createElement('button');
+                navBtn.innerText = index + 1;
+                navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+                navBtn.dataset.index = index;
+                navBtn.addEventListener('click', (e) => {
+                    currentQuestionIndex = parseInt(e.target.dataset.index);
+                    loadQuiz();
+                });
+                questionNav.appendChild(navBtn);
+            });
+        }
+
+        initializeQuiz();
+    </script>
+</body>
+</html>
