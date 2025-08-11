@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Electricity & Magnetism Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge across a wide range of physics topics. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Physics Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is the definition of electric current?", options: ["The flow of protons through a conductor.", "The rate of flow of electric charge.", "The resistance to the flow of electrons.", "The potential difference across a conductor."], answer: "The rate of flow of electric charge." },
+            { question: "A wire carries a current of 2.5 A. How many electrons pass a point in the wire each second? (e = 1.6 x 10⁻¹⁹ C)", options: ["1.56 x 10¹⁹", "6.25 x 10¹⁸", "4.00 x 10¹⁸", "2.50 x 10¹⁹"], answer: "1.56 x 10¹⁹" },
+            { question: "Which of the following best describes drift velocity?", options: ["The random motion of electrons in a conductor.", "The speed of the electric field in a conductor.", "The average velocity of charge carriers in a conductor due to an electric field.", "The maximum velocity of an electron in a conductor."], answer: "The average velocity of charge carriers in a conductor due to an electric field." },
+            { question: "A copper wire has a cross-sectional area of 2.0 x 10⁻⁶ m² and carries a current of 5.0 A. If the number of free electrons per unit volume is 8.5 x 10²⁸ m⁻³, what is the drift velocity of the electrons? (e = 1.6 x 10⁻¹⁹ C)", options: ["1.84 x 10⁻⁴ m/s", "2.94 x 10⁻⁴ m/s", "3.68 x 10⁻⁴ m/s", "5.88 x 10⁻⁴ m/s"], answer: "1.84 x 10⁻⁴ m/s" },
+            { question: "What is the SI unit of resistance?", options: ["Ampere (A)", "Volt (V)", "Ohm (Ω)", "Watt (W)"], answer: "Ohm (Ω)" },
+            { question: "According to Ohm's Law, the relationship between voltage (V), current (I), and resistance (R) is:", options: ["V = I/R", "V = IR", "V = I²R", "R = VI"], answer: "V = IR" },
+            { question: "A resistor has a potential difference of 12 V across it and a current of 0.5 A flowing through it. What is its resistance?", options: ["6 Ω", "12 Ω", "24 Ω", "48 Ω"], answer: "24 Ω" },
+            { question: "Resistivity is a property of a:", options: ["Specific resistor", "Material", "Circuit", "Battery"], answer: "Material" },
+            { question: "A wire of length 2.0 m and cross-sectional area 1.0 x 10⁻⁶ m² has a resistance of 0.5 Ω. What is the resistivity of the material?", options: ["1.0 x 10⁻⁶ Ωm", "2.5 x 10⁻⁷ Ωm", "5.0 x 10⁻⁷ Ωm", "1.0 x 10⁻⁵ Ωm"], answer: "2.5 x 10⁻⁷ Ωm" },
+            { question: "How does the resistance of a metallic conductor typically change with temperature?", options: ["It decreases as temperature increases.", "It remains constant as temperature increases.", "It increases as temperature increases.", "It becomes zero at high temperatures."], answer: "It increases as temperature increases." },
+            { question: "The temperature coefficient of resistivity is defined as:", options: ["The change in resistance per unit temperature.", "The fractional change in resistivity per unit change in temperature.", "The product of resistivity and temperature.", "The ratio of resistance to temperature."], answer: "The fractional change in resistivity per unit change in temperature." },
+            { question: "A copper wire has a resistance of 10 Ω at 20°C. What is its resistance at 100°C? (α for copper = 3.9 x 10⁻³ /°C)", options: ["10.31 Ω", "13.12 Ω", "15.24 Ω", "18.36 Ω"], answer: "13.12 Ω" },
+            { question: "What is the formula for electrical power (P) in terms of current (I) and resistance (R)?", options: ["P = I/R", "P = IR", "P = I²R", "P = R/I"], answer: "P = I²R" },
+            { question: "A light bulb with a resistance of 240 Ω is connected to a 120 V source. What is the power dissipated by the bulb?", options: ["30 W", "60 W", "120 W", "240 W"], answer: "60 W" },
+            { question: "Electrical energy is the product of:", options: ["Power and resistance", "Power and time", "Current and voltage", "Voltage and resistance"], answer: "Power and time" },
+            { question: "How much energy does a 100 W light bulb use in 10 minutes?", options: ["1000 J", "6000 J", "60,000 J", "360,000 J"], answer: "60,000 J" },
+            { question: "Electromotive force (EMF) is:", options: ["The force that pushes electrons through a circuit.", "The work done per unit charge by a source.", "The potential difference across a resistor.", "The same as terminal voltage."], answer: "The work done per unit charge by a source." },
+            { question: "The terminal voltage of a battery is:", options: ["Always equal to its EMF.", "The potential difference across its terminals when no current is flowing.", "The potential difference across its terminals when current is flowing.", "The internal resistance of the battery."], answer: "The potential difference across its terminals when current is flowing." },
+            { question: "A battery has an EMF of 12 V and an internal resistance of 0.5 Ω. If it is connected to a 10 Ω resistor, what is the terminal voltage?", options: ["11.43 V", "12.00 V", "10.57 V", "10.00 V"], answer: "11.43 V" },
+            { question: "In the previous question, what is the current flowing in the circuit?", options: ["1.00 A", "1.14 A", "1.20 A", "1.50 A"], answer: "1.14 A" },
+            { question: "When resistors are connected in series, their equivalent resistance is:", options: ["The sum of the individual resistances.", "The reciprocal of the sum of the reciprocals of the individual resistances.", "The product of the individual resistances.", "The average of the individual resistances."], answer: "The sum of the individual resistances." },
+            { question: "Three resistors of 10 Ω, 20 Ω, and 30 Ω are connected in series. What is their equivalent resistance?", options: ["6.0 Ω", "18.3 Ω", "60 Ω", "6000 Ω"], answer: "60 Ω" },
+            { question: "When resistors are connected in parallel, the reciprocal of their equivalent resistance is:", options: ["The sum of the individual resistances.", "The sum of the reciprocals of the individual resistances.", "The product of the individual resistances.", "The average of the individual resistances."], answer: "The sum of the reciprocals of the individual resistances." },
+            { question: "Three resistors of 10 Ω, 20 Ω, and 30 Ω are connected in parallel. What is their equivalent resistance?", options: ["5.45 Ω", "11.0 Ω", "60 Ω", "0.183 Ω"], answer: "5.45 Ω" },
+            { question: "In a series circuit, which of the following is the same for all resistors?", options: ["Voltage", "Current", "Resistance", "Power"], answer: "Current" },
+            { question: "In a parallel circuit, which of the following is the same for all resistors?", options: ["Voltage", "Current", "Resistance", "Power"], answer: "Voltage" },
+            { question: "Kirchhoff's junction rule is a statement of the conservation of:", options: ["Energy", "Charge", "Momentum", "Mass"], answer: "Charge" },
+            { question: "Kirchhoff's loop rule is a statement of the conservation of:", options: ["Energy", "Charge", "Momentum", "Mass"], answer: "Energy" },
+            { question: "According to Kirchhoff's junction rule, the sum of currents entering a junction is equal to:", options: ["Zero", "The sum of currents leaving the junction.", "The voltage at the junction.", "The resistance at the junction."], answer: "The sum of currents leaving the junction." },
+            { question: "According to Kirchhoff's loop rule, the sum of the potential differences around any closed loop is:", options: ["Zero", "Equal to the total current.", "Equal to the total resistance.", "Equal to the total EMF."], answer: "Zero" },
+            { question: "A 10 Ω resistor and a 20 Ω resistor are connected in series to a 12 V battery. What is the current in the circuit?", options: ["0.4 A", "0.6 A", "1.2 A", "1.8 A"], answer: "0.4 A" },
+            { question: "In the previous question, what is the voltage across the 10 Ω resistor?", options: ["4 V", "6 V", "8 V", "12 V"], answer: "4 V" },
+            { question: "A 10 Ω resistor and a 20 Ω resistor are connected in parallel to a 12 V battery. What is the total current from the battery?", options: ["0.6 A", "1.2 A", "1.8 A", "2.4 A"], answer: "1.8 A" },
+            { question: "In the previous question, what is the current through the 10 Ω resistor?", options: ["0.6 A", "1.2 A", "1.8 A", "2.4 A"], answer: "1.2 A" },
+            { question: "A circuit has a 12 V battery connected to a 2 Ω resistor in series with a parallel combination of a 4 Ω and a 6 Ω resistor. What is the equivalent resistance of the circuit?", options: ["4.4 Ω", "6.0 Ω", "8.0 Ω", "12.0 Ω"], answer: "4.4 Ω" },
+            { question: "In the previous question, what is the total current from the battery?", options: ["1.0 A", "1.5 A", "2.0 A", "2.73 A"], answer: "2.73 A" },
+            { question: "A junction has three wires connected to it. If 1 A and 2 A flow into the junction, what is the current flowing out of the junction?", options: ["1 A", "2 A", "3 A", "-3 A"], answer: "3 A" },
+            { question: "A simple loop contains a 12 V battery and a 3 Ω resistor. What is the current in the loop?", options: ["1 A", "2 A", "3 A", "4 A"], answer: "4 A" },
+            { question: "A circuit contains a 12 V battery, a 2 Ω resistor, and a 4 Ω resistor in series. What is the voltage drop across the 2 Ω resistor?", options: ["2 V", "4 V", "6 V", "8 V"], answer: "4 V" },
+            { question: "A complex circuit has two loops and three unknown currents. How many equations are needed to solve for the currents using Kirchhoff's rules?", options: ["1", "2", "3", "4"], answer: "3" },
+            { question: "Like magnetic poles ______ and opposite magnetic poles ______.", options: ["attract, repel", "repel, attract", "attract, attract", "repel, repel"], answer: "repel, attract" },
+            { question: "The direction of a magnetic field line is defined as the direction of the force on a:", options: ["North pole", "South pole", "Positive charge", "Negative charge"], answer: "North pole" },
+            { question: "Magnetic field lines originate from the ______ pole and terminate at the ______ pole.", options: ["North, South", "South, North", "Positive, Negative", "Negative, Positive"], answer: "North, South" },
+            { question: "The SI unit of magnetic field strength is the:", options: ["Weber (Wb)", "Tesla (T)", "Henry (H)", "Gauss (G)"], answer: "Tesla (T)" },
+            { question: "A long, straight wire carrying a current produces a magnetic field that:", options: ["Is parallel to the wire.", "Is directed radially outward from the wire.", "Forms concentric circles around the wire.", "Is zero."], answer: "Forms concentric circles around the wire." },
+            { question: "The direction of the magnetic field around a current-carrying wire can be determined by the:", options: ["Left-hand rule", "Right-hand rule", "Lenz's law", "Faraday's law"], answer: "Right-hand rule" },
+            { question: "The magnitude of the magnetic field at a distance r from a long, straight wire carrying a current I is given by:", options: ["B = μ₀I / (2πr)", "B = μ₀I / (2r)", "B = μ₀I / (πr²)", "B = μ₀I / r"], answer: "B = μ₀I / (2πr)" },
+            { question: "A long, straight wire carries a current of 10 A. What is the magnetic field strength at a distance of 5 cm from the wire? (μ₀ = 4π x 10⁻⁷ T·m/A)", options: ["2 x 10⁻⁵ T", "4 x 10⁻⁵ T", "6 x 10⁻⁵ T", "8 x 10⁻⁵ T"], answer: "4 x 10⁻⁵ T" },
+            { question: "The magnetic field at the center of a circular loop of N turns, radius r, and current I is given by:", options: ["B = μ₀NI / (2πr)", "B = μ₀NI / (2r)", "B = μ₀NI / (πr²)", "B = μ₀NI / r"], answer: "B = μ₀NI / (2r)" },
+            { question: "A circular coil with 100 turns and a radius of 10 cm carries a current of 2 A. What is the magnetic field at its center?", options: ["1.26 x 10⁻³ T", "2.51 x 10⁻³ T", "3.77 x 10⁻³ T", "5.03 x 10⁻³ T"], answer: "1.26 x 10⁻³ T" },
+            { question: "The magnetic field inside a long solenoid is:", options: ["Zero", "Uniform", "Inversely proportional to the number of turns.", "Strongest at the ends."], answer: "Uniform" },
+            { question: "The magnitude of the magnetic field inside a long solenoid of n turns per unit length and current I is given by:", options: ["B = μ₀nI", "B = μ₀nI / 2", "B = μ₀I / (2πr)", "B = μ₀nI / r"], answer: "B = μ₀nI" },
+            { question: "A solenoid is 50 cm long and has 1000 turns. If it carries a current of 5 A, what is the magnetic field inside it?", options: ["6.28 x 10⁻³ T", "1.26 x 10⁻² T", "2.51 x 10⁻² T", "5.03 x 10⁻² T"], answer: "1.26 x 10⁻² T" },
+            { question: "The magnetic force on a moving charged particle is always ______ to both the velocity of the particle and the magnetic field.", options: ["parallel", "perpendicular", "at a 45° angle", "in the opposite direction"], answer: "perpendicular" },
+            { question: "The magnitude of the magnetic force on a charge q moving with velocity v in a magnetic field B is given by:", options: ["F = qvB sinθ", "F = qvB cosθ", "F = qv / B", "F = qB / v"], answer: "F = qvB sinθ" },
+            { question: "An electron (q = -1.6 x 10⁻¹⁹ C) moves with a velocity of 5 x 10⁶ m/s perpendicular to a magnetic field of 0.5 T. What is the magnitude of the magnetic force on the electron?", options: ["4 x 10⁻¹³ N", "8 x 10⁻¹³ N", "1.6 x 10⁻¹² N", "3.2 x 10⁻¹² N"], answer: "4 x 10⁻¹³ N" },
+            { question: "The path of a charged particle moving perpendicular to a uniform magnetic field is a:", options: ["Straight line", "Circle", "Parabola", "Ellipse"], answer: "Circle" },
+            { question: "The radius of the circular path of a charged particle in a magnetic field is given by:", options: ["r = mv / (qB)", "r = qB / (mv)", "r = mq / (vB)", "r = vB / (mq)"], answer: "r = mv / (qB)" },
+            { question: "The force on a current-carrying wire of length L and current I in a magnetic field B is given by:", options: ["F = ILB sinθ", "F = ILB cosθ", "F = IL / B", "F = IB / L"], answer: "F = ILB sinθ" },
+            { question: "A 1 m long wire carrying a current of 5 A is placed perpendicular to a 0.2 T magnetic field. What is the force on the wire?", options: ["0.5 N", "1.0 N", "2.0 N", "5.0 N"], answer: "1.0 N" },
+            { question: "Magnetic flux is a measure of:", options: ["The strength of a magnet.", "The number of magnetic field lines passing through a surface.", "The force on a moving charge.", "The energy stored in a magnetic field."], answer: "The number of magnetic field lines passing through a surface." },
+            { question: "The SI unit of magnetic flux is the:", options: ["Tesla (T)", "Weber (Wb)", "Henry (H)", "Gauss (G)"], answer: "Weber (Wb)" },
+            { question: "The magnetic flux through a surface of area A in a uniform magnetic field B is given by:", options: ["Φ = BA sinθ", "Φ = BA cosθ", "Φ = B / A", "Φ = A / B"], answer: "Φ = BA cosθ" },
+            { question: "A circular loop of radius 10 cm is in a uniform magnetic field of 0.5 T. If the plane of the loop is perpendicular to the field, what is the magnetic flux through the loop?", options: ["0.0157 Wb", "0.0314 Wb", "0.0628 Wb", "0.1256 Wb"], answer: "0.0157 Wb" },
+            { question: "Faraday's law of induction states that the induced EMF in a circuit is proportional to:", options: ["The magnetic field strength.", "The current in the circuit.", "The rate of change of magnetic flux.", "The resistance of the circuit."], answer: "The rate of change of magnetic flux." },
+            { question: "Lenz's law states that the direction of the induced current is such that it:", options: ["Enhances the change in magnetic flux.", "Opposes the change in magnetic flux.", "Is parallel to the magnetic field.", "Is perpendicular to the magnetic field."], answer: "Opposes the change in magnetic flux." },
+            { question: "The induced EMF in a coil of N turns is given by:", options: ["ε = -N (dΦ/dt)", "ε = - (dΦ/dt) / N", "ε = -NΦ", "ε = -Φ / N"], answer: "ε = -N (dΦ/dt)" },
+            { question: "The magnetic flux through a coil changes from 0.5 Wb to 0.2 Wb in 0.1 s. If the coil has 100 turns, what is the induced EMF?", options: ["-3 V", "3 V", "-30 V", "30 V"], answer: "30 V" },
+            { question: "A straight conductor of length L moves with velocity v perpendicular to a magnetic field B. The induced EMF is given by:", options: ["ε = BLv", "ε = B / (Lv)", "ε = Lv / B", "ε = B L / v"], answer: "ε = BLv" },
+            { question: "A 0.5 m long conductor moves at 10 m/s perpendicular to a 0.2 T magnetic field. What is the induced EMF?", options: ["0.5 V", "1.0 V", "2.0 V", "5.0 V"], answer: "1.0 V" },
+            { question: "The direction of the induced current in a moving conductor can be found using:", options: ["Fleming's left-hand rule", "Fleming's right-hand rule", "The right-hand grip rule", "Lenz's law"], answer: "Fleming's right-hand rule" },
+            { question: "A coil rotating in a magnetic field produces an EMF that is:", options: ["Constant", "Sinusoidal", "Exponential", "Logarithmic"], answer: "Sinusoidal" },
+            { question: "The maximum EMF produced by a rotating coil of N turns, area A, and angular velocity ω in a magnetic field B is:", options: ["ε_max = NABω", "ε_max = NAB / ω", "ε_max = Nω / (AB)", "ε_max = ABω / N"], answer: "ε_max = NABω" },
+            { question: "Self-inductance is the property of a coil to:", options: ["Induce an EMF in a nearby coil.", "Oppose a change in current in itself.", "Store electric charge.", "Resist the flow of current."], answer: "Oppose a change in current in itself." },
+            { question: "The SI unit of inductance is the:", options: ["Tesla (T)", "Weber (Wb)", "Henry (H)", "Ohm (Ω)"], answer: "Henry (H)" },
+            { question: "The induced EMF due to self-inductance is given by:", options: ["ε = -L (dI/dt)", "ε = - (dI/dt) / L", "ε = -LI", "ε = -I / L"], answer: "ε = -L (dI/dt)" },
+            { question: "The current in a 10 mH inductor changes from 2 A to 5 A in 0.1 s. What is the induced EMF?", options: ["-0.3 V", "0.3 V", "-3 V", "3 V"], answer: "-0.3 V" },
+            { question: "The energy stored in an inductor of inductance L carrying a current I is:", options: ["U = ½ LI²", "U = ½ L²I", "U = LI", "U = L / I"], answer: "U = ½ LI²" },
+            { question: "Mutual inductance occurs when a changing current in one coil induces an EMF in:", options: ["The same coil", "A nearby coil", "A resistor", "A capacitor"], answer: "A nearby coil" },
+            { question: "The induced EMF in a secondary coil due to a changing current in a primary coil is given by:", options: ["ε₂ = -M (dI₁/dt)", "ε₂ = - (dI₁/dt) / M", "ε₂ = -MI₁", "ε₂ = -I₁ / M"], answer: "ε₂ = -M (dI₁/dt)" },
+            { question: "An alternating current (AC) is a current that:", options: ["Flows in one direction only.", "Periodically reverses its direction.", "Has a constant magnitude.", "Is produced by a battery."], answer: "Periodically reverses its direction." },
+            { question: "The root-mean-square (RMS) value of an AC current is the value of the DC current that would:", options: ["Produce the same peak voltage.", "Produce the same average power.", "Have the same frequency.", "Have the same period."], answer: "Produce the same average power." },
+            { question: "The RMS value of a sinusoidal AC current with peak value I₀ is:", options: ["I_rms = I₀ / 2", "I_rms = I₀ / √2", "I_rms = I₀", "I_rms = I₀√2"], answer: "I_rms = I₀ / √2" },
+            { question: "The RMS value of a sinusoidal AC voltage with peak value V₀ is:", options: ["V_rms = V₀ / 2", "V_rms = V₀ / √2", "V_rms = V₀", "V_rms = V₀√2"], answer: "V_rms = V₀ / √2" },
+            { question: "The peak voltage of a 120 V (RMS) AC source is:", options: ["85 V", "120 V", "170 V", "240 V"], answer: "170 V" },
+            { question: "Impedance in an AC circuit is the total opposition to:", options: ["Voltage", "Current", "Resistance", "Capacitance"], answer: "Current" },
+            { question: "The SI unit of impedance is the:", options: ["Henry (H)", "Farad (F)", "Ohm (Ω)", "Tesla (T)"], answer: "Ohm (Ω)" },
+            { question: "Capacitive reactance is the opposition of a capacitor to the flow of:", options: ["DC current", "AC current", "Electrons", "Protons"], answer: "AC current" },
+            { question: "Capacitive reactance (Xc) is given by:", options: ["Xc = ωC", "Xc = 1 / (ωC)", "Xc = ω / C", "Xc = C / ω"], answer: "Xc = 1 / (ωC)" },
+            { question: "A 10 μF capacitor is connected to a 60 Hz AC source. What is its capacitive reactance?", options: ["133 Ω", "265 Ω", "398 Ω", "531 Ω"], answer: "265 Ω" },
+            { question: "Inductive reactance is the opposition of an inductor to the flow of:", options: ["DC current", "AC current", "Electrons", "Protons"], answer: "AC current" },
+            { question: "Inductive reactance (X_L) is given by:", options: ["X_L = ωL", "X_L = 1 / (ωL)", "X_L = ω / L", "X_L = L / ω"], answer: "X_L = ωL" },
+            { question: "A 10 mH inductor is connected to a 60 Hz AC source. What is its inductive reactance?", options: ["1.88 Ω", "3.77 Ω", "5.65 Ω", "7.54 Ω"], answer: "3.77 Ω" },
+            { question: "In a series RLC circuit, the impedance (Z) is given by:", options: ["Z = R + X_L + Xc", "Z = √(R² + (X_L - Xc)²)", "Z = R + (X_L - Xc)", "Z = √(R² + (X_L + Xc)²)"], answer: "Z = √(R² + (X_L - Xc)²)" },
+            { question: "A series RLC circuit has R = 10 Ω, X_L = 20 Ω, and Xc = 10 Ω. What is the impedance?", options: ["10 Ω", "14.1 Ω", "20 Ω", "30 Ω"], answer: "14.1 Ω" },
+            { question: "Resonance in a series RLC circuit occurs when:", options: ["R = X_L", "R = Xc", "X_L = Xc", "Z = 0"], answer: "X_L = Xc" },
+            { question: "The resonant frequency of a series RLC circuit is given by:", options: ["f = 1 / (2π√(LC))", "f = √(LC) / (2π)", "f = 2π√(LC)", "f = 1 / (√(LC))"], answer: "f = 1 / (2π√(LC))" },
+            { question: "A transformer is a device that:", options: ["Converts AC to DC.", "Converts DC to AC.", "Changes the voltage and current of an AC circuit.", "Stores electrical energy."], answer: "Changes the voltage and current of an AC circuit." },
+            { question: "A step-up transformer ______ voltage and ______ current.", options: ["increases, decreases", "decreases, increases", "increases, increases", "decreases, decreases"], answer: "increases, decreases" },
+            { question: "The ratio of the secondary voltage to the primary voltage in a transformer is equal to the ratio of:", options: ["The number of turns in the primary to the secondary.", "The number of turns in the secondary to the primary.", "The current in the primary to the secondary.", "The resistance in the primary to the secondary."], answer: "The number of turns in the secondary to the primary." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
