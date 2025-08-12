@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test: Immunity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Comprehensive Biology Test: Immunity</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on the immune system. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-green-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biology Quiz: Immunity</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-green-600 dark:text-green-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Pathogens: Bacteria & Viruses
+            { question: "Which of the following structures is found in prokaryotes but is absent in eukaryotes?", options: ["Ribosomes", "Cell surface membrane", "A circular DNA molecule free in the cytoplasm", "Cytoplasm", "Flagellum"], answer: "A circular DNA molecule free in the cytoplasm" },
+            { question: "The cell wall of bacteria is primarily composed of what substance?", options: ["Chitin", "Cellulose", "Peptidoglycan (murein)", "Lipopolysaccharide", "Glycoprotein"], answer: "Peptidoglycan (murein)" },
+            { question: "A microbiologist performs a Gram stain on a bacterial sample. The bacteria appear purple under the microscope. This indicates that the bacteria:", options: ["Have a thin peptidoglycan layer and an outer membrane.", "Have a thick peptidoglycan layer that retains the crystal violet stain.", "Lack a cell wall entirely.", "Are resistant to most antibiotics.", "Have lipopolysaccharides in their cell wall."], answer: "Have a thick peptidoglycan layer that retains the crystal violet stain." },
+            { question: "Why are Gram-negative bacteria generally more resistant to antibiotics than Gram-positive bacteria?", options: ["Their thick peptidoglycan wall is impermeable.", "They lack ribosomes, the target of many antibiotics.", "Their outer membrane acts as a barrier, preventing drugs from reaching their target.", "They reproduce more rapidly.", "They possess a capsule made of protein."], answer: "Their outer membrane acts as a barrier, preventing drugs from reaching their target." },
+            { question: "What is the primary function of a bacterial capsule?", options: ["To facilitate movement.", "To synthesize proteins.", "To act as the site of respiration.", "To protect against dehydration and host immune attacks.", "To transfer genetic material during binary fission."], answer: "To protect against dehydration and host immune attacks." },
+            { question: "The process of transferring a plasmid from a resistant bacterium to a non-resistant bacterium via a pilus is known as:", options: ["Vertical transmission", "Binary fission", "Horizontal transmission (conjugation)", "Transduction", "Endospore formation"], answer: "Horizontal transmission (conjugation)" },
+            { question: "A virus is best described as a:", options: ["Simple prokaryotic cell.", "Non-cellular infectious agent consisting of a nucleic acid core in a protein capsid.", "Unicellular eukaryotic organism.", "Misfolded protein.", "Complex lipid-based organism."], answer: "Non-cellular infectious agent consisting of a nucleic acid core in a protein capsid." },
+            { question: "What is the name of the protein coat that encloses the genetic material of a virus?", options: ["Capsomere", "Envelope", "Peptidoglycan", "Capsid", "Murein"], answer: "Capsid" },
+            { question: "During the lytic cycle of a bacteriophage, what is the fate of the host cell?", options: ["It integrates the viral DNA and continues to live.", "It becomes dormant until conditions are favorable.", "It is lysed (bursts) to release newly assembled phage particles.", "It undergoes binary fission to spread the virus.", "It develops immunity to the phage."], answer: "It is lysed (bursts) to release newly assembled phage particles." },
+            { question: "Which of the following diseases is most commonly transmitted through airborne droplets?", options: ["Hepatitis A", "Yellow fever", "Chickenpox", "Poliomyelitis", "Viral gastroenteritis"], answer: "Chickenpox" },
+            { question: "Hepatitis A and E are typically transmitted through which of the following routes?", options: ["Airborne droplets", "Sexual contact", "Food-borne or water-borne contamination", "Blood transfusion", "Insect bites"], answer: "Food-borne or water-borne contamination" },
+            // Immunity: General Concepts & Innate Immunity
+            { question: "A substance that is foreign to the body and stimulates an immune response is called a(n):", options: ["Antibody", "Antigen", "Phagocyte", "Lymphocyte", "Histamine"], answer: "Antigen" },
+            { question: "The term 'self' in an immunological context refers to:", options: ["Any substance that can trigger an immune response.", "Substances produced by the body that do not stimulate an immune response.", "Only the cells of the lymphatic system.", "Pathogens that have successfully invaded the body.", "A specific type of antibody."], answer: "Substances produced by the body that do not stimulate an immune response." },
+            { question: "Which of the following is a component of the innate immune system?", options: ["B-lymphocytes", "T-lymphocytes", "Memory cells", "Phagocytic cells like macrophages", "Antibodies"], answer: "Phagocytic cells like macrophages" },
+            { question: "Adaptive immunity is characterized by its:", options: ["Rapid, non-specific response.", "Presence in all animals.", "Recognition of traits specific to particular pathogens.", "Reliance on physical barriers like skin.", "Lack of memory."], answer: "Recognition of traits specific to particular pathogens." },
+            { question: "Which of the following is a primary function of the lymphatic system?", options: ["To transport oxygen to tissues.", "To produce red blood cells.", "To trap foreign substances and activate lymphocytes.", "To digest nutrients.", "To regulate body temperature."], answer: "To trap foreign substances and activate lymphocytes." },
+            { question: "Which two types of cells are classified as the main phagocytes in the immune system?", options: ["B cells and T cells", "Neutrophils and macrophages", "Platelets and monocytes", "Eosinophils and basophils", "Plasma cells and dendritic cells"], answer: "Neutrophils and macrophages" },
+            { question: "What distinguishes white blood cells from red blood cells in a stained blood smear?", options: ["Their smaller size.", "Their biconcave shape.", "The presence of a stained nucleus in white blood cells.", "Their darker color under all light conditions.", "Their ability to carry oxygen."], answer: "The presence of a stained nucleus in white blood cells." },
+            { question: "Which phagocytes are most abundant in the blood, short-lived, and often form pus at the site of infection?", options: ["Macrophages", "Monocytes", "B-lymphocytes", "Neutrophils", "T-lymphocytes"], answer: "Neutrophils" },
+            { question: "Macrophages originate in the bone marrow and travel in the blood as which type of cell before settling in organs?", options: ["Neutrophils", "Lymphocytes", "Monocytes", "Platelets", "Plasma cells"], answer: "Monocytes" },
+            { question: "The movement of a neutrophil towards a chemical stimulus released by pathogens or damaged cells is called:", options: ["Phagocytosis", "Chemotaxis", "Endocytosis", "Opsonization", "Agglutination"], answer: "Chemotaxis" },
+            { question: "What is the first step in the process of phagocytosis?", options: ["Endocytosis", "Killing and digestion", "Attraction (chemotaxis) to the pathogen", "Fusion with a lysosome", "Recognition and attachment"], answer: "Attraction (chemotaxis) to the pathogen" },
+            { question: "During an inflammatory response, mast cells release _________, which causes capillaries to dilate.", options: ["Antibodies", "Cytokines", "Perforin", "Histamine", "Acetylcholine"], answer: "Histamine" },
+            { question: "The role of a macrophage as an antigen-presenting cell (APC) involves:", options: ["Secreting antibodies to neutralize pathogens.", "Directly killing infected body cells.", "Displaying fragments of a pathogen on its surface to activate lymphocytes.", "Storing pathogens in vacuoles indefinitely.", "Releasing toxins to destroy pathogens."], answer: "Displaying fragments of a pathogen on its surface to activate lymphocytes." },
+            // B-Lymphocytes and Humoral Immunity
+            { question: "Where do B-lymphocytes mature and produce their specific antibody receptors?", options: ["Thymus", "Spleen", "Liver", "Bone marrow", "Lymph nodes"], answer: "Bone marrow" },
+            { question: "A mature, naive B cell has antibody molecules that function as:", options: ["Secreted toxins.", "Glycoprotein receptors on its cell surface.", "Phagocytic receptors.", "Enzymes for digesting antigens.", "Signaling molecules to attract T cells."], answer: "Glycoprotein receptors on its cell surface." },
+            { question: "The process where an antigen binds to a specific B cell, which then divides to form a clone of cells, is known as:", options: ["Phagocytosis", "Clonal selection", "Apoptosis", "Chemotaxis", "Neutralization"], answer: "Clonal selection" },
+            { question: "Upon activation, a B cell differentiates into which two types of cells?", options: ["Helper T cells and Killer T cells", "Neutrophils and Macrophages", "Plasma cells and Memory B cells", "Monocytes and Mast cells", "Stem cells and Phagocytes"], answer: "Plasma cells and Memory B cells" },
+            { question: "What is the primary function of plasma cells?", options: ["To perform phagocytosis.", "To store memory of an infection.", "To secrete large quantities of antibodies.", "To present antigens to T cells.", "To directly kill infected cells."], answer: "To secrete large quantities of antibodies." },
+            { question: "The secondary immune response is faster and stronger than the primary response because of the presence of:", options: ["Phagocytes", "A higher initial number of pathogens.", "Memory cells", "Histamines", "A thicker skin barrier."], answer: "Memory cells" },
+            { question: "An antibody molecule is composed of:", options: ["Four identical polypeptide chains.", "One heavy chain and one light chain.", "Two heavy chains and two light chains.", "A single polypeptide chain.", "A lipid and a carbohydrate chain."], answer: "Two heavy chains and two light chains." },
+            { question: "The part of an antibody that binds to a specific antigen is known as the:", options: ["Constant region", "Hinge region", "Heavy chain", "Variable region", "Disulfide bridge"], answer: "Variable region" },
+            { question: "The process where antibodies cause bacteria to clump together is called:", options: ["Neutralization", "Opsonization", "Lysis", "Agglutination", "Chemotaxis"], answer: "Agglutination" },
+            { question: "How do antibodies enhance phagocytosis?", options: ["By punching holes in the pathogen's cell wall.", "By coating bacteria (opsonization), making them easier for phagocytes to ingest.", "By neutralizing toxins released by bacteria.", "By attaching to bacterial flagella to stop movement.", "By directly digesting the pathogen."], answer: "By coating bacteria (opsonization), making them easier for phagocytes to ingest." },
+            { question: "The first exposure to an antigen elicits a:", options: ["Secondary response", "Primary response", "Allergic response", "Autoimmune response", "Passive response"], answer: "Primary response" },
+            { question: "Which class of antibody is found in colostrum and provides passive immunity to infants?", options: ["IgG", "IgM", "IgE", "IgD", "IgA"], answer: "IgA" },
+            { question: "The flexibility of an antibody molecule, allowing it to bind to antigens, is provided by the:", options: ["Variable region", "Light chain", "Hinge region", "Constant region", "Antigen-binding site"], answer: "Hinge region" },
+            { question: "Antibodies that combine with and neutralize toxins are specifically called:", options: ["Agglutinins", "Opsonins", "Lysins", "Antitoxins", "Perforins"], answer: "Antitoxins" },
+            // T-Lymphocytes and Cell-Mediated Immunity
+            { question: "Where do T-lymphocytes mature?", options: ["Bone marrow", "Spleen", "Thymus gland", "Liver", "Lymph nodes"], answer: "Thymus gland" },
+            { question: "T cells recognize antigens only when they are:", options: ["Free-floating in the blood.", "Bound to an antibody.", "Presented on the surface of another body cell (like a macrophage).", "In a clump due to agglutination.", "Inside a pathogen."], answer: "Presented on the surface of another body cell (like a macrophage)." },
+            { question: "The molecules on the surface of host cells that present antigen fragments are called:", options: ["Antibody receptors", "T cell receptors", "MHC molecules", "Histamines", "Immunoglobulins"], answer: "MHC molecules" },
+            { question: "Which type of T cell is responsible for stimulating B cells and other T cells by releasing cytokines?", options: ["Killer T cell (Cytotoxic T cell)", "Helper T cell", "Memory T cell", "Suppressor T cell", "Plasma cell"], answer: "Helper T cell" },
+            { question: "What is the primary function of Killer T cells (cytotoxic T lymphocytes)?", options: ["To secrete antibodies.", "To engulf pathogens via phagocytosis.", "To search for and destroy the body's own infected cells.", "To activate B cells.", "To produce memory cells."], answer: "To search for and destroy the body's own infected cells." },
+            { question: "Killer T cells destroy infected cells by releasing toxic substances, including _________, which punches holes in the cell membrane.", options: ["Histamine", "Lysozyme", "Perforin", "Cytokines", "Antibodies"], answer: "Perforin" },
+            { question: "The cell-mediated immune response is most effective against:", options: ["Bacteria in the bloodstream.", "Free-floating viruses in the lymph.", "Body cells that have been infected by viruses.", "Toxins released by bacteria.", "Allergens like pollen."], answer: "Body cells that have been infected by viruses." },
+            { question: "The accessory protein CD4 is characteristic of which type of cell?", options: ["B cell", "Helper T cell", "Cytotoxic T cell", "Macrophage", "Plasma cell"], answer: "Helper T cell" },
+            { question: "The accessory protein CD8 is characteristic of which type of cell?", options: ["B cell", "Helper T cell", "Cytotoxic T cell", "Macrophage", "Plasma cell"], answer: "Cytotoxic T cell" },
+            { question: "The production of memory helper T cells and memory killer T cells ensures:", options: ["A rapid response to the first invasion of a pathogen.", "The immediate destruction of all bacteria.", "A faster and more effective response upon a second exposure to the same antigen.", "The production of histamine during an allergic reaction.", "The prevention of autoimmune diseases."], answer: "A faster and more effective response upon a second exposure to the same antigen." },
+            // Immune System Disorders & Acquired Immunity
+            { question: "All white blood cells, including neutrophils and lymphocytes, originate from:", options: ["Stem cells in the bone marrow.", "Mature cells in the thymus.", "Monocytes in the blood.", "Plasma cells in the lymph nodes.", "Macrophages in the liver."], answer: "Stem cells in the bone marrow." },
+            { question: "Leukaemia is a cancer characterized by the uncontrolled division of:", options: ["Red blood cells.", "Platelets.", "Stem cells in the bone marrow that produce white blood cells.", "Mature plasma cells.", "Mast cells."], answer: "Stem cells in the bone marrow that produce white blood cells." },
+            { question: "A person with leukaemia is often immunosuppressed because:", options: ["The cancerous cells are mature and fully functional.", "The overproduced white blood cells are immature and non-functional.", "The body produces too many antibodies.", "Red blood cell production is enhanced.", "The thymus gland grows too large."], answer: "The overproduced white blood cells are immature and non-functional." },
+            { question: "Immunity gained from recovering from an infection is an example of:", options: ["Natural active immunity", "Artificial active immunity", "Natural passive immunity", "Artificial passive immunity", "Innate immunity"], answer: "Natural active immunity" },
+            { question: "A vaccination provides:", options: ["Natural active immunity", "Artificial active immunity", "Natural passive immunity", "Artificial passive immunity", "A direct cure for a disease."], answer: "Artificial active immunity" },
+            { question: "The transfer of antibodies from a mother to her baby through breast milk is an example of:", options: ["Natural active immunity", "Artificial active immunity", "Natural passive immunity", "Artificial passive immunity", "Cell-mediated immunity."], answer: "Natural passive immunity" },
+            { question: "An injection of antiserum (containing antibodies) after a snakebite provides:", options: ["Natural active immunity", "Artificial active immunity", "Natural passive immunity", "Artificial passive immunity", "Long-term protection."], answer: "Artificial passive immunity" },
+            { question: "Which statement best describes passive immunity?", options: ["It develops slowly and provides long-term protection.", "It involves the production of memory cells.", "It provides immediate but temporary protection by transferring antibodies.", "It is stimulated by exposure to an antigen.", "It is another term for the innate immune system."], answer: "It provides immediate but temporary protection by transferring antibodies." },
+            { question: "How do vaccines work to provide long-term immunity?", options: ["They contain antibodies that fight the infection directly.", "They contain antigens that stimulate a primary immune response and the production of memory cells.", "They contain antibiotics that kill the pathogen.", "They physically block pathogens from entering the body.", "They provide a temporary boost to the number of phagocytes."], answer: "They contain antigens that stimulate a primary immune response and the production of memory cells." },
+            { question: "Herd immunity is effective because:", options: ["It makes every individual in the population immune.", "It cures individuals who are already sick.", "It reduces the chance of a susceptible individual encountering an infected person.", "It eliminates the need for any vaccinations.", "It only works for bacterial diseases."], answer: "It reduces the chance of a susceptible individual encountering an infected person." },
+            { question: "Ring vaccination is a strategy that involves:", options: ["Vaccinating everyone in a country.", "Vaccinating only the individuals who are already sick.", "Vaccinating the contacts of an infected person to form a 'ring' of immunity and stop transmission.", "Using a ring-shaped vaccine.", "A type of passive immunization."], answer: "Vaccinating the contacts of an infected person to form a 'ring' of immunity and stop transmission." },
+            { question: "An exaggerated, hypersensitive response to a normally harmless antigen (like pollen) is called:", options: ["An autoimmune disease", "An allergy", "Passive immunity", "A primary immune response", "Leukaemia"], answer: "An allergy" },
+            { question: "The class of antibodies primarily involved in allergic reactions is:", options: ["IgG", "IgA", "IgM", "IgD", "IgE"], answer: "IgE" },
+            { question: "During an allergic reaction, allergens bind to IgE antibodies on the surface of _________, causing them to release histamine.", options: ["Plasma cells", "Helper T cells", "Mast cells", "Neutrophils", "B cells"], answer: "Mast cells" },
+            { question: "An autoimmune disease is a condition where:", options: ["The immune system is too weak to fight off infections.", "The immune system fails to produce memory cells.", "The immune system attacks the body's own 'self' antigens.", "The body is allergic to a foreign substance.", "The body overproduces white blood cells."], answer: "The immune system attacks the body's own 'self' antigens." },
+            { question: "Myasthenia gravis is an autoimmune disease that targets:", options: ["The islets of Langerhans in the pancreas.", "The joints, causing arthritis.", "The central nervous system.", "The neuromuscular junctions (acetylcholine receptors).", "The skin and kidneys."], answer: "The neuromuscular junctions (acetylcholine receptors)." },
+            // Comprehensive & Application Questions
+            { question: "A virus has successfully infected a liver cell. Which part of the adaptive immune system will be most effective at destroying this infected cell?", options: ["Antibodies secreted by plasma cells.", "Helper T cells releasing cytokines.", "Cytotoxic T cells (Killer T cells).", "Phagocytosis by neutrophils.", "The complement system."], answer: "Cytotoxic T cells (Killer T cells)." },
+            { question: "A patient's blood test shows an abnormally high number of immature lymphocytes. This is a strong indicator of:", options: ["An acute bacterial infection.", "An allergic reaction.", "A viral infection like the flu.", "Leukaemia.", "Natural passive immunity."], answer: "Leukaemia." },
+            { question: "If a person has blood type A, which self-antigens are present on their red blood cells?", options: ["A antigens", "B antigens", "Both A and B antigens", "No antigens", "O antigens"], answer: "A antigens" },
+            { question: "The human immunodeficiency virus (HIV) primarily targets and destroys which cells, leading to a collapse of the adaptive immune system?", options: ["B cells", "Cytotoxic T cells", "Helper T cells", "Macrophages", "Neutrophils"], answer: "Helper T cells" },
+            { question: "Which of the following is NOT a function of antibodies?", options: ["Neutralizing viruses and toxins.", "Activating the complement system to cause lysis.", "Performing phagocytosis.", "Causing agglutination of bacteria.", "Opsonizing pathogens for phagocytosis."], answer: "Performing phagocytosis." },
+            { question: "A child receives a DTP vaccination (diphtheria, tetanus, pertussis). This will stimulate the production of:", options: ["Antibodies against DTP antigens only.", "Memory B and T cells specific to DTP antigens.", "A general increase in all phagocytes.", "Passive immunity against all bacterial infections.", "Histamine and mast cells."], answer: "Memory B and T cells specific to DTP antigens." },
+            { question: "Which statement accurately compares the primary and secondary immune responses?", options: ["The primary response is faster and produces more antibodies.", "The secondary response is slower but lasts longer.", "The secondary response is faster, stronger, and produces a higher concentration of antibodies.", "The primary response involves T cells, while the secondary response involves B cells.", "Both responses are identical in speed and magnitude."], answer: "The secondary response is faster, stronger, and produces a higher concentration of antibodies." },
+            { question: "The incredible diversity of antibody molecules (estimated at 10 million types) is possible because:", options: ["Each B cell can produce many different types of antibodies.", "Each mature B cell is specialized to produce only one type of antibody, and there are millions of different B cells.", "Antibodies can change their shape to fit any antigen.", "The body is exposed to millions of antigens at birth.", "Macrophages instruct B cells on which antibody to make."], answer: "Each mature B cell is specialized to produce only one type of antibody, and there are millions of different B cells." },
+            { question: "A key difference between the humoral and cell-mediated responses is that:", options: ["Humoral response uses T cells, while cell-mediated uses B cells.", "Humoral response defends against pathogens in body fluids, while cell-mediated response defends against infected body cells.", "Humoral response is part of innate immunity, while cell-mediated is adaptive.", "Humoral response does not create memory cells.", "Cell-mediated response is faster than the humoral response."], answer: "Humoral response defends against pathogens in body fluids, while cell-mediated response defends against infected body cells." },
+            { question: "A bacterial pathogen has a polysaccharide capsule. How might this capsule help the bacterium evade the immune system?", options: ["By preventing the bacteria from moving.", "By shielding the bacterial antigens from being recognized by phagocytes and antibodies.", "By releasing toxins that kill white blood cells.", "By helping the bacteria to reproduce faster.", "By staining Gram-positive."], answer: "By shielding the bacterial antigens from being recognized by phagocytes and antibodies." },
+            { question: "The 'hinge region' of an antibody is important because it:", options: ["Binds to the antigen.", "Provides flexibility, allowing the two antigen-binding sites to bind to antigens that are different distances apart.", "Attaches the antibody to the B cell membrane.", "Is the site where the heavy and light chains are synthesized.", "Contains the genetic code for the antibody."], answer: "Provides flexibility, allowing the two antigen-binding sites to bind to antigens that are different distances apart." },
+            { question: "Which of the following is a potential disadvantage of passive immunity?", options: ["It takes a long time to develop.", "It is not specific to any pathogen.", "It does not create immunological memory.", "It can cause autoimmune diseases.", "It is only effective against viruses."], answer: "It does not create immunological memory." },
+            { question: "An individual with Myasthenia Gravis produces antibodies that block and destroy acetylcholine receptors. This is a failure of the immune system to:", options: ["Recognize non-self antigens.", "Produce memory cells.", "Distinguish between self and non-self antigens.", "Undergo phagocytosis.", "Produce enough T cells."], answer: "Distinguish between self and non-self antigens." },
+            { question: "The final step of phagocytosis by a neutrophil involves:", options: ["The pathogen binding to the cell surface.", "The fusion of the phagocytic vacuole with a lysosome for digestion.", "The release of histamine to attract more cells.", "The neutrophil dividing by mitosis.", "The presentation of antigens on the neutrophil's surface."], answer: "The fusion of the phagocytic vacuole with a lysosome for digestion." },
+            { question: "A person who has never been infected with the chickenpox virus is exposed to it. What kind of immune response will they mount?", options: ["A rapid secondary response.", "A primary response involving the selection and cloning of specific B and T cells.", "Passive immunity.", "An allergic reaction.", "Innate immunity only."], answer: "A primary response involving the selection and cloning of specific B and T cells." },
+            { question: "The term 'attenuated' in the context of a vaccine means the pathogen is:", options: ["Dead", "A harmless part of the pathogen, like a surface antigen.", "A live but weakened version of the pathogen.", "A toxin produced by the pathogen.", "A genetically engineered version."], answer: "A live but weakened version of the pathogen." },
+            { question: "Which of the following is NOT a characteristic of a virus?", options: ["It contains either DNA or RNA.", "It has a protein capsid.", "It can reproduce independently without a host cell.", "It is a non-cellular agent.", "It is an obligate intracellular parasite."], answer: "It can reproduce independently without a host cell." },
+            { question: "The main role of helper T cells is best described as:", options: ["The 'master regulators' of the adaptive immune response, activating both B cells and cytotoxic T cells.", "The primary cells responsible for phagocytosis.", "The cells that directly kill virus-infected host cells.", "The producers of immunoglobulin E for allergic reactions.", "The first line of defense in the innate immune system."], answer: "The 'master regulators' of the adaptive immune response, activating both B cells and cytotoxic T cells." },
+            { question: "If a person's thymus gland was surgically removed early in life, which of the following would be most severely affected?", options: ["The maturation of B-lymphocytes.", "The maturation of T-lymphocytes.", "The production of neutrophils.", "The ability to produce histamine.", "The production of red blood cells."], answer: "The maturation of T-lymphocytes." },
+            { question: "The specificity of an antibody for its antigen is determined by the:", options: ["Amino acid sequence of the constant regions.", "Number of disulfide bonds.", "Amino acid sequence of the variable regions.", "Type of heavy chain present.", "Hinge region."], answer: "Amino acid sequence of the variable regions." },
+            { question: "A bacterial infection has been cleared from the body. Which cells are crucial for ensuring a much faster response if the same bacteria invade again?", options: ["Plasma cells", "Activated cytotoxic T cells", "Neutrophils", "Memory B and T cells", "Mast cells"], answer: "Memory B and T cells" },
+            { question: "Which of the following correctly pairs a cell type with its primary function?", options: ["B cell - Phagocytosis", "Macrophage - Antibody secretion", "Plasma cell - Antigen presentation", "Cytotoxic T cell - Lysis of infected cells", "Neutrophil - Cytokine release"], answer: "Cytotoxic T cell - Lysis of infected cells" },
+            { question: "The reason you can get the flu multiple times is that:", options: ["The flu vaccine is not effective.", "The flu virus changes its surface antigens frequently, evading the memory of previous infections.", "The flu is caused by bacteria, not a virus.", "The immune system cannot form memory cells against the flu virus.", "The flu virus destroys memory cells."], answer: "The flu virus changes its surface antigens frequently, evading the memory of previous infections." },
+            { question: "What is the fundamental difference between active and passive immunity?", options: ["Active immunity involves T cells; passive immunity involves B cells.", "Active immunity is always natural; passive immunity is always artificial.", "Active immunity involves the individual's own immune system producing antibodies and memory cells; passive immunity involves receiving pre-made antibodies.", "Active immunity is short-term; passive immunity is long-term.", "Active immunity is non-specific; passive immunity is specific."], answer: "Active immunity involves the individual's own immune system producing antibodies and memory cells; passive immunity involves receiving pre-made antibodies." },
+            { question: "A patient is found to have a defect in the gene that codes for MHC Class I molecules. This would most directly impact the function of which cells?", options: ["B cells recognizing free antigens.", "Macrophages presenting antigens to helper T cells.", "Cytotoxic T cells recognizing and killing infected body cells.", "Mast cells releasing histamine.", "Plasma cells secreting antibodies."], answer: "Cytotoxic T cells recognizing and killing infected body cells." },
+            { question: "The term 'humoral' in humoral immunity refers to the fact that its components (antibodies) are found in the:", options: ["Body's cells", "Bone marrow", "Body fluids (humors), like blood and lymph", "Thymus gland", "Brain"], answer: "Body fluids (humors), like blood and lymph" },
+            { question: "Which of the following is NOT a direct result of histamine release?", options: ["Dilation of capillaries", "Increased permeability of capillaries", "Sneezing and runny nose", "Production of memory cells", "Attraction of phagocytes to the area"], answer: "Production of memory cells" },
+            { question: "A plasmid carrying a gene for antibiotic resistance is transferred from one bacterium to another. This is an example of:", options: ["A viral infection", "Vertical gene transmission", "An immune response", "Horizontal gene transmission", "A mutation"], answer: "Horizontal gene transmission" },
+            { question: "The primary immune response can take 1-2 weeks to become fully effective because:", options: ["Phagocytes are slow to act.", "It takes time for the correct B and T cells to be selected, divide, and differentiate.", "The pathogens reproduce very slowly.", "Antibodies take weeks to synthesize.", "The skin barrier must be repaired first."], answer: "It takes time for the correct B and T cells to be selected, divide, and differentiate." },
+            { question: "Which of the following would be the LEAST effective target for an antibiotic designed to kill bacteria?", options: ["The peptidoglycan cell wall", "The bacterial ribosomes", "The bacterial capsule", "The viral capsid", "The bacterial circular DNA"], answer: "The viral capsid" },
+            { question: "The role of helper T cells is so critical that their destruction by HIV leads to Acquired Immunodeficiency Syndrome (AIDS). This is because without helper T cells:", options: ["Phagocytes cannot engulf pathogens.", "The skin barrier becomes ineffective.", "Both the humoral (B cell) and cell-mediated (cytotoxic T cell) responses are severely impaired.", "The body cannot produce histamine.", "The lymphatic system stops circulating lymph."], answer: "Both the humoral (B cell) and cell-mediated (cytotoxic T cell) responses are severely impaired." },
+            { question: "A child is born with a genetic disorder that prevents the maturation of B-lymphocytes. This child would be unable to:", options: ["Produce antibodies.", "Have T cells that kill infected cells.", "Undergo phagocytosis.", "Mount an inflammatory response.", "Develop a fever."], answer: "Produce antibodies." },
+            { question: "An antibody's constant region is important for:", options: ["Binding to a specific antigen.", "Providing flexibility at the hinge.", "Binding to receptors on phagocytes or activating the complement system.", "Determining the antibody's specificity.", "Neutralizing toxins."], answer: "Binding to receptors on phagocytes or activating the complement system." },
+            { question: "Which of these is an example of a self-antigen?", options: ["A protein on the surface of a bacterium.", "A toxin released by a pathogen.", "An MHC molecule on the surface of a person's own liver cell.", "A protein on the surface of a pollen grain.", "The capsid protein of a virus."], answer: "An MHC molecule on the surface of a person's own liver cell." },
+            { question: "The 'lock and key' analogy is often used to describe the interaction between:", options: ["A phagocyte and a pathogen.", "A T cell receptor and an MHC molecule.", "An antibody's variable region and its specific antigen.", "A mast cell and histamine.", "A neutrophil and a macrophage."], answer: "An antibody's variable region and its specific antigen." },
+            { question: "A person is vaccinated against Measles. A year later, they are exposed to the Mumps virus. Will the Measles vaccination protect them?", options: ["Yes, because vaccination provides general immunity.", "Yes, because Measles and Mumps are similar viruses.", "No, because the adaptive immune response, including memory from vaccination, is highly specific to the antigens of the Measles virus.", "No, because vaccines only provide passive immunity.", "It depends on whether they have had the flu recently."], answer: "No, because the adaptive immune response, including memory from vaccination, is highly specific to the antigens of the Measles virus." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
