@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2a8a9e 0%, #4a6a8a 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biology Test: Reproductive System</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on the reproductive system. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biology Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which of the following is NOT a primary function of the male reproductive system?", options: ["Production of sperm", "Production of estrogen", "Transport of sperm", "Secretion of male sex hormones"], answer: "Production of estrogen" },
+            { question: "Where does spermatogenesis occur?", options: ["Epididymis", "Vas deferens", "Seminiferous tubules", "Prostate gland"], answer: "Seminiferous tubules" },
+            { question: "What is the primary function of the scrotum?", options: ["Sperm production", "Testosterone production", "Maintaining the temperature of the testes", "Semen production"], answer: "Maintaining the temperature of the testes" },
+            { question: "Which accessory gland produces a sugar-rich fluid to provide energy for sperm?", options: ["Prostate gland", "Bulbourethral gland", "Seminal vesicle", "Epididymis"], answer: "Seminal vesicle" },
+            { question: "The tube that carries both urine and sperm out of the body in males is the:", options: ["Vas deferens", "Ureter", "Ejaculatory duct", "Urethra"], answer: "Urethra" },
+            { question: "Where does fertilization typically occur in the female reproductive system?", options: ["Ovary", "Uterus", "Fallopian tube", "Cervix"], answer: "Fallopian tube" },
+            { question: "Which structure produces eggs and female hormones?", options: ["Uterus", "Ovary", "Cervix", "Vagina"], answer: "Ovary" },
+            { question: "The inner lining of the uterus that is shed during menstruation is the:", options: ["Myometrium", "Perimetrium", "Endometrium", "Fundus"], answer: "Endometrium" },
+            { question: "What is the primary function of the vagina?", options: ["Egg production", "Hormone secretion", "Accepting the penis during intercourse", "Fetal development"], answer: "Accepting the penis during intercourse" },
+            { question: "Which part of the female external genitalia is sensitive to stimulation?", options: ["Labia majora", "Labia minora", "Clitoris", "Mons pubis"], answer: "Clitoris" },
+            { question: "Spermatogenesis begins with which type of cell?", options: ["Spermatid", "Primary spermatocyte", "Spermatogonium", "Secondary spermatocyte"], answer: "Spermatogonium" },
+            { question: "How many functional sperm cells are produced from one primary spermatocyte?", options: ["One", "Two", "Three", "Four"], answer: "Four" },
+            { question: "What is the function of the acrosome in a sperm cell?", options: ["Provide energy for movement", "Contain the genetic material", "Help penetrate the egg", "Propel the sperm forward"], answer: "Help penetrate the egg" },
+            { question: "Which hormone is primarily responsible for the development of male secondary sexual characteristics?", options: ["FSH", "LH", "Testosterone", "GnRH"], answer: "Testosterone" },
+            { question: "Oogenesis begins:", options: ["At puberty", "Before birth", "At menopause", "During fertilization"], answer: "Before birth" },
+            { question: "How many functional ova are produced from one primary oocyte?", options: ["One", "Two", "Three", "Four"], answer: "One" },
+            { question: "What are the non-functional cells produced during oogenesis called?", options: ["Oogonia", "Primary oocytes", "Secondary oocytes", "Polar bodies"], answer: "Polar bodies" },
+            { question: "In which stage is the secondary oocyte arrested until fertilization?", options: ["Prophase I", "Metaphase I", "Prophase II", "Metaphase II"], answer: "Metaphase II" },
+            { question: "Which hormones are commonly used in IVF to stimulate egg development?", options: ["Estrogen and Progesterone", "FSH and LH", "Testosterone and GnRH", "Oxytocin and Prolactin"], answer: "FSH and LH" },
+            { question: "What is the purpose of artificial insemination?", options: ["To fertilize an egg outside the body", "To manually deposit sperm into the female reproductive tract", "To stimulate ovulation", "To prevent sexually transmitted infections"], answer: "To manually deposit sperm into the female reproductive tract" },
+            { question: "HIV primarily infects which type of cells?", options: ["Red blood cells", "B-lymphocytes", "T-lymphocytes", "Neutrophils"], answer: "T-lymphocytes" },
+            { question: "How is HIV transmitted?", options: ["Through the air", "Through casual contact", "Through exchange of body fluids", "Through insect bites"], answer: "Through exchange of body fluids" },
+            { question: "What does AIDS stand for?", options: ["Acquired Immunodeficiency Syndrome", "Autoimmune Disease Syndrome", "Acute Infectious Disease Syndrome", "Acquired Immune Deficiency Standard"], answer: "Acquired Immunodeficiency Syndrome" },
+            { question: "Which of the following is a method to control the spread of STIs?", options: ["Avoiding vaccination", "Sharing needles", "Using condoms", "Having multiple sexual partners"], answer: "Using condoms" },
+            { question: "In plant reproduction, the male gametophyte is the:", options: ["Ovule", "Pollen grain", "Embryo sac", "Stigma"], answer: "Pollen grain" },
+            { question: "The female gametophyte in flowering plants is the:", options: ["Pollen tube", "Anther", "Embryo sac", "Filament"], answer: "Embryo sac" },
+            { question: "What is pollination?", options: ["The fusion of gametes", "The transfer of pollen from anther to stigma", "The development of the embryo", "The germination of a seed"], answer: "The transfer of pollen from anther to stigma" },
+            { question: "Asexual reproduction in plants relies on which type of cell division?", options: ["Meiosis", "Mitosis", "Fusion", "Fertilization"], answer: "Mitosis" },
+            { question: "A potato is an example of which type of vegetative propagation?", options: ["Runner", "Bulb", "Tuber", "Rhizome"], answer: "Tuber" },
+            { question: "Apomixis is a form of:", options: ["Sexual reproduction", "Asexual reproduction", "Pollination", "Fertilization"], answer: "Asexual reproduction" },
+            { question: "Which of the following is a mechanism of asexual reproduction in animals?", options: ["Fertilization", "Gametogenesis", "Budding", "Pollination"], answer: "Budding" },
+            { question: "Fission is a form of asexual reproduction where:", options: ["A new individual grows from an outgrowth of the parent", "An egg develops without fertilization", "The parent separates into two or more individuals", "A piece of the parent breaks off and regenerates"], answer: "The parent separates into two or more individuals" },
+            { question: "Parthenogenesis is:", options: ["The fusion of gametes", "The development of an egg without fertilization", "The regeneration of a lost body part", "The division of a cell into two"], answer: "The development of an egg without fertilization" },
+            { question: "Which of the following is an advantage of asexual reproduction?", options: ["Increased genetic variation", "Rapid population growth", "Adaptability to changing environments", "Requires a mate"], answer: "Rapid population growth" },
+            { question: "Internal fertilization is common in which type of animals?", options: ["Aquatic animals", "Terrestrial animals", "Sessile animals", "Invertebrates"], answer: "Terrestrial animals" },
+            { question: "What is a disadvantage of external fertilization?", options: ["Requires specialized reproductive organs", "High energy expenditure", "Low survival rate of offspring", "Limited number of offspring"], answer: "Low survival rate of offspring" },
+            { question: "A hermaphrodite is an organism that:", options: ["Reproduces asexually", "Has both male and female reproductive organs", "Lays eggs", "Gives birth to live young"], answer: "Has both male and female reproductive organs" },
+            { question: "Viviparous animals are those that:", options: ["Lay eggs", "Give birth to live young", "Reproduce by budding", "Undergo parthenogenesis"], answer: "Give birth to live young" },
+            { question: "Oviparous animals are those that:", options: ["Lay eggs", "Give birth to live young", "Have internal fertilization", "Are hermaphrodites"], answer: "Lay eggs" },
+            { question: "Ovoviviparous animals are those that:", options: ["Lay eggs that hatch outside the body", "Give birth to live young that develop inside the body with nourishment from the mother", "Retain eggs inside the body that hatch internally", "Reproduce asexually"], answer: "Retain eggs inside the body that hatch internally" },
+            { question: "Which part of the sperm cell contains mitochondria for energy?", options: ["Head", "Midpiece", "Tail", "Acrosome"], answer: "Midpiece" },
+            { question: "The process of releasing a mature egg from the ovary is called:", options: ["Menstruation", "Fertilization", "Ovulation", "Gestation"], answer: "Ovulation" },
+            { question: "The corpus luteum secretes which hormone?", options: ["FSH", "LH", "Estrogen", "Progesterone"], answer: "Progesterone" },
+            { question: "Which hormone triggers ovulation?", options: ["FSH", "LH", "Estrogen", "Progesterone"], answer: "LH" },
+            { question: "The menstrual cycle is typically how many days long?", options: ["14", "21", "28", "35"], answer: "28" },
+            { question: "What is the function of the cervix?", options: ["Produce eggs", "Produce mucus", "Site of fertilization", "Site of fetal development"], answer: "Produce mucus" },
+            { question: "The external female genitalia are collectively known as the:", options: ["Vagina", "Uterus", "Vulva", "Ovary"], answer: "Vulva" },
+            { question: "The mammary glands are responsible for:", options: ["Hormone production", "Egg production", "Milk production", "Sperm production"], answer: "Milk production" },
+            { question: "What is the main advantage of sexual reproduction?", options: ["It is fast", "It requires only one parent", "It produces genetically identical offspring", "It increases genetic variation"], answer: "It increases genetic variation" },
+            { question: "Which of the following is a sexually transmitted infection?", options: ["Influenza", "Chickenpox", "HIV", "Measles"], answer: "HIV" },
+            { question: "The generative cell in a pollen grain divides to form:", options: ["One sperm cell", "Two sperm cells", "The pollen tube", "The embryo sac"], answer: "Two sperm cells" },
+            { question: "The ovule in a plant develops into a:", options: ["Fruit", "Seed", "Flower", "Pollen grain"], answer: "Seed" },
+            { question: "Double fertilization is a characteristic of:", options: ["Gymnosperms", "Angiosperms", "Ferns", "Mosses"], answer: "Angiosperms" },
+            { question: "A runner is a type of:", options: ["Underground stem", "Above-ground stem", "Root", "Leaf"], answer: "Above-ground stem" },
+            { question: "Fragmentation is a common method of reproduction in:", options: ["Birds", "Mammals", "Flatworms", "Insects"], answer: "Flatworms" },
+            { question: "What are pheromones?", options: ["Hormones that regulate the reproductive cycle", "Chemicals used to attract mates", "Nutrients for the developing embryo", "Protective layers around the egg"], answer: "Chemicals used to attract mates" },
+            { question: "An example of a viviparous animal is:", options: ["A bird", "A fish", "A snake", "A human"], answer: "A human" },
+            { question: "An example of an oviparous animal is:", options: ["A cow", "A chicken", "A shark", "A dolphin"], answer: "A chicken" },
+            { question: "The prostate gland contributes to the production of:", options: ["Sperm", "Semen", "Testosterone", "Estrogen"], answer: "Semen" },
+            { question: "The epididymis is where:", options: ["Sperm are produced", "Sperm mature and are stored", "Semen is produced", "Testosterone is produced"], answer: "Sperm mature and are stored" },
+            { question: "The vas deferens carries sperm from the:", options: ["Testes to the epididymis", "Epididymis to the urethra", "Scrotum to the penis", "Prostate gland to the seminal vesicle"], answer: "Epididymis to the urethra" },
+            { question: "The fimbriae are finger-like projections at the end of the:", options: ["Uterus", "Ovary", "Fallopian tube", "Cervix"], answer: "Fallopian tube" },
+            { question: "The myometrium is the muscular layer of the:", options: ["Ovary", "Vagina", "Uterus", "Fallopian tube"], answer: "Uterus" },
+            { question: "The labia majora and minora are parts of the:", options: ["Internal female genitalia", "External female genitalia", "Mammary glands", "Ovaries"], answer: "External female genitalia" },
+            { question: "A zygote is a:", options: ["Mature egg cell", "Mature sperm cell", "Fertilized egg", "Developing embryo"], answer: "Fertilized egg" },
+            { question: "The process of cell division that produces gametes is called:", options: ["Mitosis", "Meiosis", "Fertilization", "Pollination"], answer: "Meiosis" },
+            { question: "A diploid cell has:", options: ["One set of chromosomes", "Two sets of chromosomes", "Half the number of chromosomes", "No chromosomes"], answer: "Two sets of chromosomes" },
+            { question: "A haploid cell has:", options: ["One set of chromosomes", "Two sets of chromosomes", "Double the number of chromosomes", "No chromosomes"], answer: "One set of chromosomes" },
+            { question: "The fusion of a sperm and an egg is called:", options: ["Ovulation", "Gestation", "Fertilization", "Pollination"], answer: "Fertilization" },
+            { question: "Which of the following is a bacterial STI?", options: ["HIV", "Genital herpes", "Gonorrhea", "Hepatitis B"], answer: "Gonorrhea" },
+            { question: "The anther in a flower produces:", options: ["Eggs", "Pollen", "Nectar", "Seeds"], answer: "Pollen" },
+            { question: "The stigma in a flower is the receptive tip of the:", options: ["Stamen", "Petal", "Sepal", "Carpel"], answer: "Carpel" },
+            { question: "A bulb is a type of:", options: ["Underground stem", "Root", "Leaf", "Flower"], answer: "Underground stem" },
+            { question: "A rhizome is a type of:", options: ["Underground stem", "Root", "Leaf", "Flower"], answer: "Underground stem" },
+            { question: "Suckers are new shoots that arise from:", options: ["The leaves", "The flowers", "The roots or underground stems", "The fruit"], answer: "The roots or underground stems" },
+            { question: "An advantage of internal fertilization is:", options: ["It requires less energy", "It produces a large number of offspring", "It provides greater protection to the embryo", "It does not require a mate"], answer: "It provides greater protection to the embryo" },
+            { question: "An example of an animal that undergoes parthenogenesis is:", options: ["A dog", "A cat", "A bee", "A bird"], answer: "A bee" },
+            { question: "The Bulbourethral glands secrete a fluid that:", options: ["Nourishes sperm", "Neutralizes acidity in the vagina", "Lubricates the penis", "Produces testosterone"], answer: "Lubricates the penis" },
+            { question: "The foreskin is a layer of skin that covers the:", options: ["Scrotum", "Testis", "Glans penis", "Epididymis"], answer: "Glans penis" },
+            { question: "The fundus is the top part of the:", options: ["Ovary", "Uterus", "Vagina", "Cervix"], answer: "Uterus" },
+            { question: "The infundibulum is the funnel-shaped opening of the:", options: ["Uterus", "Ovary", "Fallopian tube", "Cervix"], answer: "Fallopian tube" },
+            { question: "The zona pellucida is a protective layer around the:", options: ["Sperm", "Egg", "Zygote", "Embryo"], answer: "Egg" },
+            { question: "The corona radiata is a layer of cells surrounding the:", options: ["Sperm", "Egg", "Zygote", "Embryo"], answer: "Egg" },
+            { question: "In vitro means:", options: ["In the body", "In glass", "In the egg", "In the sperm"], answer: "In glass" },
+            { question: "A pathogen is a:", options: ["Type of white blood cell", "Disease-causing organism", "Type of antibiotic", "Part of the immune system"], answer: "Disease-causing organism" },
+            { question: "The carpel is the female reproductive organ of a:", options: ["Flower", "Mammal", "Bird", "Fish"], answer: "Flower" },
+            { question: "The stamen is the male reproductive organ of a:", options: ["Flower", "Mammal", "Bird", "Fish"], answer: "Flower" },
+            { question: "A plantlet is a:", options: ["Small root", "Small leaf", "Small plant", "Small flower"], answer: "Small plant" },
+            { question: "A disadvantage of asexual reproduction is:", options: ["It is slow", "It requires a mate", "It produces little genetic variation", "It produces a small number of offspring"], answer: "It produces little genetic variation" },
+            { question: "A sequential hermaphrodite is an organism that:", options: ["Has both male and female organs at the same time", "Changes its sex during its lifetime", "Reproduces asexually", "Lays eggs"], answer: "Changes its sex during its lifetime" },
+            { question: "Which of the following is a method of contraception?", options: ["Fertilization", "Ovulation", "Condom", "Gestation"], answer: "Condom" },
+            { question: "The seminal vesicles are located behind the:", options: ["Testes", "Bladder", "Prostate gland", "Epididymis"], answer: "Bladder" },
+            { question: "The ejaculatory duct is formed by the union of the vas deferens and the:", options: ["Urethra", "Seminal vesicle", "Prostate gland", "Epididymis"], answer: "Seminal vesicle" },
+            { question: "The cervix connects the uterus to the:", options: ["Ovary", "Fallopian tube", "Vagina", "Bladder"], answer: "Vagina" },
+            { question: "The clitoris is homologous to the male:", options: ["Testis", "Scrotum", "Penis", "Prostate gland"], answer: "Penis" },
+            { question: "The areola is the pigmented area around the:", options: ["Clitoris", "Cervix", "Nipple", "Vagina"], answer: "Nipple" },
+            { question: "The first milk produced after birth is called:", options: ["Lactose", "Colostrum", "Casein", "Whey"], answer: "Colostrum" },
+            { question: "A blastocyst is a:", options: ["Fertilized egg", "Developing embryo", "Mature egg", "Mature sperm"], answer: "Developing embryo" },
+            { question: "Implantation is the process where the:", options: ["Sperm fertilizes the egg", "Zygote divides", "Embryo attaches to the uterine wall", "Fetus is born"], answer: "Embryo attaches to the uterine wall" },
+            { question: "Gestation is the period of:", options: ["Menstruation", "Ovulation", "Fertilization", "Pregnancy"], answer: "Pregnancy" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
