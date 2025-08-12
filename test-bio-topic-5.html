@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test: Cell Division</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Comprehensive Biology Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on Cell Division. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-teal-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Cell Division Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-teal-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-teal-600 dark:text-teal-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Chromosome Structure and DNA Supercoiling
+            { question: "What is the primary function of the centromere?", options: ["To protect the ends of the chromosome from degradation.", "To hold the two sister chromatids together.", "To synthesize proteins for cell division.", "To initiate DNA replication."], answer: "To hold the two sister chromatids together." },
+            { question: "The combination of DNA and its associated proteins is called:", options: ["Cytoplasm", "Chromatin", "Centrosome", "Kinetochore"], answer: "Chromatin" },
+            { question: "What is the role of telomeres in the cell?", options: ["They are the site of attachment for spindle microtubules.", "They prevent the loss of vital genes during cell division and replication.", "They are responsible for the synthesis of ribosomal RNA.", "They control the coiling and uncoiling of DNA."], answer: "They prevent the loss of vital genes during cell division and replication." },
+            { question: "The protein complex on the centromere to which spindle fibers attach is known as the:", options: ["Centrosome", "Telomere", "Kinetochore", "Chromatid"], answer: "Kinetochore" },
+            { question: "What is the main function of a centrosome in an animal cell?", options: ["It contains the genetic material of the cell.", "It is the primary site of protein synthesis.", "It acts as a microtubule-organizing center for the mitotic spindle.", "It holds sister chromatids together."], answer: "It acts as a microtubule-organizing center for the mitotic spindle." },
+            { question: "DNA supercoiling is achieved by wrapping the DNA around which proteins?", options: ["Albumins", "Globulins", "Histones", "Polymerases"], answer: "Histones" },
+            { question: "A nucleosome consists of:", options: ["A segment of DNA wrapped around a core of eight histone proteins.", "A single histone protein with DNA wrapped around it.", "The entire length of a chromosome.", "A complex of RNA and protein."], answer: "A segment of DNA wrapped around a core of eight histone proteins." },
+            { question: "Why are histone proteins positively charged?", options: ["To repel the negatively charged DNA backbone.", "To attract the negatively charged phosphate groups of DNA.", "To facilitate their movement across the nuclear membrane.", "To help them bind to ribosomes."], answer: "To attract the negatively charged phosphate groups of DNA." },
+            { question: "During which phase of the cell cycle are chromosomes in their most condensed state?", options: ["G1 phase", "S phase", "G2 phase", "M phase (Mitosis/Meiosis)"], answer: "M phase (Mitosis/Meiosis)" },
+            { question: "A duplicated chromosome consists of two identical parts called:", options: ["Homologous chromosomes", "Centromeres", "Sister chromatids", "Telomeres"], answer: "Sister chromatids" },
+            { question: "The short arm of a chromosome is referred to as the:", options: ["p arm", "q arm", "alpha arm", "beta arm"], answer: "p arm" },
+            { question: "The progressive shortening of which chromosomal structure is linked to cellular aging?", options: ["Centromere", "Kinetochore", "Telomeres", "Origin of replication"], answer: "Telomeres" },
+            // The Cell Cycle & Mitosis
+            { question: "The cell cycle is divided into two main phases:", options: ["Mitosis and Meiosis", "Prophase and Metaphase", "Interphase and M phase", "G1 and G2 phase"], answer: "Interphase and M phase" },
+            { question: "In which stage of interphase does the cell grow and synthesize proteins and RNA?", options: ["S phase", "G2 phase", "M phase", "G1 phase"], answer: "G1 phase" },
+            { question: "DNA replication, where each chromosome is duplicated, occurs during:", options: ["G1 phase", "S phase", "G2 phase", "Prophase"], answer: "S phase" },
+            { question: "The final 'checkpoint' phase before a cell enters mitosis, where it checks for DNA errors and synthesizes necessary proteins, is:", options: ["G1 phase", "S phase", "G2 phase", "Anaphase"], answer: "G2 phase" },
+            { question: "What is the correct order of the stages of mitosis?", options: ["Metaphase, Prophase, Anaphase, Telophase", "Prophase, Metaphase, Anaphase, Telophase", "Anaphase, Telophase, Prophase, Metaphase", "Prophase, Anaphase, Metaphase, Telophase"], answer: "Prophase, Metaphase, Anaphase, Telophase" },
+            { question: "During which phase of mitosis do the chromosomes condense and become visible, and the nuclear envelope breaks down?", options: ["Prophase", "Metaphase", "Anaphase", "Telophase"], answer: "Prophase" },
+            { question: "Chromosomes align at the cell's equator (the metaphase plate) during which phase?", options: ["Prophase", "Metaphase", "Anaphase", "Telophase"], answer: "Metaphase" },
+            { question: "The separation of sister chromatids, which are then pulled to opposite poles of the cell, characterizes:", options: ["Prophase", "Metaphase", "Anaphase", "Telophase"], answer: "Anaphase" },
+            { question: "During which phase do the chromosomes arrive at the poles, decondense, and nuclear envelopes re-form around them?", options: ["Prophase", "Metaphase", "Anaphase", "Telophase"], answer: "Telophase" },
+            { question: "What is the process of cytoplasmic division that follows nuclear division?", options: ["Interphase", "Karyokinesis", "Cytokinesis", "Synapsis"], answer: "Cytokinesis" },
+            { question: "In animal cells, cytokinesis occurs via the formation of a:", options: ["Cell plate", "Cleavage furrow", "Cell wall", "Vesicle line"], answer: "Cleavage furrow" },
+            { question: "In plant cells, cytokinesis is characterized by the formation of a:", options: ["Cell plate", "Cleavage furrow", "Contractile ring", "Spindle fiber"], answer: "Cell plate" },
+            { question: "Mitosis results in the production of:", options: ["Two diploid cells, genetically identical to the parent cell.", "Four haploid cells, genetically different from the parent cell.", "Two haploid cells, genetically identical to the parent cell.", "Four diploid cells, genetically different from the parent cell."], answer: "Two diploid cells, genetically identical to the parent cell." },
+            { question: "Which of the following is a primary importance of mitosis?", options: ["Production of gametes for sexual reproduction.", "Increasing genetic variation in a population.", "Growth, repair, and replacement of somatic cells.", "Halving the chromosome number."], answer: "Growth, repair, and replacement of somatic cells." },
+            { question: "A chemical that inhibits the formation of the mitotic spindle would arrest the cell in which phase?", options: ["Interphase", "Prophase", "Anaphase", "Telophase"], answer: "Prophase" },
+            { question: "The microtubules of the spindle attach to which part of the chromosome?", options: ["Telomere", "Kinetochore", "p arm", "The entire chromatid"], answer: "Kinetochore" },
+            { question: "If a parent cell has a diploid number (2n) of 24, how many chromosomes will each daughter cell have after mitosis?", options: ["12", "24", "48", "6"], answer: "24" },
+            { question: "The nucleolus disappears during which phase of mitosis?", options: ["Interphase", "Prophase", "Metaphase", "Telophase"], answer: "Prophase" },
+            { question: "The cell spends the majority of its life in which phase?", options: ["Mitosis", "Cytokinesis", "Interphase", "Anaphase"], answer: "Interphase" },
+            { question: "What is the state of the chromosomes at the end of anaphase?", options: ["They exist as duplicated chromosomes at the metaphase plate.", "They exist as unduplicated chromosomes at opposite poles.", "They are decondensed and enclosed in new nuclei.", "They are paired up as homologous bivalents."], answer: "They exist as unduplicated chromosomes at opposite poles." },
+            { question: "Which cellular structure is responsible for pulling the chromatids apart during anaphase?", options: ["Nuclear envelope", "Ribosomes", "Spindle microtubules", "Golgi apparatus"], answer: "Spindle microtubules" },
+            { question: "The reformation of the nuclear envelope and the nucleolus occurs during:", options: ["Prophase", "Metaphase", "Anaphase", "Telophase"], answer: "Telophase" },
+            // Meiosis
+            { question: "Meiosis is a type of cell division that produces:", options: ["Genetically identical somatic cells.", "Haploid gametes (sperm and egg cells).", "Diploid zygotes.", "Clones of the parent organism."], answer: "Haploid gametes (sperm and egg cells)." },
+            { question: "A key difference between Meiosis I and Meiosis II is that:", options: ["Meiosis I separates homologous chromosomes, while Meiosis II separates sister chromatids.", "Meiosis I separates sister chromatids, while Meiosis II separates homologous chromosomes.", "Meiosis I produces diploid cells, while Meiosis II produces haploid cells.", "Meiosis II involves crossing over, while Meiosis I does not."], answer: "Meiosis I separates homologous chromosomes, while Meiosis II separates sister chromatids." },
+            { question: "The pairing of homologous chromosomes during Prophase I is called:", options: ["Cytokinesis", "Synapsis", "Nondisjunction", "Segregation"], answer: "Synapsis" },
+            { question: "The structure formed by a pair of synapsed homologous chromosomes is called a:", options: ["Chromatid", "Centromere", "Bivalent or Tetrad", "Kinetochore"], answer: "Bivalent or Tetrad" },
+            { question: "The exchange of genetic material between non-sister chromatids of homologous chromosomes is known as:", options: ["Independent assortment", "Segregation", "Crossing over", "Fertilization"], answer: "Crossing over" },
+            { question: "The points where crossing over occurs, forming X-shaped structures, are called:", options: ["Centromeres", "Kinetochores", "Telomeres", "Chiasmata"], answer: "Chiasmata" },
+            { question: "During Metaphase I of meiosis, what aligns at the metaphase plate?", options: ["Individual chromosomes", "Sister chromatids", "Homologous chromosome pairs (bivalents)", "Centrosomes"], answer: "Homologous chromosome pairs (bivalents)" },
+            { question: "What separates during Anaphase I of meiosis?", options: ["Sister chromatids", "Homologous chromosomes", "Centromeres", "The nuclear envelope"], answer: "Homologous chromosomes" },
+            { question: "At the end of Telophase I and cytokinesis, the resulting two cells are:", options: ["Diploid (2n) with duplicated chromosomes.", "Haploid (n) with duplicated chromosomes.", "Diploid (2n) with unduplicated chromosomes.", "Haploid (n) with unduplicated chromosomes."], answer: "Haploid (n) with duplicated chromosomes." },
+            { question: "Which statement best describes Meiosis II?", options: ["It is a reductional division, reducing the chromosome number from 2n to n.", "It is essentially identical to mitosis, but starts with a haploid cell.", "It is the phase where genetic recombination occurs.", "It produces two diploid daughter cells."], answer: "It is essentially identical to mitosis, but starts with a haploid cell." },
+            { question: "During Anaphase II, what is separated and moved to opposite poles?", options: ["Homologous chromosomes", "Bivalents", "Sister chromatids", "The entire cell"], answer: "Sister chromatids" },
+            { question: "The final product of meiosis in a diploid organism is:", options: ["Two genetically identical diploid cells.", "Four genetically identical haploid cells.", "Two genetically different haploid cells.", "Four genetically different haploid cells."], answer: "Four genetically different haploid cells." },
+            { question: "If a parent cell has a chromosome number of 2n = 46, what is the chromosome number of each gamete after meiosis?", options: ["46", "92", "23", "12"], answer: "23" },
+            { question: "The primary importance of meiosis is to:", options: ["Produce identical cells for growth and repair.", "Ensure genetic continuity in asexual reproduction.", "Produce genetic variation and haploid cells for sexual reproduction.", "Double the chromosome number for the next generation."], answer: "Produce genetic variation and haploid cells for sexual reproduction." },
+            { question: "How does meiosis contribute to genetic variation?", options: ["Only through the process of fertilization.", "Through crossing over and independent assortment of homologous chromosomes.", "By creating exact copies of the parent cell's chromosomes.", "By preventing mutations from occurring."], answer: "Through crossing over and independent assortment of homologous chromosomes." },
+            { question: "The alignment of homologous pairs at the metaphase plate in Meiosis I is random. This is known as:", options: ["The law of segregation", "The principle of crossing over", "The law of independent assortment", "The process of synapsis"], answer: "The law of independent assortment" },
+            { question: "In humans, a cell at the end of Meiosis I contains:", options: ["46 chromosomes, each with two chromatids.", "23 chromosomes, each with two chromatids.", "46 chromosomes, each with one chromatid.", "23 chromosomes, each with one chromatid."], answer: "23 chromosomes, each with two chromatids." },
+            { question: "The centromeres divide during which phase?", options: ["Prophase I", "Anaphase I", "Prophase II", "Anaphase II"], answer: "Anaphase II" },
+            { question: "Cytokinesis occurs how many times during meiosis?", options: ["Zero", "Once", "Twice", "Four times"], answer: "Twice" },
+            { question: "A human cell containing 22 autosomes and a Y chromosome is a:", options: ["Somatic cell of a male", "Zygote", "Somatic cell of a female", "Sperm cell"], answer: "Sperm cell" },
+            { question: "A cell with a diploid number of 20 chromosomes undergoes meiosis. How many chromatids are present in each daughter cell at the end of Meiosis I?", options: ["10", "20", "40", "5"], answer: "20" },
+            // Mitosis vs. Meiosis Comparison
+            { question: "Which process occurs in somatic cells?", options: ["Mitosis", "Meiosis", "Both Mitosis and Meiosis", "Neither"], answer: "Mitosis" },
+            { question: "Which process involves two rounds of nuclear and cytoplasmic division?", options: ["Mitosis", "Meiosis", "Both", "Neither"], answer: "Meiosis" },
+            { question: "Synapsis of homologous chromosomes occurs during:", options: ["Mitosis only", "Meiosis only", "Both Mitosis and Meiosis", "Neither"], answer: "Meiosis only" },
+            { question: "The number of daughter cells produced in mitosis is ___, while in meiosis it is ___.", options: ["2, 2", "2, 4", "4, 2", "4, 4"], answer: "2, 4" },
+            { question: "Which statement accurately compares the genetic makeup of daughter cells?", options: ["Mitosis produces genetically identical cells; Meiosis produces genetically varied cells.", "Mitosis produces genetically varied cells; Meiosis produces genetically identical cells.", "Both processes produce genetically identical cells.", "Both processes produce genetically varied cells."], answer: "Mitosis produces genetically identical cells; Meiosis produces genetically varied cells." },
+            { question: "The chromosome number of the daughter cells in mitosis is ___, while in meiosis it is ___.", options: ["Haploid (n), Diploid (2n)", "Diploid (2n), Diploid (2n)", "Diploid (2n), Haploid (n)", "Haploid (n), Haploid (n)"], answer: "Diploid (2n), Haploid (n)" },
+            { question: "Crossing over is a source of genetic variation that occurs in:", options: ["Prophase of Mitosis", "Prophase I of Meiosis", "Prophase II of Meiosis", "Anaphase of Mitosis"], answer: "Prophase I of Meiosis" },
+            { question: "The purpose of mitosis is for ___, while the purpose of meiosis is for ___.", options: ["Sexual reproduction; growth and repair", "Growth and repair; sexual reproduction", "Asexual reproduction; sexual reproduction", "Both b and c are correct"], answer: "Both b and c are correct" },
+            { question: "A cell undergoing division has individual chromosomes aligned at the equator. This cell is in:", options: ["Metaphase of Mitosis", "Metaphase I of Meiosis", "Metaphase II of Meiosis", "Either a or c"], answer: "Either a or c" },
+            { question: "A key event that does NOT happen in Meiosis I but DOES happen in Mitosis is:", options: ["Chromosome condensation", "Spindle formation", "Division of the centromere", "Cytokinesis"], answer: "Division of the centromere" },
+            { question: "After which process can the resulting daughter cells undergo further division by mitosis?", options: ["Mitosis only", "Meiosis only", "Both Mitosis and Meiosis", "Neither"], answer: "Mitosis only" },
+            { question: "Homologous chromosomes are separated during:", options: ["Anaphase of Mitosis", "Anaphase I of Meiosis", "Anaphase II of Meiosis", "Both a and c"], answer: "Anaphase I of Meiosis" },
+            // Comprehensive & Applied Questions
+            { question: "If a diploid cell has 4 pairs of homologous chromosomes, how many different combinations of chromosomes are possible in the gametes due to independent assortment?", options: ["4", "8", "16", "32"], answer: "16" },
+            { question: "Which of the following cells is diploid?", options: ["A human sperm cell", "A human egg cell", "A human zygote", "A bacterial cell"], answer: "A human zygote" },
+            { question: "The structure composed of DNA and histone proteins that becomes tightly packed during cell division is a:", options: ["Ribosome", "Chromosome", "Lysosome", "Peroxisome"], answer: "Chromosome" },
+            { question: "In the mitotic cell cycle, the transition from G2 to M phase is triggered by the activation of specific proteins. This represents a:", options: ["Replication fork", "Growth factor", "Cell cycle checkpoint", "Mutation"], answer: "Cell cycle checkpoint" },
+            { question: "A cell is observed to have chromosomes condensing, the nuclear envelope is intact, and centrosomes are moving apart. This cell is in:", options: ["Early prophase", "Late prophase", "Metaphase", "Anaphase"], answer: "Early prophase" },
+            { question: "What is the direct result of the S phase of the cell cycle?", options: ["The cell divides.", "The cell grows in size.", "The amount of DNA in the cell doubles.", "The chromosomes align at the equator."], answer: "The amount of DNA in the cell doubles." },
+            { question: "The term 'reduction division' specifically refers to:", options: ["Mitosis", "Meiosis I", "Meiosis II", "Cytokinesis"], answer: "Meiosis I" },
+            { question: "If crossing over did not occur, what would be the consequence for sexual reproduction?", options: ["The chromosome number would not be halved.", "Meiosis II would not be able to proceed.", "There would be significantly less genetic variation among gametes.", "Fertilization would not be possible."], answer: "There would be significantly less genetic variation among gametes." },
+            { question: "A cell in Telophase I of meiosis would have:", options: ["Four distinct nuclei.", "Two nuclei, each with a haploid number of duplicated chromosomes.", "One nucleus with a diploid number of unduplicated chromosomes.", "Two nuclei, each with a diploid number of duplicated chromosomes."], answer: "Two nuclei, each with a haploid number of duplicated chromosomes." },
+            { question: "In a human karyogram, how many homologous pairs of autosomes are present in a male?", options: ["23", "22", "46", "44"], answer: "22" },
+            { question: "Which statement correctly describes a chromosome at the beginning of mitosis?", options: ["It consists of one DNA molecule.", "It consists of two identical DNA molecules.", "It is unpaired with its homologue.", "It is in a relaxed, uncoiled state."], answer: "It consists of two identical DNA molecules." },
+            { question: "The proteins that check for DNA damage and control the progression of the cell cycle are crucial for preventing what condition?", options: ["Infection", "Cancer", "Aging", "Allergies"], answer: "Cancer" },
+            { question: "A cell with 20 chromosomes undergoes mitosis. How many chromatids are present during metaphase?", options: ["10", "20", "40", "80"], answer: "40" },
+            { question: "A cell with 20 chromosomes undergoes meiosis. How many chromosomes are in each cell at the end of Meiosis I?", options: ["10", "20", "40", "5"], answer: "10" },
+            { question: "A cell with 20 chromosomes undergoes meiosis. How many chromatids are in each cell at the end of Meiosis I?", options: ["10", "20", "40", "5"], answer: "20" },
+            { question: "The physical basis of the law of segregation is:", options: ["The separation of homologous chromosomes in meiosis I.", "The separation of sister chromatids in meiosis II.", "The random alignment of bivalents in metaphase I.", "The exchange of parts between non-sister chromatids."], answer: "The separation of homologous chromosomes in meiosis I." },
+            { question: "What is the fundamental difference between prophase of mitosis and prophase I of meiosis?", options: ["Chromosomes condense only in meiosis.", "The nuclear envelope breaks down only in mitosis.", "Homologous chromosomes form pairs (synapsis) only in meiosis.", "Spindle fibers form only in mitosis."], answer: "Homologous chromosomes form pairs (synapsis) only in meiosis." },
+            { question: "Which of the following is NOT a function of mitosis?", options: ["Asexual reproduction in unicellular eukaryotes.", "Development of a multicellular organism from a zygote.", "Replacement of skin cells.", "Production of sperm."], answer: "Production of sperm." },
+            { question: "The final result of meiosis is intended to ensure that:", options: ["All offspring are identical to the parent.", "The diploid chromosome number is maintained after fertilization.", "The haploid chromosome number is maintained after fertilization.", "The chromosome number is doubled in the zygote."], answer: "The diploid chromosome number is maintained after fertilization." },
+            { question: "Which phase is common to both mitosis and meiosis?", options: ["Prophase I", "Anaphase I", "Interphase", "Telophase II"], answer: "Interphase" },
+            { question: "The DNA of a chromosome is replicated, resulting in two sister chromatids. These chromatids are genetically:", options: ["Identical", "Similar but not identical due to mutation", "Different due to crossing over", "Haploid"], answer: "Identical" },
+            { question: "A cell is in anaphase of mitosis if:", options: ["Homologous chromosomes are moving to opposite poles.", "The cell is dividing for the first time.", "Sister chromatids are separating.", "It is forming a cell plate."], answer: "Sister chromatids are separating." },
+            { question: "In the life cycle of an animal, which process connects meiosis and fertilization?", options: ["Growth", "Mitosis", "Gamete formation", "Zygote formation"], answer: "Gamete formation" },
+            { question: "Which of the following is a haploid cell?", options: ["A cell in prophase of mitosis.", "A cell in prophase I of meiosis.", "A cell in prophase II of meiosis.", "A somatic cell."], answer: "A cell in prophase II of meiosis." },
+            { question: "The protein tubulin is essential for the synthesis of:", options: ["Histones", "DNA polymerase", "Mitotic spindle microtubules", "The nuclear envelope"], answer: "Mitotic spindle microtubules" },
+            { question: "A cell that exits the cell cycle and enters a non-dividing state is said to be in:", options: ["G1 phase", "G0 phase", "S phase", "M phase"], answer: "G0 phase" },
+            { question: "What is the significance of crossing over?", options: ["It ensures the correct number of chromosomes in the gametes.", "It creates new combinations of alleles on a chromosome.", "It holds sister chromatids together.", "It is the sole method of DNA repair."], answer: "It creates new combinations of alleles on a chromosome." },
+            { question: "In a diploid organism with 2n=6, how many bivalents would be formed during Prophase I?", options: ["6", "12", "3", "2"], answer: "3" },
+            { question: "The separation of homologous chromosomes in Anaphase I is the cellular basis for which of Mendel's laws?", options: ["Law of Dominance", "Law of Segregation", "Law of Independent Assortment", "Both b and c"], answer: "Law of Segregation" },
+            { question: "The division of the cytoplasm in a plant cell begins with:", options: ["The inward pinching of the plasma membrane.", "The fusion of vesicles from the Golgi apparatus at the metaphase plate.", "The formation of a contractile ring of actin filaments.", "The breakdown of the cell wall."], answer: "The fusion of vesicles from the Golgi apparatus at the metaphase plate." },
+            { question: "A cell is diploid and has duplicated chromosomes. It could be in which of the following phases?", options: ["G1", "Prophase of Mitosis", "Prophase I of Meiosis", "Both b and c"], answer: "Both b and c" },
+            { question: "A cell is haploid and has unduplicated chromosomes. It could be in which of the following phases?", options: ["Metaphase I", "Anaphase I", "Telophase of Mitosis", "Telophase II of Meiosis"], answer: "Telophase II of Meiosis" },
+            { question: "The ultimate source of all genetic variation is:", options: ["Mitosis", "Meiosis", "Mutation", "Fertilization"], answer: "Mutation" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
