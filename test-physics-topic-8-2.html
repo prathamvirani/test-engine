@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test: Electromagnetic Induction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Physics Test: Electromagnetic Induction</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge of Topic 8B. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Electromagnetic Induction</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is magnetic flux?", options: ["The amount of magnetic force in a region.", "The number of magnetic field lines passing perpendicularly through a given area.", "The strength of a magnet's pole.", "The speed at which a magnetic field changes."], answer: "The number of magnetic field lines passing perpendicularly through a given area." },
+            { question: "The SI unit of magnetic flux is the:", options: ["Tesla (T)", "Henry (H)", "Weber (Wb)", "Ampere (A)"], answer: "Weber (Wb)" },
+            { question: "Which of the following expressions correctly defines magnetic flux (Φ)?", options: ["Φ = B/A", "Φ = BA sinθ", "Φ = BA cosθ", "Φ = B/A cosθ"], answer: "Φ = BA cosθ" },
+            { question: "In the equation Φ = BA cosθ, what does θ represent?", options: ["The angle between the magnetic field and the plane of the area.", "The angle between the normal to the area and the magnetic field.", "The angle of the magnetic field relative to the horizontal.", "The angle of the area relative to the vertical."], answer: "The angle between the normal to the area and the magnetic field." },
+            { question: "Magnetic flux is maximum when the angle between the magnetic field and the normal to the surface is:", options: ["0°", "45°", "90°", "180°"], answer: "0°" },
+            { question: "Magnetic flux is zero when the plane of the area is:", options: ["Parallel to the magnetic field.", "Perpendicular to the magnetic field.", "At a 45° angle to the magnetic field.", "The flux is never zero."], answer: "Parallel to the magnetic field." },
+            { question: "A circular loop of area 0.05 m² is placed in a uniform magnetic field of 0.2 T. If the plane of the loop is perpendicular to the field, what is the magnetic flux through the loop?", options: ["0.01 Wb", "0.1 Wb", "1 Wb", "0 Wb"], answer: "0.01 Wb" },
+            { question: "If the loop from the previous question is tilted so its plane makes a 60° angle with the magnetic field, what is the new magnetic flux? (Note: the angle with the normal is 30°)", options: ["0.005 Wb", "0.0087 Wb", "0.01 Wb", "0.02 Wb"], answer: "0.0087 Wb" },
+            { question: "What is 'magnetic flux linkage'?", options: ["The magnetic flux per unit area.", "The total magnetic flux passing through all the turns of a coil.", "The force linking a magnet to a coil.", "The resistance to a change in magnetic flux."], answer: "The total magnetic flux passing through all the turns of a coil." },
+            { question: "A coil with 200 turns, each of area 0.01 m², is in a 0.5 T magnetic field. The flux linkage is maximum. What is its value?", options: ["1 Wb", "10 Wb", "100 Wb", "0.005 Wb"], answer: "100 Wb" },
+            { question: "If you double the magnetic field strength (B) through a loop, the magnetic flux will:", options: ["Halve.", "Double.", "Quadruple.", "Remain the same."], answer: "Double." },
+            { question: "If you double the area (A) of a loop in a uniform magnetic field, the magnetic flux will:", options: ["Halve.", "Double.", "Quadruple.", "Remain the same."], answer: "Double." },
+            { question: "A square loop of side 10 cm is in a magnetic field of 2 T. The field is parallel to the plane of the loop. The magnetic flux is:", options: ["0.02 Wb", "0.2 Wb", "2 Wb", "0 Wb"], answer: "0 Wb" },
+            { question: "One Weber (Wb) is equivalent to:", options: ["1 T/m²", "1 T·m²", "1 T/A", "1 H·A"], answer: "1 T·m²" },
+            { question: "To change the magnetic flux through a coil, one can:", options: ["Change the magnetic field strength.", "Change the area of the coil.", "Change the orientation of the coil.", "All of the above."], answer: "All of the above." },
+            { question: "Electromagnetic induction is the process of generating:", options: ["A magnetic field from a current.", "A current from a magnetic field.", "An electric charge from a magnet.", "An electromotive force (EMF) by changing magnetic flux."], answer: "An electromotive force (EMF) by changing magnetic flux." },
+            { question: "Faraday's Law of Induction states that the induced EMF in a circuit is proportional to:", options: ["The magnetic flux.", "The strength of the magnetic field.", "The rate of change of the magnetic flux.", "The current in the circuit."], answer: "The rate of change of the magnetic flux." },
+            { question: "The mathematical expression for Faraday's Law is:", options: ["ε = -NΦ", "ε = -N B A", "ε = -N dΦ/dt", "ε = -L dΦ/dt"], answer: "ε = -N dΦ/dt" },
+            { question: "The negative sign in Faraday's Law is a consequence of:", options: ["Fleming's Right-Hand Rule.", "The law of conservation of charge.", "Lenz's Law.", "The inverse square law."], answer: "Lenz's Law." },
+            { question: "To induce a larger EMF in a coil, you should:", options: ["Move the magnet slowly.", "Use a weaker magnet.", "Change the magnetic flux as rapidly as possible.", "Use a coil with fewer turns."], answer: "Change the magnetic flux as rapidly as possible." },
+            { question: "A magnet is held stationary inside a coil of wire. The induced EMF is:", options: ["Maximum.", "Constant and non-zero.", "Zero.", "Dependent on the magnet's strength."], answer: "Zero." },
+            { question: "The magnetic flux through a coil changes from 2 Wb to 8 Wb in 3 seconds. What is the magnitude of the induced EMF?", options: ["2 V", "3 V", "6 V", "8 V"], answer: "2 V" },
+            { question: "A 100-turn coil experiences a change in magnetic flux of 0.05 Wb in 0.1 s. What is the magnitude of the average induced EMF?", options: ["0.5 V", "5 V", "50 V", "500 V"], answer: "50 V" },
+            { question: "If you double the number of turns (N) in a coil, the induced EMF for the same rate of change of flux will:", options: ["Halve.", "Remain the same.", "Double.", "Quadruple."], answer: "Double." },
+            { question: "An induced current is produced when:", options: ["A conductor is stationary in a magnetic field.", "There is a change in magnetic flux through a closed circuit.", "A magnet is placed near a conductor.", "A battery is connected to a coil."], answer: "There is a change in magnetic flux through a closed circuit." },
+            { question: "Which of the following will NOT induce an EMF in a loop of wire?", options: ["Moving a magnet towards the loop.", "Rotating the loop in a uniform magnetic field.", "Moving the loop parallel to a uniform magnetic field.", "Expanding the area of the loop in a magnetic field."], answer: "Moving the loop parallel to a uniform magnetic field." },
+            { question: "A coil of area 0.1 m² is in a magnetic field of 0.2 T. The field is reduced to zero in 0.5 s. What is the induced EMF?", options: ["0.01 V", "0.02 V", "0.04 V", "0.08 V"], answer: "0.04 V" },
+            { question: "The unit of induced EMF is the:", options: ["Weber (Wb)", "Tesla (T)", "Henry (H)", "Volt (V)"], answer: "Volt (V)" },
+            { question: "A generator works on the principle of:", options: ["The motor effect.", "Electromagnetic induction.", "Self-inductance.", "Mutual inductance."], answer: "Electromagnetic induction." },
+            { question: "If the rate of change of magnetic flux is doubled, the induced EMF is:", options: ["Halved.", "Unchanged.", "Doubled.", "Quadrupled."], answer: "Doubled." },
+            { question: "A straight conductor of length 'l' moves with velocity 'v' perpendicular to a magnetic field 'B'. The induced EMF is given by:", options: ["ε = B/lv", "ε = Bl/v", "ε = Bv/l", "ε = Blv"], answer: "ε = Blv" },
+            { question: "For the motional EMF (ε = Blv) to be maximum, the angle between the conductor's velocity and the magnetic field should be:", options: ["0°", "45°", "90°", "180°"], answer: "90°" },
+            { question: "A 0.5 m long wire moves at 4 m/s perpendicularly through a 0.2 T magnetic field. The induced EMF is:", options: ["0.1 V", "0.4 V", "1.0 V", "4.0 V"], answer: "0.4 V" },
+            { question: "A coil rotating in a magnetic field produces an EMF that is:", options: ["Constant.", "Sinusoidal.", "Exponentially increasing.", "Zero."], answer: "Sinusoidal." },
+            { question: "The peak EMF produced by a rotating coil of N turns, area A, in a field B at angular velocity ω is:", options: ["ε_max = NBA", "ε_max = NBA/ω", "ε_max = NBAω", "ε_max = BAω/N"], answer: "ε_max = NBAω" },
+            { question: "To increase the peak EMF of a simple AC generator, you can:", options: ["Decrease the rotation speed.", "Decrease the number of turns in the coil.", "Use a stronger magnet.", "Decrease the area of the coil."], answer: "Use a stronger magnet." },
+            { question: "The instantaneous EMF in a rotating coil is given by ε = ε_max sin(ωt). The EMF is zero when:", options: ["The plane of the coil is perpendicular to the field.", "The plane of the coil is parallel to the field.", "The coil is at a 45° angle to the field.", "The EMF is never zero."], answer: "The plane of the coil is perpendicular to the field." },
+            { question: "The EMF is maximum in a rotating coil when the plane of the coil is:", options: ["Perpendicular to the magnetic field.", "Parallel to the magnetic field.", "At a 45° angle to the magnetic field.", "The EMF is always constant."], answer: "Parallel to the magnetic field." },
+            { question: "If the frequency of rotation of a generator coil is doubled, the peak induced EMF will:", options: ["Halve.", "Remain the same.", "Double.", "Quadruple."], answer: "Double." },
+            { question: "A 50-turn coil with an area of 0.02 m² rotates at 60 rad/s in a 0.1 T magnetic field. What is the peak induced EMF?", options: ["3 V", "6 V", "12 V", "60 V"], answer: "6 V" },
+            { question: "Lenz's Law is a statement of the conservation of:", options: ["Charge.", "Mass.", "Momentum.", "Energy."], answer: "Energy." },
+            { question: "According to Lenz's Law, the direction of an induced current is such that it:", options: ["Enhances the change in magnetic flux that produced it.", "Opposes the change in magnetic flux that produced it.", "Is always in the clockwise direction.", "Is parallel to the external magnetic field."], answer: "Opposes the change in magnetic flux that produced it." },
+            { question: "When the North pole of a magnet is moved towards a coil, the face of the coil nearest the magnet will become a:", options: ["North pole.", "South pole.", "It will have no polarity.", "The polarity depends on the speed."], answer: "North pole." },
+            { question: "When the North pole of a magnet is moved away from a coil, the face of the coil nearest the magnet will become a:", options: ["North pole.", "South pole.", "It will have no polarity.", "The polarity depends on the speed."], answer: "South pole." },
+            { question: "The induced magnetic field inside a coil always acts to:", options: ["Increase the external magnetic field.", "Keep the total magnetic flux through the coil constant.", "Align with the external magnetic field.", "Be perpendicular to the external magnetic field."], answer: "Keep the total magnetic flux through the coil constant." },
+            { question: "A current is induced in a coil by a decreasing magnetic flux pointing into the page. The induced current will create a magnetic field that is:", options: ["Into the page.", "Out of the page.", "To the right.", "To the left."], answer: "Into the page." },
+            { question: "Fleming's Right-Hand Rule is used to determine the direction of:", options: ["Force on a current-carrying wire.", "Magnetic field around a wire.", "Induced current in a conductor moving in a magnetic field.", "Torque on a coil."], answer: "Induced current in a conductor moving in a magnetic field." },
+            { question: "In Fleming's Right-Hand Rule, the thumb points in the direction of:", options: ["Magnetic Field.", "Induced Current.", "Motion (Force).", "Voltage."], answer: "Motion (Force)." },
+            { question: "In Fleming's Right-Hand Rule, the forefinger points in the direction of:", options: ["Magnetic Field.", "Induced Current.", "Motion (Force).", "Voltage."], answer: "Magnetic Field." },
+            { question: "In Fleming's Right-Hand Rule, the second (middle) finger points in the direction of:", options: ["Magnetic Field.", "Induced Current.", "Motion (Force).", "Voltage."], answer: "Induced Current." },
+            { question: "A vertical wire is moved horizontally to the east through a magnetic field pointing north. The induced current will flow:", options: ["Upwards.", "Downwards.", "East.", "West."], answer: "Upwards." },
+            { question: "If a copper ring is dropped through a vertical magnetic field, the induced current will:", options: ["Speed up its fall.", "Slow down its fall.", "Not affect its fall.", "Cause it to stop completely."], answer: "Slow down its fall." },
+            { question: "The work done to push a magnet into a coil against the repulsive force appears as:", options: ["Heat in the magnet.", "Electrical energy in the coil.", "Potential energy in the magnetic field.", "Kinetic energy of the coil."], answer: "Electrical energy in the coil." },
+            { question: "When the South pole of a magnet is moved towards a coil, the induced current creates a:", options: ["North pole to attract it.", "South pole to attract it.", "North pole to repel it.", "South pole to repel it."], answer: "South pole to repel it." },
+            { question: "A wire loop is moved into a magnetic field pointing out of the page. The induced current in the loop will be:", options: ["Clockwise.", "Counter-clockwise.", "Zero.", "Alternating."], answer: "Clockwise." },
+            { question: "The same wire loop is then moved out of the magnetic field. The induced current will be:", options: ["Clockwise.", "Counter-clockwise.", "Zero.", "Alternating."], answer: "Counter-clockwise." },
+            { question: "Lenz's Law ensures that the induced EMF will always:", options: ["Create a current that aids the original current.", "Create a force that opposes the motion causing the flux change.", "Be in the same direction as the change in flux.", "Be zero if the circuit is open."], answer: "Create a force that opposes the motion causing the flux change." },
+            { question: "A straight conductor is moved upwards through a magnetic field directed into the page. The electrons in the conductor will be pushed towards the:", options: ["Left end.", "Right end.", "Top end.", "Bottom end."], answer: "Left end." },
+            { question: "Why does Lenz's law have to be true?", options: ["Because of Newton's third law.", "To satisfy the conservation of momentum.", "To satisfy the conservation of energy.", "Because of the conservation of charge."], answer: "To satisfy the conservation of energy." },
+            { question: "If the induced current enhanced the change in flux, it would lead to:", options: ["A stable system.", "The creation of energy from nothing.", "A decrease in temperature.", "The destruction of the magnetic field."], answer: "The creation of energy from nothing." },
+            { question: "Self-inductance is the property of a coil to:", options: ["Induce an EMF in a nearby coil.", "Oppose a change in the current flowing through itself.", "Store electric charge.", "Resist the flow of steady DC current."], answer: "Oppose a change in the current flowing through itself." },
+            { question: "The EMF induced in a coil due to a change of current in the same coil is called:", options: ["Mutual EMF.", "Hall EMF.", "Back EMF.", "Forward EMF."], answer: "Back EMF." },
+            { question: "The SI unit of inductance (both self and mutual) is the:", options: ["Weber (Wb)", "Tesla (T)", "Henry (H)", "Farad (F)"], answer: "Henry (H)" },
+            { question: "The self-inductance (L) of a coil is defined by the equation:", options: ["ε = -L dΦ/dt", "ε = -L dI/dt", "Φ = LI", "Both b and c are used in its definition."], answer: "Both b and c are used in its definition." },
+            { question: "The self-inductance of a solenoid does NOT depend on:", options: ["The number of turns.", "The cross-sectional area.", "The current flowing through it.", "The material of the core."], answer: "The current flowing through it." },
+            { question: "A current in a coil of self-inductance 2 H changes from 5 A to 1 A in 0.2 s. What is the magnitude of the induced EMF?", options: ["4 V", "10 V", "20 V", "40 V"], answer: "40 V" },
+            { question: "An inductor's primary function in a circuit is to:", options: ["Store energy in an electric field.", "Store energy in a magnetic field.", "Dissipate energy as heat.", "Act as a one-way valve for current."], answer: "Store energy in a magnetic field." },
+            { question: "The energy (U) stored in an inductor is given by:", options: ["U = ½LI", "U = ½L²I", "U = ½LI²", "U = ½I²R"], answer: "U = ½LI²" },
+            { question: "How much energy is stored in a 50 mH inductor carrying a current of 4 A?", options: ["0.1 J", "0.2 J", "0.4 J", "0.8 J"], answer: "0.4 J" },
+            { question: "If the current through an inductor is doubled, the stored energy is:", options: ["Halved.", "Doubled.", "Unchanged.", "Quadrupled."], answer: "Quadrupled." },
+            { question: "Mutual inductance occurs when:", options: ["A coil induces an EMF in itself.", "A changing current in one coil induces an EMF in a nearby coil.", "Two coils have the same self-inductance.", "Two coils are connected in series."], answer: "A changing current in one coil induces an EMF in a nearby coil." },
+            { question: "The operation of a transformer is based on the principle of:", options: ["Self-inductance.", "Mutual inductance.", "Capacitive reactance.", "The motor effect."], answer: "Mutual inductance." },
+            { question: "The EMF (ε₂) induced in a secondary coil due to a changing current (I₁) in the primary coil is given by:", options: ["ε₂ = -M dI₂/dt", "ε₂ = -L dI₁/dt", "ε₂ = -M dI₁/dt", "ε₂ = -M dΦ₁/dt"], answer: "ε₂ = -M dI₁/dt" },
+            { question: "The mutual inductance (M) between two coils depends on:", options: ["Their geometry and relative position.", "The current in the primary coil.", "The current in the secondary coil.", "The rate of change of current."], answer: "Their geometry and relative position." },
+            { question: "A changing current of 5 A/s in a primary coil induces an EMF of 20 mV in a secondary coil. What is the mutual inductance?", options: ["4 mH", "10 mH", "100 mH", "4 H"], answer: "4 mH" },
+            { question: "An inductor opposes a change in current. This is an electrical analogy to:", options: ["Velocity.", "Acceleration.", "Inertia.", "Friction."], answer: "Inertia." },
+            { question: "The self-inductance of a long solenoid is proportional to:", options: ["The number of turns (N).", "The square of the number of turns (N²).", "The inverse of the number of turns (1/N).", "The current (I)."], answer: "The square of the number of turns (N²)." },
+            { question: "Inserting an iron core into a solenoid will:", options: ["Decrease its self-inductance.", "Increase its self-inductance.", "Have no effect on its self-inductance.", "Decrease its resistance."], answer: "Increase its self-inductance." },
+            { question: "One Henry (H) is equivalent to:", options: ["1 V·s/A", "1 V·A/s", "1 Wb/s", "1 T·m/A"], answer: "1 V·s/A" },
+            { question: "In an RL circuit, when the switch is first closed, the inductor acts like:", options: ["An open circuit (infinite resistance).", "A short circuit (zero resistance).", "A capacitor.", "A simple resistor."], answer: "An open circuit (infinite resistance)." },
+            { question: "A flat coil is in a uniform magnetic field. The magnetic flux through the coil is greatest when the plane of the coil is:", options: ["Parallel to the magnetic field.", "Perpendicular to the magnetic field.", "At 45° to the magnetic field.", "Flux is independent of orientation."], answer: "Perpendicular to the magnetic field." },
+            { question: "A bar magnet is dropped through a vertical copper tube. The magnet's acceleration will be:", options: ["Greater than g.", "Equal to g.", "Less than g.", "Zero."], answer: "Less than g." },
+            { question: "The direction of the induced EMF in a conductor is given by:", options: ["Fleming's Left-Hand Rule.", "Right-Hand Grip Rule.", "Lenz's Law.", "Coulomb's Law."], answer: "Lenz's Law." },
+            { question: "Which device does NOT operate on the principle of electromagnetic induction?", options: ["Electric generator.", "Transformer.", "Electric motor.", "A simple resistor in a DC circuit."], answer: "A simple resistor in a DC circuit." },
+            { question: "The quantity NΦ is known as:", options: ["Magnetic flux density.", "Magnetic moment.", "Magnetic flux linkage.", "Self-inductance."], answer: "Magnetic flux linkage." },
+            { question: "To produce a DC output from a rotating coil generator, one must use:", options: ["Slip rings.", "A split-ring commutator.", "A capacitor.", "An inductor."], answer: "A split-ring commutator." },
+            { question: "The back EMF in a motor is greatest when:", options: ["The motor is just starting up.", "The motor is running at maximum speed.", "The motor is stalled.", "The back EMF is always constant."], answer: "The motor is running at maximum speed." },
+            { question: "A 2.0 m long conductor moves at 5.0 m/s. An EMF of 4.0 V is induced. If the conductor is perpendicular to the field, what is the magnetic field strength?", options: ["0.1 T", "0.2 T", "0.4 T", "0.8 T"], answer: "0.4 T" },
+            { question: "The magnetic flux through a coil is given by Φ = 4t² + 2t - 5 (in Wb). What is the magnitude of the induced EMF at t = 1 s?", options: ["1 V", "6 V", "10 V", "12 V"], answer: "10 V" },
+            { question: "A coil has a self-inductance of 0.5 H. What rate of change of current is required to induce an EMF of 10 V?", options: ["5 A/s", "10 A/s", "20 A/s", "50 A/s"], answer: "20 A/s" },
+            { question: "The magnetic flux linkage of a 500-turn coil is 0.2 Wb when a current of 2 A flows through it. What is the self-inductance?", options: ["0.1 H", "0.2 H", "100 H", "200 H"], answer: "0.1 H" },
+            { question: "The primary purpose of an inductor in a filter circuit is to:", options: ["Block DC current and pass AC current.", "Pass DC current and block high-frequency AC current.", "Block all current.", "Amplify the voltage."], answer: "Pass DC current and block high-frequency AC current." },
+            { question: "When a current in a coil is switched off, a spark can be seen at the switch. This is due to:", options: ["Static electricity.", "Capacitive discharge.", "A large self-induced EMF.", "The heating effect of the current."], answer: "A large self-induced EMF." },
+            { question: "The magnetic field inside a long solenoid is B. If the current is doubled and the number of turns per unit length is halved, the new magnetic field will be:", options: ["B/4", "B/2", "B", "2B"], answer: "B" },
+            { question: "A rectangular loop is pulled with constant velocity away from a long straight wire carrying a constant current. The induced current in the loop is:", options: ["Zero.", "Constant and clockwise.", "Constant and counter-clockwise.", "Varies with distance."], answer: "Constant and counter-clockwise." },
+            { question: "Which of the following is the correct unit for the rate of change of magnetic flux?", options: ["Weber", "Volt", "Tesla", "Henry"], answer: "Volt" },
+            { question: "The energy stored in an inductor's magnetic field is analogous to the energy stored in a capacitor's:", options: ["Magnetic field.", "Electric field.", "Dielectric material.", "Plates."], answer: "Electric field." },
+            { question: "A 10-turn coil has a radius of 5 cm. It is rotated at a frequency of 60 Hz in a 0.5 T magnetic field. What is its angular velocity?", options: ["60 rad/s", "120 rad/s", "120π rad/s", "60π rad/s"], answer: "120π rad/s" },
+            { question: "Two coils are placed such that the flux from one coil does not link with the other at all. Their mutual inductance is:", options: ["Maximum.", "Infinite.", "Dependent on the current.", "Zero."], answer: "Zero." },
+            { question: "The phenomenon where a changing magnetic field creates an electric field is described by:", options: ["Ampere's Law.", "Gauss's Law.", "Faraday's Law of Induction.", "Coulomb's Law."], answer: "Faraday's Law of Induction." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            // Sanitize HTML content before setting it
+            const sanitizedQuestion = currentQuestion.question.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            questionEl.innerHTML = `${currentQuestionIndex + 1}. ${sanitizedQuestion}`;
+            
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                const sanitizedOption = optionText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                button.innerHTML = sanitizedOption;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', () => selectAnswer(optionText));
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(selectedOption) {
+            userAnswers[currentQuestionIndex] = selectedOption;
+            
+            Array.from(optionsEl.children).forEach(button => {
+                button.classList.remove('selected');
+                if (button.innerText === selectedOption) {
+                    button.classList.add('selected');
+                }
+            });
+
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                const sanitizedQuestion = questionData.question.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                questionText.innerHTML = `<strong>${index + 1}. ${sanitizedQuestion}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    const sanitizedOption = optionText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    optionDiv.innerHTML = sanitizedOption;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerHTML = `${score} / ${quizData.length} <span class="text-2xl">(${percentage}%)</span>`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        function initializeQuiz() {
+            quizData.forEach((_, index) => {
+                const navBtn = document.createElement('button');
+                navBtn.innerText = index + 1;
+                navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+                navBtn.dataset.index = index;
+                navBtn.addEventListener('click', (e) => {
+                    currentQuestionIndex = parseInt(e.target.dataset.index);
+                    loadQuiz();
+                });
+                questionNav.appendChild(navBtn);
+            });
+        }
+
+        initializeQuiz();
+    </script>
+</body>
+</html>
