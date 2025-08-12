@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Test: Alternating Current</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #0052D4 0%, #4364F7 50%, #6FB1FC 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Alternating Current (AC) Circuits Quiz</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge of AC circuits, reactance, impedance, RLC circuits, and transformers. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Physics Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is the primary characteristic of an alternating current (AC)?", options: ["It flows continuously in one direction.", "Its magnitude is always constant.", "Its direction changes periodically.", "It can only flow through capacitors."], answer: "Its direction changes periodically." },
+            { question: "The standard symbol for an AC voltage source in a circuit diagram is:", options: ["A circle with a '+' and '-' sign.", "A long and a short parallel line.", "A circle with a sine wave inside.", "A rectangle."], answer: "A circle with a sine wave inside." },
+            { question: "In the equation for sinusoidal AC voltage, `V = V₀ sin(ωt)`, what does `V₀` represent?", options: ["The RMS voltage", "The average voltage", "The peak voltage (amplitude)", "The instantaneous voltage"], answer: "The peak voltage (amplitude)" },
+            { question: "The angular frequency (ω) is related to the frequency (f) by which equation?", options: ["`ω = 2π / f`", "`ω = f / 2π`", "`ω = 2πf`", "`ω = πf`"], answer: "`ω = 2πf`" },
+            { question: "If an AC current has a period (T) of 0.02 seconds, what is its frequency?", options: ["20 Hz", "50 Hz", "100 Hz", "0.02 Hz"], answer: "50 Hz" },
+            { question: "For a purely resistive AC circuit, what is the phase relationship between the current and the voltage?", options: ["The voltage leads the current by 90°.", "The current leads the voltage by 90°.", "The voltage and current are in phase.", "The voltage and current are 180° out of phase."], answer: "The voltage and current are in phase." },
+            { question: "The 'effective' value of an AC current, which produces the same heating effect as a DC current, is known as the:", options: ["Peak current", "Average current", "Instantaneous current", "Root Mean Square (RMS) current"], answer: "Root Mean Square (RMS) current" },
+            { question: "How is the RMS voltage (`V_rms`) related to the peak voltage (`V₀`) for a sinusoidal waveform?", options: ["`V_rms = V₀`", "`V_rms = V₀ / 2`", "`V_rms = V₀ / √2`", "`V_rms = V₀ * √2`"], answer: "`V_rms = V₀ / √2`" },
+            { question: "A standard household outlet in many regions is rated at 240 V AC. This value represents the:", options: ["Peak voltage", "RMS voltage", "Average voltage", "Minimum voltage"], answer: "RMS voltage" },
+            { question: "If the RMS current in a circuit is 5 A, what is the peak current?", options: ["5 A", "2.5 A", "7.07 A", "10 A"], answer: "7.07 A" },
+            { question: "The average power (`P_ave`) dissipated in a resistor in an AC circuit is given by:", options: ["`P_ave = I₀ * V₀`", "`P_ave = (1/2) * I_rms * V_rms`", "`P_ave = I_rms * V_rms`", "`P_ave = I₀ * V_rms`"], answer: "`P_ave = I_rms * V_rms`" },
+            { question: "If the peak power in an AC circuit is 100 W, what is the average power?", options: ["100 W", "70.7 W", "50 W", "200 W"], answer: "50 W" },
+            { question: "An AC voltage is given by `V = 170 sin(120πt)`. What is the RMS voltage?", options: ["170 V", "120 V", "85 V", "240 V"], answer: "120 V" },
+            { question: "From the equation `V = 170 sin(120πt)`, what is the frequency of the AC voltage?", options: ["120 Hz", "170 Hz", "50 Hz", "60 Hz"], answer: "60 Hz" },
+            { question: "A phasor is a vector that:", options: ["Remains stationary.", "Rotates with angular frequency ω.", "Represents the resistance of a component.", "Always points in the direction of the current."], answer: "Rotates with angular frequency ω." },
+            { question: "The length of a voltage phasor represents the:", options: ["RMS value of the voltage.", "Average value of the voltage.", "Peak value (amplitude) of the voltage.", "Frequency of the voltage."], answer: "Peak value (amplitude) of the voltage." },
+            { question: "If the phasors for voltage and current in a circuit point in the same direction, it means they are:", options: ["Out of phase by 90°", "In phase", "Out of phase by 180°", "Not related"], answer: "In phase" },
+            { question: "The average value of a sinusoidal AC current over one complete cycle is:", options: ["`I₀ / 2`", "`I_rms`", "Zero", "`I₀`"], answer: "Zero" },
+            { question: "An AC current is given by `I = 4 sin(100πt)`. What is the RMS current?", options: ["4 A", "2 A", "2.83 A", "5.66 A"], answer: "2.83 A" },
+            { question: "Why are RMS values useful in AC circuit analysis?", options: ["They simplify calculations involving peak values.", "They allow for direct comparison of the power delivered by AC and DC sources.", "They are easier to measure than peak values.", "They are only used for non-sinusoidal waveforms."], answer: "They allow for direct comparison of the power delivered by AC and DC sources." },
+            { question: "What term describes the total opposition to current flow in an AC circuit, including both resistance and reactance?", options: ["Conductance", "Admittance", "Reactance", "Impedance"], answer: "Impedance" },
+            { question: "The opposition to current flow offered by a capacitor in an AC circuit is called:", options: ["Inductive reactance", "Capacitive reactance", "Resistance", "Impedance"], answer: "Capacitive reactance" },
+            { question: "The formula for capacitive reactance (`X_C`) is:", options: ["`X_C = ωC`", "`X_C = 1 / (ωC)`", "`X_C = ω / C`", "`X_C = C / ω`"], answer: "`X_C = 1 / (ωC)`" },
+            { question: "If the frequency of the AC source in a purely capacitive circuit is increased, the capacitive reactance will:", options: ["Increase", "Decrease", "Remain the same", "Become zero"], answer: "Decrease" },
+            { question: "What is the phase relationship between current and voltage in a purely capacitive AC circuit?", options: ["They are in phase.", "The voltage leads the current by 90°.", "The current leads the voltage by 90°.", "They are 180° out of phase."], answer: "The current leads the voltage by 90°." },
+            { question: "The opposition to current flow offered by an inductor in an AC circuit is called:", options: ["Inductive reactance", "Capacitive reactance", "Resistance", "Impedance"], answer: "Inductive reactance" },
+            { question: "The formula for inductive reactance (`X_L`) is:", options: ["`X_L = ωL`", "`X_L = 1 / (ωL)`", "`X_L = ω / L`", "`X_L = L / ω`"], answer: "`X_L = ωL`" },
+            { question: "If the frequency of the AC source in a purely inductive circuit is increased, the inductive reactance will:", options: ["Increase", "Decrease", "Remain the same", "Become zero"], answer: "Increase" },
+            { question: "What is the phase relationship between current and voltage in a purely inductive AC circuit?", options: ["They are in phase.", "The voltage leads the current by 90°.", "The current leads the voltage by 90°.", "They are 180° out of phase."], answer: "The voltage leads the current by 90°." },
+            { question: "The unit for impedance, capacitive reactance, and inductive reactance is the:", options: ["Farad (F)", "Henry (H)", "Watt (W)", "Ohm (Ω)"], answer: "Ohm (Ω)" },
+            { question: "What is the average power dissipated in a purely capacitive or a purely inductive circuit over a full cycle?", options: ["`I_rms * V_rms`", "`(1/2) * I₀ * V₀`", "Zero", "Infinite"], answer: "Zero" },
+            { question: "A 100 µF capacitor is connected to a 50 Hz AC source. What is its capacitive reactance?", options: ["31.8 Ω", "0.0318 Ω", "314 Ω", "5000 Ω"], answer: "31.8 Ω" },
+            { question: "A 2 mH inductor is connected to a 1 kHz AC source. What is its inductive reactance?", options: ["12.6 Ω", "0.0126 Ω", "2000 Ω", "0.5 Ω"], answer: "12.6 Ω" },
+            { question: "In a phasor diagram for a pure capacitor, if the voltage phasor points along the positive x-axis, the current phasor points along the:", options: ["Positive x-axis", "Negative x-axis", "Positive y-axis", "Negative y-axis"], answer: "Positive y-axis" },
+            { question: "In a phasor diagram for a pure inductor, if the current phasor points along the positive x-axis, the voltage phasor points along the:", options: ["Positive x-axis", "Negative x-axis", "Positive y-axis", "Negative y-axis"], answer: "Positive y-axis" },
+            { question: "For a DC source (f = 0 Hz), the capacitive reactance (`X_C`) is:", options: ["Zero", "Infinite", "Equal to the resistance", "1 Ω"], answer: "Infinite" },
+            { question: "For a DC source (f = 0 Hz), the inductive reactance (`X_L`) is:", options: ["Zero", "Infinite", "Equal to the resistance", "1 Ω"], answer: "Zero" },
+            { question: "Impedance (Z) is calculated for a series circuit using the formula:", options: ["`Z = R + X_L + X_C`", "`Z = R - X_L - X_C`", "`Z = √(R² + (X_L - X_C)²) `", "`Z = R / (X_L - X_C)`"], answer: "`Z = √(R² + (X_L - X_C)²) `" },
+            { question: "The term `(X_L - X_C)` is known as the total:", options: ["Resistance", "Impedance", "Reactance", "Admittance"], answer: "Reactance" },
+            { question: "If `X_L > X_C` in a series RLC circuit, the circuit is said to be predominantly:", options: ["Resistive", "Capacitive", "Inductive", "In resonance"], answer: "Inductive" },
+            { question: "If `X_C > X_L` in a series RLC circuit, the circuit is said to be predominantly:", options: ["Resistive", "Capacitive", "Inductive", "In resonance"], answer: "Capacitive" },
+            { question: "A capacitor blocks ______ and an inductor blocks ______.", options: ["high-frequency AC, low-frequency AC", "DC, high-frequency AC", "AC, DC", "low-frequency AC, high-frequency AC"], answer: "DC, high-frequency AC" },
+            { question: "A 50 Ω resistor and a 10 µF capacitor are in series with a 100 Hz AC source. What is the capacitive reactance?", options: ["159 Ω", "50 Ω", "100 Ω", "314 Ω"], answer: "159 Ω" },
+            { question: "For the circuit in the previous question, what is the total impedance?", options: ["109 Ω", "159 Ω", "167 Ω", "209 Ω"], answer: "167 Ω" },
+            { question: "A 30 Ω resistor and a 100 mH inductor are in series with a 50 Hz AC source. What is the inductive reactance?", options: ["3.14 Ω", "31.4 Ω", "50 Ω", "100 Ω"], answer: "31.4 Ω" },
+            { question: "For the circuit in the previous question, what is the total impedance?", options: ["30.0 Ω", "31.4 Ω", "43.4 Ω", "61.4 Ω"], answer: "43.4 Ω" },
+            { question: "The phase angle (φ) in a series RC circuit is given by:", options: ["`tan(φ) = R / X_C`", "`tan(φ) = -X_C / R`", "`tan(φ) = X_C / R`", "`tan(φ) = -R / X_C`"], answer: "`tan(φ) = -X_C / R`" },
+            { question: "The phase angle (φ) in a series RL circuit is given by:", options: ["`tan(φ) = R / X_L`", "`tan(φ) = -X_L / R`", "`tan(φ) = X_L / R`", "`tan(φ) = -R / X_L`"], answer: "`tan(φ) = X_L / R`" },
+            { question: "In a series RC circuit, the current will always ______ the source voltage.", options: ["lead", "lag", "be in phase with", "be opposite to"], answer: "lead" },
+            { question: "In a series RL circuit, the current will always ______ the source voltage.", options: ["lead", "lag", "be in phase with", "be opposite to"], answer: "lag" },
+            { question: "In a series RLC circuit, the total voltage `V` across the combination is found by:", options: ["`V = V_R + V_L + V_C`", "`V = √(V_R² + (V_L - V_C)²) `", "`V = V_R - V_L - V_C`", "`V = V_R + V_L - V_C`"], answer: "`V = √(V_R² + (V_L - V_C)²) `" },
+            { question: "The phase angle (φ) for a series RLC circuit is given by:", options: ["`tan(φ) = (X_L - X_C) / R`", "`tan(φ) = R / (X_L - X_C)`", "`tan(φ) = (X_L + X_C) / R`", "`tan(φ) = R / (X_L + X_C)`"], answer: "`tan(φ) = (X_L - X_C) / R`" },
+            { question: "Resonance occurs in a series RLC circuit when:", options: ["`R = X_L`", "`R = X_C`", "`X_L = X_C`", "`R = X_L = X_C`"], answer: "`X_L = X_C`" },
+            { question: "At resonance, the impedance (Z) of a series RLC circuit is:", options: ["Maximum", "Minimum, and equal to R", "Zero", "Infinite"], answer: "Minimum, and equal to R" },
+            { question: "At resonance, the phase angle (φ) between the current and voltage is:", options: ["90°", "-90°", "45°", "0°"], answer: "0°" },
+            { question: "The resonant frequency (`f₀`) of a series RLC circuit is given by:", options: ["`f₀ = 2π√(LC)`", "`f₀ = 1 / (2π√(LC))`", "`f₀ = √(L/C) / (2π)`", "`f₀ = √(C/L) / (2π)`"], answer: "`f₀ = 1 / (2π√(LC))`" },
+            { question: "A circuit has R=6Ω, L=5mH, and C=300µF. What is the total impedance at a frequency of 50 Hz?", options: ["10.8 Ω", "9.0 Ω", "15.6 Ω", "25.1 Ω"], answer: "10.8 Ω" },
+            { question: "For the circuit in the previous question, does the current lead or lag the voltage?", options: ["The current leads the voltage.", "The current lags the voltage.", "They are in phase.", "It cannot be determined."], answer: "The current leads the voltage." },
+            { question: "What is the resonant frequency of a circuit with L = 10 mH and C = 25 µF?", options: ["318 Hz", "503 Hz", "1000 Hz", "637 Hz"], answer: "318 Hz" },
+            { question: "The primary principle behind the operation of a transformer is:", options: ["Self-inductance", "Capacitive reactance", "Mutual inductance", "Ohm's law"], answer: "Mutual inductance" },
+            { question: "A transformer is designed to operate with:", options: ["DC voltage only", "AC voltage only", "Both AC and DC voltage", "A constant current source"], answer: "AC voltage only" },
+            { question: "A step-up transformer is one where the number of turns in the secondary coil (`N_s`) is:", options: ["Less than the number of turns in the primary (`N_p`).", "Equal to the number of turns in the primary (`N_p`).", "Greater than the number of turns in the primary (`N_p`).", "Zero."], answer: "Greater than the number of turns in the primary (`N_p`)." },
+            { question: "In an ideal step-up transformer, the secondary voltage is ______ and the secondary current is ______ than the primary.", options: ["higher, higher", "higher, lower", "lower, higher", "lower, lower"], answer: "higher, lower" },
+            { question: "The relationship for an ideal transformer is given by:", options: ["`V_s / V_p = N_s / N_p = I_s / I_p`", "`V_s / V_p = N_p / N_s = I_p / I_s`", "`V_s / V_p = N_s / N_p = I_p / I_s`", "`V_p / V_s = N_s / N_p = I_p / I_s`"], answer: "`V_s / V_p = N_s / N_p = I_p / I_s`" },
+            { question: "For an ideal transformer, what is the relationship between input power and output power?", options: ["Input power is greater than output power.", "Output power is greater than input power.", "Input power is equal to output power.", "There is no relationship."], answer: "Input power is equal to output power." },
+            { question: "A transformer has a primary coil with 1200 turns and a secondary coil with 60 turns. This is a:", options: ["Step-up transformer", "Step-down transformer", "1:1 transformer", "Resonant transformer"], answer: "Step-down transformer" },
+            { question: "If the transformer in the previous question has a primary voltage of 240 V, what is the secondary voltage (assuming it's ideal)?", options: ["4800 V", "240 V", "12 V", "60 V"], answer: "12 V" },
+            { question: "An ideal transformer has a turns ratio (`N_s / N_p`) of 30. If the primary voltage is 6.0 V, what is the secondary voltage?", options: ["0.2 V", "6.0 V", "36 V", "180 V"], answer: "180 V" },
+            { question: "For the transformer in the previous question, if the primary current is 4.5 A, what is the secondary current?", options: ["135 A", "4.5 A", "0.15 A", "30 A"], answer: "0.15 A" },
+            { question: "The efficiency of a real transformer is always:", options: ["Equal to 100%", "Greater than 100%", "Less than 100%", "Zero"], answer: "Less than 100%" },
+            { question: "A transformer with an efficiency of 90% has an input power of 100 W. What is the output power?", options: ["100 W", "111 W", "90 W", "10 W"], answer: "90 W" },
+            { question: "The core of a transformer is typically made of soft iron to:", options: ["Increase electrical resistance.", "Reduce the magnetic flux linkage.", "Concentrate the magnetic flux and link the coils.", "Provide structural support only."], answer: "Concentrate the magnetic flux and link the coils." },
+            { question: "In a series RLC circuit, if the frequency is below the resonant frequency, the circuit is:", options: ["Inductive, and the current lags the voltage.", "Capacitive, and the current leads the voltage.", "Purely resistive.", "Inductive, and the current leads the voltage."], answer: "Capacitive, and the current leads the voltage." },
+            { question: "In a series RLC circuit, if the frequency is above the resonant frequency, the circuit is:", options: ["Inductive, and the current lags the voltage.", "Capacitive, and the current leads the voltage.", "Purely resistive.", "Capacitive, and the current lags the voltage."], answer: "Inductive, and the current lags the voltage." },
+            { question: "A 120 V AC source is connected to a series RLC circuit with R=40Ω, `X_L`=50Ω, and `X_C`=20Ω. What is the impedance?", options: ["30 Ω", "40 Ω", "50 Ω", "70 Ω"], answer: "50 Ω" },
+            { question: "What is the RMS current for the circuit in the previous question?", options: ["1.71 A", "2.40 A", "3.00 A", "4.00 A"], answer: "2.40 A" },
+            { question: "What is the phase angle for the circuit in question 75?", options: ["36.9°", "45.0°", "53.1°", "-36.9°"], answer: "36.9°" },
+            { question: "What is the RMS voltage across the inductor in the circuit from question 75?", options: ["120 V", "96 V", "48 V", "120 V"], answer: "120 V" },
+            { question: "What is the RMS voltage across the capacitor in the circuit from question 75?", options: ["120 V", "96 V", "48 V", "120 V"], answer: "48 V" },
+            { question: "The power factor of an AC circuit is defined as:", options: ["`sin(φ)`", "`cos(φ)`", "`tan(φ)`", "`φ`"], answer: "`cos(φ)`" },
+            { question: "For a purely resistive circuit, the power factor is:", options: ["0", "-1", "1", "0.5"], answer: "1" },
+            { question: "For a purely reactive (capacitive or inductive) circuit, the power factor is:", options: ["0", "-1", "1", "0.5"], answer: "0" },
+            { question: "Average power in an RLC circuit can be calculated as `P_ave = I_rms * V_rms * cos(φ)`. The term `cos(φ)` is the:", options: ["Reactance factor", "Impedance factor", "Power factor", "Quality factor"], answer: "Power factor" },
+            { question: "A transformer is used to step down 240 V to 12 V. If the primary coil has 1000 turns, how many turns should the secondary coil have?", options: ["20", "50", "20000", "120"], answer: "50" },
+            { question: "If a 12 V, 24 W light bulb is connected to the secondary of the transformer in the previous question, what is the current in the secondary coil?", options: ["0.5 A", "1.0 A", "2.0 A", "12 A"], answer: "2.0 A" },
+            { question: "Assuming the transformer is 100% efficient, what is the current in the primary coil when the bulb from the previous question is on?", options: ["0.1 A", "0.2 A", "1.0 A", "2.0 A"], answer: "0.1 A" },
+            { question: "In a series RLC circuit at resonance, the voltage across the inductor and the voltage across the capacitor are:", options: ["Both zero.", "Equal in magnitude and in phase.", "Equal in magnitude but 180° out of phase.", "Unequal."], answer: "Equal in magnitude but 180° out of phase." },
+            { question: "The sharpness of the resonance peak in an RLC circuit is described by the:", options: ["Power factor", "Quality factor (Q)", "Impedance", "Phase angle"], answer: "Quality factor (Q)" },
+            { question: "A high Q-factor in a resonant circuit implies:", options: ["A broad, flat resonance curve.", "A sharp, narrow resonance curve.", "A low impedance at all frequencies.", "A high resistance."], answer: "A sharp, narrow resonance curve." },
+            { question: "Why is AC preferred over DC for long-distance power transmission?", options: ["AC is safer to handle.", "AC voltage can be easily stepped up or down by transformers to reduce power loss.", "AC generators are simpler to build.", "AC travels faster in wires."], answer: "AC voltage can be easily stepped up or down by transformers to reduce power loss." },
+            { question: "Power loss in transmission lines is primarily due to the heating effect, given by `P = I²R`. To minimize this loss, one should:", options: ["Increase the current (I) and decrease the voltage (V).", "Decrease the current (I) and increase the voltage (V).", "Increase both current and voltage.", "Use wires with high resistance (R)."], answer: "Decrease the current (I) and increase the voltage (V)." },
+            { question: "A resistor R and a capacitor C are connected in series to an AC source. The impedance of the circuit is:", options: ["`R + 1/(ωC)`", "`√(R² + (1/(ωC))²) `", "`R - 1/(ωC)`", "`√(R² - (1/(ωC))²) `"], answer: "`√(R² + (1/(ωC))²) `" },
+            { question: "A resistor R and an inductor L are connected in series to an AC source. The impedance of the circuit is:", options: ["`R + ωL`", "`√(R² + (ωL)²) `", "`R - ωL`", "`√(R² - (ωL)²) `"], answer: "`√(R² + (ωL)²) `" },
+            { question: "An AC voltmeter measures which value?", options: ["Peak voltage", "Instantaneous voltage", "Average voltage", "RMS voltage"], answer: "RMS voltage" },
+            { question: "An AC ammeter measures which value?", options: ["Peak current", "Instantaneous current", "Average current", "RMS current"], answer: "RMS current" },
+            { question: "In the equation `I = I₀ sin(ωt + φ)`, what does φ represent?", options: ["The frequency", "The period", "The phase angle", "The amplitude"], answer: "The phase angle" },
+            { question: "If the phase angle φ is positive, it means the:", options: ["Current leads the voltage.", "Voltage leads the current.", "Circuit is purely resistive.", "Circuit is at resonance."], answer: "Current leads the voltage." },
+            { question: "If the phase angle φ is negative, it means the:", options: ["Current leads the voltage.", "Voltage leads the current.", "Circuit is purely resistive.", "Circuit is at resonance."], answer: "Voltage leads the current." },
+            { question: "A device that converts AC to DC is called a:", options: ["Transformer", "Inductor", "Capacitor", "Rectifier"], answer: "Rectifier" },
+            { question: "The main advantage of a three-phase AC power system over a single-phase system is:", options: ["It is simpler to generate.", "It can deliver more power more smoothly and efficiently.", "It uses fewer wires.", "It operates at a lower voltage."], answer: "It can deliver more power more smoothly and efficiently." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
