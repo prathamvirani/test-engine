@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biology Test: DNA & Protein Synthesis</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on DNA replication, protein synthesis, and mutations. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biology Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // DNA Replication & Structure
+            { question: "Which model of DNA replication results in each new DNA molecule containing one old strand and one new strand?", options: ["Conservative replication", "Semi-conservative replication", "Dispersive replication", "Liberal replication"], answer: "Semi-conservative replication" },
+            { question: "In the Meselson-Stahl experiment, what was the key difference between the nitrogen isotopes used?", options: ["Their charge", "Their color", "Their density", "Their reactivity"], answer: "Their density" },
+            { question: "After one generation of replication in the Meselson-Stahl experiment, the DNA formed a single band of intermediate density. This result disproved which model?", options: ["Semi-conservative model", "Dispersive model", "Conservative model", "Both B and C"], answer: "Conservative model" },
+            { question: "What is the primary function of helicase in DNA replication?", options: ["To synthesize new DNA strands", "To unwind the parental double helix", "To join Okazaki fragments", "To relieve overwinding strain"], answer: "To unwind the parental double helix" },
+            { question: "DNA replication begins at specific sites called:", options: ["Replication forks", "Promoters", "Origins of replication", "Telomeres"], answer: "Origins of replication" },
+            { question: "DNA polymerase III synthesizes the new DNA strand in which direction?", options: ["3' to 5'", "5' to 3'", "In both directions simultaneously", "It depends on the strand"], answer: "5' to 3'" },
+            { question: "Why can DNA polymerase not initiate the synthesis of a new DNA strand on its own?", options: ["It can only add nucleotides to an existing 3' end.", "It lacks the necessary energy.", "It cannot recognize the origin of replication.", "It can only work on single-stranded DNA."], answer: "It can only add nucleotides to an existing 3' end." },
+            { question: "The short segments of DNA synthesized on the lagging strand are called:", options: ["Okazaki fragments", "Meselson fragments", "Stahl fragments", "Primer fragments"], answer: "Okazaki fragments" },
+            { question: "Which enzyme is responsible for joining the Okazaki fragments together?", options: ["DNA polymerase I", "Helicase", "Primase", "DNA ligase"], answer: "DNA ligase" },
+            { question: "What is the function of single-strand binding proteins?", options: ["To unwind the DNA", "To synthesize the primer", "To stabilize the unwound template strands", "To join DNA fragments"], answer: "To stabilize the unwound template strands" },
+            { question: "Topoisomerase is crucial for:", options: ["Synthesizing the leading strand", "Relieving the strain from overwinding ahead of the replication fork", "Adding the RNA primer", "Proofreading the new DNA strand"], answer: "Relieving the strain from overwinding ahead of the replication fork" },
+            { question: "Which enzyme removes the RNA primer and replaces it with DNA nucleotides?", options: ["DNA polymerase III", "DNA ligase", "DNA polymerase I", "Primase"], answer: "DNA polymerase I" },
+            { question: "The leading strand is synthesized:", options: ["Discontinuously in short fragments", "Continuously in the 5' to 3' direction", "Continuously in the 3' to 5' direction", "After the lagging strand is complete"], answer: "Continuously in the 5' to 3' direction" },
+            { question: "The lagging strand is synthesized discontinuously because:", options: ["DNA polymerase can only synthesize in the 5' to 3' direction.", "The replication fork moves in the opposite direction.", "It requires more enzymes.", "It is less important than the leading strand."], answer: "DNA polymerase can only synthesize in the 5' to 3' direction." },
+            { question: "What is the role of primase in DNA replication?", options: ["To unwind the DNA helix", "To synthesize a short RNA primer", "To join DNA fragments", "To proofread the newly synthesized DNA"], answer: "To synthesize a short RNA primer" },
+            { question: "The specialized DNA 'caps' at the ends of eukaryotic chromosomes are called:", options: ["Centromeres", "Kinetochores", "Telomeres", "Origins of replication"], answer: "Telomeres" },
+            { question: "What is the primary function of telomeres?", options: ["To initiate DNA replication", "To prevent the loss of genes from the ends of chromosomes", "To encode for essential proteins", "To regulate the cell cycle"], answer: "To prevent the loss of genes from the ends of chromosomes" },
+            { question: "The enzyme that extends telomeres in certain cells is called:", options: ["DNA polymerase", "Helicase", "Ligase", "Telomerase"], answer: "Telomerase" },
+            { question: "In which of the following cells is telomerase typically most active?", options: ["Somatic cells", "Germ cells (sperm and egg)", "Muscle cells", "Nerve cells"], answer: "Germ cells (sperm and egg)" },
+            { question: "The shortening of telomeres is associated with:", options: ["Cell division and aging", "Increased mutation rates", "Cancer development", "Enhanced DNA repair"], answer: "Cell division and aging" },
+            { question: "DNA proofreading is primarily performed by:", options: ["DNA ligase", "DNA polymerases", "Helicase", "Primase"], answer: "DNA polymerases" },
+            { question: "Mismatch repair mechanisms are used to:", options: ["Correct errors made during DNA replication that escape proofreading", "Repair damage from UV radiation", "Rejoin double-stranded breaks", "Extend telomeres"], answer: "Correct errors made during DNA replication that escape proofreading" },
+            { question: "UV radiation can cause what type of DNA damage?", options: ["Double-stranded breaks", "Thymine dimers", "Base substitutions", "Deletions"], answer: "Thymine dimers" },
+            { question: "The genetic disease Xeroderma pigmentosum is caused by a defect in:", options: ["DNA proofreading", "Nucleotide excision repair", "Telomerase activity", "Homologous recombination"], answer: "Nucleotide excision repair" },
+            { question: "Homologous recombination is a repair mechanism for:", options: ["Mismatched bases", "Thymine dimers", "Double-stranded breaks", "Single nucleotide insertions"], answer: "Double-stranded breaks" },
+            // Protein Synthesis
+            { question: "The 'one gene-one enzyme' hypothesis was proposed by:", options: ["Watson and Crick", "Meselson and Stahl", "Beadle and Tatum", "Hershey and Chase"], answer: "Beadle and Tatum" },
+            { question: "Beadle and Tatum used which organism in their experiments?", options: ["E. coli", "Drosophila melanogaster", "Garden peas", "Neurospora crassa (bread mold)"], answer: "Neurospora crassa (bread mold)" },
+            { question: "The 'one gene-one enzyme' hypothesis has been modified to the 'one gene-one polypeptide' hypothesis because:", options: ["Not all proteins are enzymes.", "Some proteins have multiple polypeptide subunits encoded by different genes.", "Some genes encode functional RNA molecules, not polypeptides.", "All of the above"], answer: "All of the above" },
+            { question: "The process of synthesizing RNA from a DNA template is called:", options: ["Translation", "Transcription", "Replication", "Transformation"], answer: "Transcription" },
+            { question: "The process of synthesizing a polypeptide from an mRNA template is called:", options: ["Translation", "Transcription", "Replication", "Transduction"], answer: "Translation" },
+            { question: "In eukaryotes, transcription occurs in the:", options: ["Cytoplasm", "Ribosome", "Nucleus", "Endoplasmic reticulum"], answer: "Nucleus" },
+            { question: "The enzyme responsible for transcription is:", options: ["DNA polymerase", "RNA polymerase", "Helicase", "Ligase"], answer: "RNA polymerase" },
+            { question: "The DNA strand that is read to synthesize mRNA is called the:", options: ["Coding strand", "Sense strand", "Template strand", "Leading strand"], answer: "Template strand" },
+            { question: "A three-nucleotide sequence in mRNA that specifies a particular amino acid is called a(n):", options: ["Anticodon", "Codon", "Gene", "Exon"], answer: "Codon" },
+            { question: "The non-coding sequences in a eukaryotic gene that are removed from pre-mRNA are called:", options: ["Exons", "Introns", "Codons", "Promoters"], answer: "Introns" },
+            { question: "The coding sequences that are joined together to form mature mRNA are called:", options: ["Exons", "Introns", "Anticodons", "Terminators"], answer: "Exons" },
+            { question: "The process of removing introns and joining exons is called:", options: ["Splicing", "Capping", "Tailing", "Translation"], answer: "Splicing" },
+            { question: "What is the function of the 5' cap on eukaryotic mRNA?", options: ["To protect the mRNA from degradation", "To help the ribosome attach to the mRNA", "To signal the end of translation", "Both A and B"], answer: "Both A and B" },
+            { question: "The poly-A tail is added to which end of the mRNA?", options: ["The 5' end", "The 3' end", "Both ends", "The middle"], answer: "The 3' end" },
+            { question: "The molecule that carries amino acids to the ribosome is:", options: ["mRNA", "rRNA", "tRNA", "snRNA"], answer: "tRNA" },
+            { question: "The three-nucleotide sequence on a tRNA molecule that is complementary to a codon on mRNA is the:", options: ["Codon", "Anticodon", "Amino acid attachment site", "Start signal"], answer: "Anticodon" },
+            { question: "Translation occurs at which cellular structure?", options: ["Nucleus", "Mitochondrion", "Ribosome", "Golgi apparatus"], answer: "Ribosome" },
+            { question: "A ribosome is composed of:", options: ["Protein and DNA", "Protein and mRNA", "Protein and rRNA", "Protein and tRNA"], answer: "Protein and rRNA" },
+            { question: "The start codon for translation is typically:", options: ["UAA", "UAG", "UGA", "AUG"], answer: "AUG" },
+            { question: "The start codon AUG codes for which amino acid?", options: ["Glycine", "Alanine", "Methionine", "Leucine"], answer: "Methionine" },
+            { question: "The A, P, and E sites are found on the:", options: ["mRNA molecule", "tRNA molecule", "Ribosome", "DNA template"], answer: "Ribosome" },
+            { question: "During elongation in translation, the incoming tRNA carrying an amino acid binds to which site?", options: ["A site", "P site", "E site", "The promoter site"], answer: "A site" },
+            { question: "What type of bond is formed between adjacent amino acids during translation?", options: ["Hydrogen bond", "Ionic bond", "Peptide bond", "Covalent bond"], answer: "Peptide bond" },
+            { question: "The movement of the ribosome along the mRNA is called:", options: ["Initiation", "Elongation", "Termination", "Translocation"], answer: "Translocation" },
+            { question: "Termination of translation occurs when the ribosome encounters a(n):", options: ["Start codon", "Stop codon", "Promoter", "Intron"], answer: "Stop codon" },
+            { question: "The DNA strand that is NOT used for transcription is called the:", options: ["Template strand", "Antisense strand", "Noncoding strand", "Coding strand"], answer: "Coding strand" },
+            { question: "In Beadle and Tatum's experiment, a mutant that could only grow on minimal medium supplemented with arginine was defective in:", options: ["The gene for Enzyme A", "The gene for Enzyme B", "The gene for Enzyme C", "All of the above"], answer: "The gene for Enzyme C" },
+            { question: "Alternative RNA splicing demonstrates that:", options: ["One gene can code for multiple polypeptides.", "All genes code for enzymes.", "Introns are always non-functional.", "Prokaryotic and eukaryotic transcription are identical."], answer: "One gene can code for multiple polypeptides." },
+            { question: "The TATA box is part of the:", options: ["Terminator sequence", "Exon", "Promoter", "Start codon"], answer: "Promoter" },
+            { question: "What is the role of transcription factors?", options: ["They carry amino acids to the ribosome.", "They help RNA polymerase bind to the promoter.", "They splice introns out of pre-mRNA.", "They terminate transcription."], answer: "They help RNA polymerase bind to the promoter." },
+            { question: "A spliceosome is involved in:", options: ["DNA replication", "Transcription", "RNA processing", "Translation"], answer: "RNA processing" },
+            { question: "The anticodon is located on the:", options: ["mRNA", "rRNA", "tRNA", "DNA"], answer: "tRNA" },
+            { question: "If a codon is 5'-GCA-3', the corresponding anticodon is:", options: ["5'-GCA-3'", "3'-CGU-5'", "5'-UGC-3'", "3'-GCA-5'"], answer: "3'-CGU-5'" },
+            { question: "The P site of the ribosome holds the:", options: ["Incoming tRNA with the next amino acid", "tRNA attached to the growing polypeptide chain", "Uncharged tRNA that is exiting", "mRNA molecule"], answer: "tRNA attached to the growing polypeptide chain" },
+            { question: "What is a polyribosome?", options: ["A complex of multiple ribosomes translating a single mRNA simultaneously", "A ribosome that can translate multiple types of mRNA", "A type of RNA found only in the nucleus", "A protein that assists in ribosome assembly"], answer: "A complex of multiple ribosomes translating a single mRNA simultaneously" },
+            // Mutation
+            { question: "A change in a single nucleotide pair of a gene is called a:", options: ["Chromosomal mutation", "Frameshift mutation", "Point mutation", "Nondisjunction"], answer: "Point mutation" },
+            { question: "Which type of point mutation involves the replacement of one nucleotide and its partner with another pair?", options: ["Insertion", "Deletion", "Substitution", "Translocation"], answer: "Substitution" },
+            { question: "A mutation that changes an amino acid codon into a stop codon is a:", options: ["Silent mutation", "Missense mutation", "Nonsense mutation", "Frameshift mutation"], answer: "Nonsense mutation" },
+            { question: "A mutation that changes one amino acid to another is a:", options: ["Silent mutation", "Missense mutation", "Nonsense mutation", "Frameshift mutation"], answer: "Missense mutation" },
+            { question: "A mutation that has no observable effect on the phenotype is a:", options: ["Silent mutation", "Missense mutation", "Nonsense mutation", "Frameshift mutation"], answer: "Silent mutation" },
+            { question: "Sickle-cell anemia is caused by what type of mutation?", options: ["Nonsense substitution", "Silent substitution", "Missense substitution", "Frameshift deletion"], answer: "Missense substitution" },
+            { question: "Insertions and deletions of nucleotides that are not in multiples of three often cause a:", options: ["Silent mutation", "Missense mutation", "Nonsense mutation", "Frameshift mutation"], answer: "Frameshift mutation" },
+            { question: "Why are frameshift mutations often more severe than substitutions?", options: ["They alter the reading frame for all subsequent codons.", "They always create a stop codon immediately.", "They are more difficult for the cell to repair.", "They only affect non-coding regions."], answer: "They alter the reading frame for all subsequent codons." },
+            { question: "A mutation that involves a segment of a chromosome being reversed end-to-end is a(n):", options: ["Deletion", "Duplication", "Inversion", "Translocation"], answer: "Inversion" },
+            { question: "Cri du chat syndrome is caused by which type of chromosomal mutation?", options: ["Inversion", "Duplication", "Translocation", "Deletion"], answer: "Deletion" },
+            { question: "A mutation where a segment of a chromosome is repeated is called:", options: ["Deletion", "Duplication", "Inversion", "Translocation"], answer: "Duplication" },
+            { question: "The movement of a segment from one chromosome to a non-homologous chromosome is:", options: ["Inversion", "Duplication", "Translocation", "Deletion"], answer: "Translocation" },
+            { question: "An abnormal number of a particular chromosome is called:", options: ["Polyploidy", "Aneuploidy", "Euploidy", "Haploidy"], answer: "Aneuploidy" },
+            { question: "A cell with an extra copy of a chromosome (2n+1) has a condition called:", options: ["Monosomy", "Trisomy", "Nullisomy", "Tetrasomy"], answer: "Trisomy" },
+            { question: "A cell missing a chromosome (2n-1) has a condition called:", options: ["Monosomy", "Trisomy", "Nullisomy", "Tetrasomy"], answer: "Monosomy" },
+            { question: "Nondisjunction is the failure of chromosomes to:", options: ["Replicate properly during S phase", "Condense properly during prophase", "Separate properly during meiosis or mitosis", "Align at the metaphase plate"], answer: "Separate properly during meiosis or mitosis" },
+            { question: "If nondisjunction occurs during Meiosis I, how many of the resulting gametes will be abnormal?", options: ["None", "One", "Two", "All four"], answer: "All four" },
+            { question: "If nondisjunction occurs during Meiosis II, how many of the resulting gametes will be abnormal?", options: ["None", "One", "Two", "All four"], answer: "Two" },
+            { question: "Down syndrome is an example of:", options: ["Monosomy of chromosome 21", "Trisomy of chromosome 21", "A large deletion on chromosome 5", "A translocation between chromosomes 9 and 22"], answer: "Trisomy of chromosome 21" },
+            { question: "Turner syndrome (XO) is an example of:", options: ["Trisomy of the sex chromosomes", "Monosomy of the sex chromosomes", "A point mutation", "A frameshift mutation"], answer: "Monosomy of the sex chromosomes" },
+            // Comprehensive & Application Questions
+            { question: "In the Meselson-Stahl experiment, if replication were conservative, what would the results look like after the second generation in the ¹⁴N medium?", options: ["One intermediate band", "One light band", "One heavy band and one light band", "One heavy band and one intermediate band"], answer: "One heavy band and one light band" },
+            { question: "The replication bubble in prokaryotes has how many replication forks?", options: ["One", "Two", "Four", "It varies"], answer: "Two" },
+            { question: "Eukaryotic DNA replication involves multiple origins of replication to:", options: ["Increase the mutation rate", "Ensure only one copy is made", "Speed up the replication of their large genomes", "Prevent telomere shortening"], answer: "Speed up the replication of their large genomes" },
+            { question: "The energy for the addition of a nucleotide to a growing DNA strand comes from:", options: ["ATP hydrolysis", "The cleavage of two phosphate groups from the incoming nucleotide triphosphate", "The ribosome", "The enzyme helicase"], answer: "The cleavage of two phosphate groups from the incoming nucleotide triphosphate" },
+            { question: "What is the relationship between the DNA coding strand and the mRNA transcript?", options: ["They are identical.", "They are complementary.", "They have the same sequence, with T in DNA replaced by U in RNA.", "They have no direct sequence relationship."], answer: "They have the same sequence, with T in DNA replaced by U in RNA." },
+            { question: "A key inaccuracy of the original 'one gene-one enzyme' hypothesis is that some genes code for:", options: ["Carbohydrates", "Lipids", "Structural proteins like collagen", "Only enzymes found in bread mold"], answer: "Structural proteins like collagen" },
+            { question: "In Beadle and Tatum's experiment, a mutant that could grow on minimal medium + citrulline or + arginine, but not on + ornithine, had a mutation in the gene for which enzyme?", options: ["The enzyme converting a precursor to ornithine", "The enzyme converting ornithine to citrulline", "The enzyme converting citrulline to arginine", "All enzymes in the pathway"], answer: "The enzyme converting ornithine to citrulline" },
+            { question: "What is a ribozyme?", options: ["A protein that synthesizes RNA", "An RNA molecule that functions as an enzyme", "The complex of a ribosome and an mRNA molecule", "An enzyme that repairs DNA"], answer: "An RNA molecule that functions as an enzyme" },
+            { question: "What is the significance of the wobble effect in translation?", options: ["It ensures the correct amino acid is always added.", "It allows some tRNAs to bind to more than one codon.", "It speeds up the process of transcription.", "It prevents mutations from occurring."], answer: "It allows some tRNAs to bind to more than one codon." },
+            { question: "If a DNA template strand has the sequence 3'-TACGGT-5', what will be the sequence of the transcribed mRNA?", options: ["5'-ATGCC A-3'", "5'-AUGCCA-3'", "3'-AUGCCA-5'", "5'-UAC GGU-3'"], answer: "5'-AUGCCA-3'" },
+            { question: "A silent mutation is possible because the genetic code is:", options: ["Universal", "Ambiguous", "Redundant (degenerate)", "Non-overlapping"], answer: "Redundant (degenerate)" },
+            { question: "Which of the following would result from a frameshift mutation?", options: ["A single amino acid change", "No change in the amino acid sequence", "A protein that is drastically altered from the point of mutation onwards", "The substitution of a purine for a pyrimidine"], answer: "A protein that is drastically altered from the point of mutation onwards" },
+            { question: "The process of DNA proofreading by DNA polymerase occurs:", options: ["After replication is complete", "During replication", "Before replication begins", "Only in prokaryotes"], answer: "During replication" },
+            { question: "Which enzyme's primary role is to synthesize RNA primers for DNA replication?", options: ["RNA Polymerase", "DNA Polymerase III", "Primase", "Telomerase"], answer: "Primase" },
+            { question: "If a pre-mRNA molecule has the structure: 5' Cap - Exon 1 - Intron 1 - Exon 2 - Poly-A Tail, what is the structure of the mature mRNA?", options: ["5' Cap - Exon 1 - Intron 1 - Exon 2 - Poly-A Tail", "Exon 1 - Intron 1 - Exon 2", "5' Cap - Exon 1 - Exon 2 - Poly-A Tail", "Intron 1"], answer: "5' Cap - Exon 1 - Exon 2 - Poly-A Tail" },
+            { question: "The Philadelphia chromosome, associated with a form of leukemia, is an example of a:", options: ["Deletion", "Inversion", "Translocation", "Aneuploidy"], answer: "Translocation" },
+            { question: "What is the role of the sliding clamp in DNA replication?", options: ["It unwinds the DNA helix.", "It holds DNA polymerase III in place on the template strand.", "It joins the Okazaki fragments.", "It synthesizes the RNA primer."], answer: "It holds DNA polymerase III in place on the template strand." },
+            { question: "A particular protein is 100 amino acids long. What is the minimum number of nucleotides in the coding region of the mRNA that specifies this protein?", options: ["100", "200", "300", "303"], answer: "300" },
+            { question: "The anticodon loop of a tRNA is responsible for:", options: ["Binding to the ribosome", "Attaching to the correct amino acid", "Binding to the complementary mRNA codon", "Terminating translation"], answer: "Binding to the complementary mRNA codon" },
+            { question: "The fact that the genetic code is nearly the same in all organisms from bacteria to humans is evidence that:", options: ["All life shares a common ancestor.", "The code is optimal and cannot be improved.", "Mutations are extremely rare.", "DNA replication is a perfect process."], answer: "All life shares a common ancestor." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
