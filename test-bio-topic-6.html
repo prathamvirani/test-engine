@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Comprehensive Biology Test</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on the Theory of Inheritance (Topics 6a & 6b). You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-green-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biology Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            // Part 1: Topic 6a
+            { question: "Who is known as the \"father of genetics\"?", options: ["Charles Darwin", "Gregor Mendel", "James Watson", "Francis Crick"], answer: "Gregor Mendel" },
+            { question: "Mendel's Law of Segregation states that:", options: ["Alleles of different genes assort independently.", "Alleles on the same chromosome are always inherited together.", "Two alleles for a heritable character separate from each other during gamete formation.", "Recessive alleles are masked by dominant alleles."], answer: "Two alleles for a heritable character separate from each other during gamete formation." },
+            { question: "A cross between two individuals that are heterozygous for one character (e.g., Pp x Pp) is called a:", options: ["Dihybrid cross", "Test cross", "Monohybrid cross", "Back cross"], answer: "Monohybrid cross" },
+            { question: "The observable traits of an organism are its:", options: ["Genotype", "Phenotype", "Allele", "Genome"], answer: "Phenotype" },
+            { question: "An organism with two identical alleles for a character (e.g., PP or pp) is said to be:", options: ["Heterozygous", "Homozygous", "Dominant", "Recessive"], answer: "Homozygous" },
+            { question: "In a typical monohybrid cross between two heterozygous parents, what is the expected phenotypic ratio of the offspring?", options: ["1:2:1", "9:3:3:1", "1:1", "3:1"], answer: "3:1" },
+            { question: "What is the expected genotypic ratio from a heterozygous x heterozygous monohybrid cross?", options: ["1:2:1", "9:3:3:1", "1:1", "3:1"], answer: "1:2:1" },
+            { question: "The Law of Independent Assortment applies to:", options: ["Genes located on the same chromosome.", "Genes located on different, non-homologous chromosomes.", "Only dominant alleles.", "Only recessive alleles."], answer: "Genes located on different, non-homologous chromosomes." },
+            { question: "A cross following two different characters, such as seed color and seed shape, is a:", options: ["Monohybrid cross", "Dihybrid cross", "Test cross", "Back cross"], answer: "Dihybrid cross" },
+            { question: "What is the phenotypic ratio expected from a dihybrid cross between two parents that are heterozygous for both traits (e.g., YyRr x YyRr)?", options: ["3:1", "1:2:1", "1:1:1:1", "9:3:3:1"], answer: "9:3:3:1" },
+            { question: "To determine the genotype of an individual with a dominant phenotype, you would perform a:", options: ["Self-cross", "Dihybrid cross", "Test cross", "Monohybrid cross"], answer: "Test cross" },
+            { question: "A test cross involves crossing the individual with an unknown genotype with an individual that is:", options: ["Homozygous dominant", "Homozygous recessive", "Heterozygous", "A sibling"], answer: "Homozygous recessive" },
+            { question: "Cystic fibrosis is an example of which type of Mendelian disorder?", options: ["Autosomal dominant", "Autosomal recessive", "X-linked dominant", "Y-linked"], answer: "Autosomal recessive" },
+            { question: "If two parents are carriers for an autosomal recessive disease like cystic fibrosis (Cc x Cc), what is the probability of them having an affected child (cc)?", options: ["0%", "25%", "50%", "75%"], answer: "25%" },
+            { question: "Huntington's disease is an autosomal dominant disorder. If an affected heterozygous parent (Hh) has a child with an unaffected partner (hh), what is the chance the child will have the disease?", options: ["0%", "25%", "50%", "100%"], answer: "50%" },
+            { question: "The mating of closely related individuals, which can increase the chance of recessive genetic disorders, is called:", options: ["Outbreeding", "Selective breeding", "Inbreeding", "Pure breeding"], answer: "Inbreeding" },
+            { question: "When a red cow (RR) is crossed with a white cow (WW), the resulting offspring are roan (RW), showing both red and white hairs. This is an example of:", options: ["Incomplete dominance", "Codominance", "Polygenic inheritance", "Lethal alleles"], answer: "Codominance" },
+            { question: "In snapdragons, a cross between a red-flowered plant (C<sup>R</sup>C<sup>R</sup>) and a white-flowered plant (C<sup>W</sup>C<sup>W</sup>) produces pink-flowered offspring (C<sup>R</sup>C<sup>W</sup>). This is an example of:", options: ["Incomplete dominance", "Codominance", "Complete dominance", "Multiple alleles"], answer: "Incomplete dominance" },
+            { question: "The human ABO blood group system is an example of:", options: ["Codominance only", "Multiple alleles only", "Both codominance and multiple alleles", "Incomplete dominance"], answer: "Both codominance and multiple alleles" },
+            { question: "A person with blood type AB has which genotype?", options: ["I<sup>A</sup>I<sup>A</sup>", "I<sup>B</sup>i", "I<sup>A</sup>I<sup>B</sup>", "ii"], answer: "I<sup>A</sup>I<sup>B</sup>" },
+            { question: "A trait controlled by two or more genes, such as human height or skin color, is known as:", options: ["A lethal gene", "A multiple allele trait", "A polygenic trait", "An epistatic trait"], answer: "A polygenic trait" },
+            { question: "A mutant gene that results in the death of the organism, often in a homozygous state, is called a:", options: ["Dominant allele", "Recessive allele", "Lethal gene", "Polygenic trait"], answer: "Lethal gene" },
+            { question: "The process of crossing individuals from genetically distinct varieties to produce superior offspring (hybrids) is called:", options: ["Inbreeding", "Outbreeding", "Pure breeding", "Selfing"], answer: "Outbreeding" },
+            { question: "What is the primary purpose of selective breeding?", options: ["To increase genetic diversity", "To produce organisms with characteristics desired by humans", "To study lethal alleles", "To eliminate recessive traits"], answer: "To produce organisms with characteristics desired by humans" },
+            { question: "A \"true-breeding\" plant is one that:", options: ["Is heterozygous for a trait.", "When self-pollinated, produces offspring identical to the parent.", "Can only be cross-pollinated.", "Produces a 3:1 ratio in its offspring."], answer: "When self-pollinated, produces offspring identical to the parent." },
+            { question: "If a purple-flowered pea plant (PP) is crossed with a white-flowered pea plant (pp), what will be the genotype of the F1 generation?", options: ["PP", "pp", "Pp", "A mix of PP and pp"], answer: "Pp" },
+            { question: "The different versions of a gene are called:", options: ["Chromosomes", "Loci", "Alleles", "Genotypes"], answer: "Alleles" },
+            { question: "In a back cross, an F1 individual is crossed with:", options: ["Another F1 individual", "A homozygous recessive individual", "One of the original homozygous parents", "An unrelated individual"], answer: "One of the original homozygous parents" },
+            { question: "Which blood type is considered the universal donor?", options: ["A", "B", "AB", "O"], answer: "O" },
+            { question: "Which allele is recessive in the ABO blood group system?", options: ["I<sup>A</sup>", "I<sup>B</sup>", "Both I<sup>A</sup> and I<sup>B</sup>", "i"], answer: "i" },
+            { question: "If a plant heterozygous for height (Tt) is crossed with a homozygous tall plant (TT), what percentage of the offspring will be tall?", options: ["25%", "50%", "75%", "100%"], answer: "100%" },
+            { question: "The physical location of a gene on a chromosome is called its:", options: ["Allele", "Locus", "Genotype", "Telomere"], answer: "Locus" },
+            { question: "Which of the following is NOT a reason Mendel's choice of pea plants was fortunate?", options: ["They have a long generation time.", "They have many distinct, contrasting traits.", "Mating can be strictly controlled.", "They produce many offspring."], answer: "They have a long generation time." },
+            { question: "In the F2 generation of a monohybrid cross, what fraction of the offspring are expected to be heterozygous?", options: ["1/4", "1/2", "3/4", "All"], answer: "1/2" },
+            { question: "A cross that is performed to obtain a pure-breed generation is:", options: ["Cross-pollination", "Self-pollination (selfing)", "Test cross", "Outbreeding"], answer: "Self-pollination (selfing)" },
+            { question: "Incomplete dominance results in a phenotype that is:", options: ["The same as the homozygous dominant parent.", "The same as the homozygous recessive parent.", "A blend or intermediate of the two parental phenotypes.", "A simultaneous expression of both parental phenotypes."], answer: "A blend or intermediate of the two parental phenotypes." },
+            { question: "A key characteristic of an autosomal dominant disorder like Huntington's is that:", options: ["It tends to skip generations.", "It appears in every generation.", "Only males are affected.", "Two unaffected parents can have an affected child."], answer: "It appears in every generation." },
+            { question: "Which process reduces genetic diversity within a population?", options: ["Outbreeding", "Mutation", "Inbreeding", "Independent assortment"], answer: "Inbreeding" },
+            { question: "The F1 generation in Mendel's monohybrid crosses always displayed:", options: ["The recessive trait", "The dominant trait", "An intermediate trait", "A 3:1 ratio of traits"], answer: "The dominant trait" },
+            { question: "If an individual has the genotype GgWw, how many different types of gametes can they produce with respect to these two genes?", options: ["1", "2", "3", "4"], answer: "4" },
+            { question: "In a dihybrid test cross (e.g., YyRr x yyrr), what is the expected phenotypic ratio of the offspring?", options: ["9:3:3:1", "3:1", "1:1:1:1", "1:2:1"], answer: "1:1:1:1" },
+            { question: "Polygenic traits often show what kind of variation in a population?", options: ["Discontinuous variation", "Continuous variation", "No variation", "Only two distinct phenotypes"], answer: "Continuous variation" },
+            { question: "If a man with blood type A and a woman with blood type B have a child with blood type O, what are the genotypes of the parents?", options: ["I<sup>A</sup>I<sup>A</sup> and I<sup>B</sup>I<sup>B</sup>", "I<sup>A</sup>i and I<sup>B</sup>i", "I<sup>A</sup>I<sup>A</sup> and I<sup>B</sup>i", "I<sup>A</sup>i and I<sup>B</sup>I<sup>B</sup>"], answer: "I<sup>A</sup>i and I<sup>B</sup>i" },
+            { question: "Which of Mendel's laws is demonstrated by a dihybrid cross?", options: ["Law of Dominance", "Law of Segregation", "Law of Independent Assortment", "Law of Unit Characters"], answer: "Law of Independent Assortment" },
+            { question: "The cross-pollination technique used by Mendel involved:", options: ["Allowing plants to self-fertilize naturally.", "Removing the anthers of a flower to prevent self-fertilization.", "Using insects to transfer pollen.", "Only crossing plants with identical traits."], answer: "Removing the anthers of a flower to prevent self-fertilization." },
+            { question: "What is a potential negative consequence of inbreeding?", options: ["Increased fertility", "Increased resistance to diseases", "Higher risk of recessive disorders appearing", "Increased genetic diversity"], answer: "Higher risk of recessive disorders appearing" },
+            { question: "The term \"hybrid\" refers to offspring resulting from:", options: ["Self-pollination of a true-breeding plant.", "A cross between two genetically distinct individuals.", "A cross between two homozygous recessive individuals.", "Asexual reproduction."], answer: "A cross between two genetically distinct individuals." },
+            { question: "If a lethal allele (l) is recessive, which genotype will result in death?", options: ["LL", "Ll", "ll", "L-"], answer: "ll" },
+            { question: "The four concepts that make up Mendel's model of inheritance include all of the following EXCEPT:", options: ["Alternative versions of genes (alleles) account for variations.", "For each character, an organism inherits two alleles, one from each parent.", "Some traits are controlled by more than one gene.", "The two alleles for a heritable character segregate during gamete formation."], answer: "Some traits are controlled by more than one gene." },
+            { question: "The mating of a hybrid F1 generation with a homozygous recessive parent is an example of a:", options: ["Test cross and a back cross", "Dihybrid cross", "Self-cross", "Pure breeding cross"], answer: "Test cross and a back cross" },
+            // Part 2: Topic 6b
+            { question: "How many autosomes are present in a normal human karyotype?", options: ["2", "22", "23", "44"], answer: "44" },
+            { question: "A human female has which combination of sex chromosomes?", options: ["XX", "XY", "XO", "YY"], answer: "XX" },
+            { question: "A gene located on a sex chromosome is called a:", options: ["Autosomal gene", "Linked gene", "Sex-linked gene", "Polygenic gene"], answer: "Sex-linked gene" },
+            { question: "Why are X-linked recessive disorders more common in males than females?", options: ["Males have two X chromosomes.", "The Y chromosome carries a dominant allele that enhances the trait.", "Males are hemizygous for the X chromosome.", "Females cannot be carriers for X-linked traits."], answer: "Males are hemizygous for the X chromosome." },
+            { question: "A human male receives his X chromosome from his:", options: ["Mother", "Father", "Both mother and father", "Paternal grandfather"], answer: "Mother" },
+            { question: "Haemophilia is an X-linked recessive disorder. If a carrier female (X<sup>H</sup>X<sup>h</sup>) has children with a normal male (X<sup>H</sup>Y), what is the probability that their son will have haemophilia?", options: ["0%", "25%", "50%", "100%"], answer: "50%" },
+            { question: "Y-linked traits are passed from:", options: ["Father to all children", "Mother to son", "Father to son", "Mother to daughter"], answer: "Father to son" },
+            { question: "A chart that shows the inheritance of a trait over several generations in a family is called a:", options: ["Karyotype", "Punnett square", "Pedigree chart", "Gene map"], answer: "Pedigree chart" },
+            { question: "In a pedigree, a filled-in square represents an:", options: ["Unaffected female", "Affected female", "Unaffected male", "Affected male"], answer: "Affected male" },
+            { question: "If a trait skips a generation in a pedigree, it is most likely:", options: ["Dominant", "Recessive", "Y-linked", "Codominant"], answer: "Recessive" },
+            { question: "Epistasis is a genetic phenomenon where:", options: ["One gene influences multiple phenotypic traits.", "The alleles of one gene mask the expression of the alleles of another gene.", "Two alleles are equally expressed in the phenotype.", "A single trait is controlled by multiple genes."], answer: "The alleles of one gene mask the expression of the alleles of another gene." },
+            { question: "In Labrador retrievers, the allele 'e' prevents the deposition of black or brown pigment, resulting in a yellow coat, regardless of the 'B'/'b' alleles. The 'e' allele is therefore:", options: ["Dominant", "Hypostatic to the B gene", "Epistatic to the B gene", "Codominant"], answer: "Epistatic to the B gene" },
+            { question: "What is the expected phenotypic ratio in the F2 generation from a cross involving recessive epistasis (e.g., BbEe x BbEe in Labradors)?", options: ["9:3:3:1", "12:3:1", "9:3:4", "1:2:1"], answer: "9:3:4" },
+            { question: "Genes that are located on the same chromosome and tend to be inherited together are described as:", options: ["Alleles", "Homologous", "Linked", "Polygenic"], answer: "Linked" },
+            { question: "The exchange of genetic material between non-sister chromatids of homologous chromosomes during meiosis is called:", options: ["Segregation", "Independent assortment", "Crossing over", "Gene mapping"], answer: "Crossing over" },
+            { question: "The farther apart two genes are on a chromosome, the ______ the recombination frequency.", options: ["higher", "lower", "less predictable", "same"], answer: "higher" },
+            { question: "A recombination frequency of 10% between two genes means they are:", options: ["On different chromosomes", "10 map units apart", "10 alleles apart", "Not linked"], answer: "10 map units apart" },
+            { question: "What is the maximum possible recombination frequency between two genes?", options: ["25%", "50%", "75%", "100%"], answer: "50%" },
+            { question: "All the genes on a single chromosome form a:", options: ["Karyotype", "Genome", "Linkage group", "Pedigree"], answer: "Linkage group" },
+            { question: "The Hardy-Weinberg principle describes a population that is:", options: ["Evolving", "Not evolving", "Shrinking", "Migrating"], answer: "Not evolving" },
+            { question: "In the Hardy-Weinberg equation p² + 2pq + q² = 1, what does '2pq' represent?", options: ["The frequency of the homozygous dominant genotype.", "The frequency of the homozygous recessive genotype.", "The frequency of the heterozygous genotype.", "The frequency of the dominant allele."], answer: "The frequency of the heterozygous genotype." },
+            { question: "In the equation p + q = 1, 'p' represents the frequency of the:", options: ["Dominant phenotype", "Recessive phenotype", "Dominant allele", "Recessive allele"], answer: "Dominant allele" },
+            { question: "Which of the following is NOT an assumption of the Hardy-Weinberg equilibrium?", options: ["No mutation", "Random mating", "Small population size", "No natural selection"], answer: "Small population size" },
+            { question: "If the frequency of a recessive allele 'a' in a population is 0.3, what is the frequency of the dominant allele 'A'?", options: ["0.3", "0.49", "0.7", "0.9"], answer: "0.7" },
+            { question: "If the frequency of the homozygous recessive genotype (aa) is 0.09, what is the frequency of the recessive allele (q)?", options: ["0.09", "0.81", "0.3", "0.7"], answer: "0.3" },
+            { question: "Using the information from the previous question (q=0.3), what is the frequency of the heterozygous genotype (2pq)?", options: ["0.21", "0.42", "0.49", "0.7"], answer: "0.42" },
+            { question: "A red-green colorblind male has the genotype:", options: ["X<sup>B</sup>X<sup>b</sup>", "X<sup>b</sup>X<sup>b</sup>", "X<sup>B</sup>Y", "X<sup>b</sup>Y"], answer: "X<sup>b</sup>Y" },
+            { question: "If an affected father has an X-linked dominant trait, he will pass it on to:", options: ["All of his sons", "Half of his sons", "All of his daughters", "Half of his daughters"], answer: "All of his daughters" },
+            { question: "The random fluctuation of allele frequencies due to chance events in a small population is called:", options: ["Natural selection", "Gene flow", "Mutation", "Genetic drift"], answer: "Genetic drift" },
+            { question: "A diagram of all the chromosomes in a cell, arranged in homologous pairs, is a:", options: ["Pedigree", "Gene map", "Karyotype", "Genome"], answer: "Karyotype" },
+            { question: "In dominant epistasis, a dominant allele at one locus can mask the expression of alleles at a second locus. A typical ratio for this is:", options: ["9:3:4", "9:7", "12:3:1", "15:1"], answer: "12:3:1" },
+            { question: "If two genes are completely linked (no crossing over), what phenotypic ratio would you expect from a dihybrid test cross (AaBb x aabb)?", options: ["9:3:3:1", "1:1:1:1", "1:1", "3:1"], answer: "1:1" },
+            { question: "The unit of measurement for distance on a genetic map is the:", options: ["Angstrom", "Nanometer", "Centimorgan (map unit)", "Locus"], answer: "Centimorgan (map unit)" },
+            { question: "A male with hairy ears (a Y-linked trait) will pass this trait to:", options: ["All his children", "All his sons", "All his daughters", "Half his sons"], answer: "All his sons" },
+            { question: "In a pedigree for an autosomal dominant trait, affected individuals must have:", options: ["At least one affected parent", "Two affected parents", "An affected son", "An affected daughter"], answer: "At least one affected parent" },
+            { question: "The sum total of all alleles for all genes in a population is its:", options: ["Gene pool", "Karyotype", "Genotype", "Phenotype"], answer: "Gene pool" },
+            { question: "If 16% of a population in Hardy-Weinberg equilibrium shows a recessive trait, what is the value of q?", options: ["0.16", "0.04", "0.4", "0.6"], answer: "0.4" },
+            { question: "Offspring with combinations of traits that differ from those found in either parent are known as:", options: ["Parental types", "Recombinants", "Hybrids", "Mutants"], answer: "Recombinants" },
+            { question: "Which process is the ultimate source of new alleles in a population?", options: ["Natural selection", "Genetic drift", "Mutation", "Gene flow"], answer: "Mutation" },
+            { question: "Queen Victoria was a famous carrier of which X-linked recessive disorder?", options: ["Color blindness", "Huntington's disease", "Cystic fibrosis", "Haemophilia"], answer: "Haemophilia" },
+            { question: "A cross between a black Labrador (BBEe) and a yellow Labrador (bbee) can produce which of the following offspring?", options: ["Black, brown, and yellow", "Only black and yellow", "Only yellow", "Only black"], answer: "Only black and yellow" },
+            { question: "The presence of the Y chromosome in humans determines:", options: ["Height", "Intelligence", "Maleness", "Blood type"], answer: "Maleness" },
+            { question: "If a man is colorblind, can he pass the allele to his son?", options: ["Yes, always", "Yes, 50% of the time", "No, never", "Only if the mother is a carrier"], answer: "No, never" },
+            { question: "What does a horizontal line connecting a circle and a square in a pedigree represent?", options: ["Offspring", "Siblings", "Mating", "Identical twins"], answer: "Mating" },
+            { question: "If the frequency of allele 'A' (p) is 0.8, what is the frequency of the homozygous dominant genotype (p²)?", options: ["0.8", "1.6", "0.64", "0.04"], answer: "0.64" },
+            { question: "The movement of alleles between populations is called:", options: ["Genetic drift", "Gene flow (migration)", "Natural selection", "Mutation"], answer: "Gene flow (migration)" },
+            { question: "If two genes on the same chromosome are 50 map units apart, they:", options: ["Are completely linked.", "Show no recombination.", "Assort independently.", "Are on different chromosomes."], answer: "Assort independently." },
+            { question: "A female who is heterozygous for an X-linked recessive trait is called a:", options: ["Sufferer", "Carrier", "Hemizygote", "Homozygote"], answer: "Carrier" },
+            { question: "In the fruit fly experiment described, the observation that the F2 generation had a 3:1 ratio instead of 9:3:3:1 suggested that the genes for wing length and abdomen width were:", options: ["On different chromosomes", "Linked", "Epistatic", "Codominant"], answer: "Linked" },
+            { question: "The Hardy-Weinberg equation is a tool used by:", options: ["Cell biologists", "Anatomists", "Population geneticists", "Ecologists"], answer: "Population geneticists" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerHTML = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerHTML = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerHTML;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerHTML = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerHTML = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
