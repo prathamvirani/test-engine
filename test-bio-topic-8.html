@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Biology Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Biology Quiz: Growth & Development</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on human and plant growth and development. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-teal-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Biology Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-teal-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-teal-600 dark:text-teal-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "What is the approximate length of the human menstrual cycle?", options: ["14 days", "21 days", "28 days", "35 days", "45 days"], answer: "28 days" },
+            { question: "Which structure develops from the remaining tissue of the ovarian follicle after ovulation?", options: ["Corpus albicans", "Graafian follicle", "Secondary follicle", "Corpus luteum", "Primary follicle"], answer: "Corpus luteum" },
+            { question: "During which phase of the uterine cycle is the endometrium most developed and rich in blood vessels?", options: ["Menstruation", "Proliferative phase", "Ovulation", "Secretory phase", "Follicular phase"], answer: "Secretory phase" },
+            { question: "Which hormone is primarily responsible for stimulating the growth and thickening of the endometrium?", options: ["FSH", "LH", "Progesterone", "Oestrogen", "HCG"], answer: "Oestrogen" },
+            { question: "A surge in which hormone directly triggers ovulation?", options: ["FSH", "LH", "Oestrogen", "Progesterone", "GnRH"], answer: "LH" },
+            { question: "What is the main function of progesterone after ovulation?", options: ["To stimulate follicle maturation", "To trigger the LH surge", "To cause the breakdown of the endometrium", "To maintain the uterine lining for pregnancy", "To inhibit the production of oestrogen"], answer: "To maintain the uterine lining for pregnancy" },
+            { question: "If fertilization does not occur, what happens to the corpus luteum?", options: ["It continues to produce progesterone", "It develops into a Graafian follicle", "It degenerates", "It releases the egg", "It enlarges and secretes HCG"], answer: "It degenerates" },
+            { question: "Where does fertilization typically occur?", options: ["Uterus", "Ovary", "Cervix", "Vagina", "Fallopian tube"], answer: "Fallopian tube" },
+            { question: "What is the term for the process where a sperm becomes capable of fertilizing an egg while migrating through the female reproductive tract?", options: ["Acrosomal reaction", "Cortical reaction", "Capacitation", "Implantation", "Gastrulation"], answer: "Capacitation" },
+            { question: "What is the immediate result of the cortical reaction after a sperm penetrates the oocyte?", options: ["The release of enzymes to digest the corona radiata", "The fusion of male and female pronuclei", "The completion of meiosis II by the oocyte", "The hardening of the zona pellucida to form a fertilization membrane", "The rapid swimming of the sperm"], answer: "The hardening of the zona pellucida to form a fertilization membrane" },
+            { question: "The fusion of a sperm and an ovum results in a single cell called a(n):", options: ["Embryo", "Fetus", "Zygote", "Blastocyst", "Morula"], answer: "Zygote" },
+            { question: "Which hormone, secreted by the blastocyst, stimulates the corpus luteum to continue producing progesterone?", options: ["FSH", "LH", "Oestrogen", "HCG", "Oxytocin"], answer: "HCG" },
+            { question: "The rapid mitotic divisions that a zygote undergoes after fertilization are known as:", options: ["Gastrulation", "Organogenesis", "Implantation", "Cleavage", "Differentiation"], answer: "Cleavage" },
+            { question: "The solid ball of cells formed after several rounds of cleavage is called a:", options: ["Zygote", "Blastocyst", "Morula", "Gastrula", "Embryo"], answer: "Morula" },
+            { question: "The blastocyst is characterized by a fluid-filled cavity and two main parts: the trophoblast and the:", options: ["Blastomere", "Inner cell mass", "Zona pellucida", "Yolk sac", "Chorion"], answer: "Inner cell mass" },
+            { question: "What is the process by which the blastocyst burrows into the uterine wall?", options: ["Fertilization", "Ovulation", "Implantation", "Gastrulation", "Cleavage"], answer: "Implantation" },
+            { question: "The inner cell mass of the blastocyst develops into the:", options: ["Placenta", "Chorion", "Amnion", "Embryo", "Umbilical cord"], answer: "Embryo" },
+            { question: "The process of forming the three primary germ layers (ectoderm, mesoderm, endoderm) is called:", options: ["Cleavage", "Implantation", "Gastrulation", "Organogenesis", "Neurulation"], answer: "Gastrulation" },
+            { question: "Which germ layer forms the nervous system and the epidermis?", options: ["Ectoderm", "Mesoderm", "Endoderm", "Trophoderm", "Epiderm"], answer: "Ectoderm" },
+            { question: "The heart, kidneys, muscles, and dermis are formed from which germ layer?", options: ["Ectoderm", "Mesoderm", "Endoderm", "Placenta", "Chorion"], answer: "Mesoderm" },
+            { question: "Which extraembryonic membrane encloses the entire embryo and is filled with fluid?", options: ["Chorion", "Amnion", "Yolk sac", "Allantois", "Placenta"], answer: "Amnion" },
+            { question: "What is the primary function of the amniotic fluid?", options: ["To provide nutrition to the embryo", "To cushion and protect the fetus", "To form the umbilical cord", "To produce hormones", "To facilitate gas exchange"], answer: "To cushion and protect the fetus" },
+            { question: "The placenta is formed from which two structures?", options: ["Amnion and yolk sac", "Trophoblast and endometrium", "Inner cell mass and allantois", "Ectoderm and mesoderm", "Yolk sac and chorion"], answer: "Trophoblast and endometrium" },
+            { question: "Which of the following substances does NOT typically diffuse from the mother's blood to the fetus's blood via the placenta?", options: ["Oxygen", "Glucose", "Amino acids", "Urea", "Vitamins"], answer: "Urea" },
+            { question: "After which week of development is the embryo referred to as a fetus?", options: ["4th week", "8th week", "12th week", "16th week", "20th week"], answer: "8th week" },
+            { question: "During which trimester does the fetus form most of its organs?", options: ["First trimester", "Second trimester", "Third trimester", "All three trimesters equally", "Only in the first month"], answer: "First trimester" },
+            { question: "The fine hairs that cover the fetus during the 5th to 7th months are called:", options: ["Vernix", "Lanugo", "Villi", "Cilia", "Somites"], answer: "Lanugo" },
+            { question: "What is the waxy substance that protects the delicate skin of the fetus?", options: ["Lanugo", "Amnion", "Chorion", "Vernix", "Surfactant"], answer: "Vernix" },
+            { question: "An infant born before 37 weeks of gestation is considered:", options: ["Low birth weight", "Post-term", "Premature", "A zygote", "A blastocyst"], answer: "Premature" },
+            { question: "Identical twins are also known as:", options: ["Dizygotic twins", "Fraternal twins", "Monozygotic twins", "Conjoined twins", "Bipaternal twins"], answer: "Monozygotic twins" },
+            { question: "How are monozygotic twins formed?", options: ["Two eggs are fertilized by two different sperm.", "One egg is fertilized by two different sperm.", "One zygote splits into two separate embryos.", "Two eggs are released and fertilized by the same sperm.", "The inner cell mass fails to separate."], answer: "One zygote splits into two separate embryos." },
+            { question: "Which statement is true regarding identical twins?", options: ["They can be of different sexes.", "They have different genetic endowments.", "They always have separate placentas.", "They result from a single fertilized egg.", "They are the most common type of twins."], answer: "They result from a single fertilized egg." },
+            { question: "Fraternal twins are also known as:", options: ["Monozygotic twins", "Identical twins", "Dizygotic twins", "Maternal twins", "Conjoined twins"], answer: "Dizygotic twins" },
+            { question: "How are fraternal twins formed?", options: ["One zygote splits into two embryos.", "Two eggs are fertilized by two different sperm.", "One egg is fertilized by two different sperm.", "Two zygotes fuse into one embryo.", "One egg splits before fertilization."], answer: "Two eggs are fertilized by two different sperm." },
+            { question: "Which statement is true regarding fraternal twins?", options: ["They are always the same sex.", "They are genetically identical.", "They result from two separate fertilization events.", "They always share one placenta.", "They are less common than identical twins."], answer: "They result from two separate fertilization events." },
+            { question: "What is the cause of conjoined twins?", options: ["The fusion of two separate zygotes.", "The fertilization of one egg by two sperm.", "The incomplete separation of the inner cell mass of a single zygote.", "The fertilization of two eggs by the same sperm.", "The use of fertility drugs."], answer: "The incomplete separation of the inner cell mass of a single zygote." },
+            { question: "A home pregnancy test detects the presence of which hormone in the urine?", options: ["Progesterone", "Oestrogen", "LH", "FSH", "HCG"], answer: "HCG" },
+            { question: "Which hormone is primarily responsible for inhibiting the contraction of the myometrium during pregnancy?", options: ["Oestrogen", "Progesterone", "Oxytocin", "HCG", "Prolactin"], answer: "Progesterone" },
+            { question: "The process of birth is also known as:", options: ["Gestation", "Parturition", "Lactation", "Implantation", "Conception"], answer: "Parturition" },
+            { question: "Which hormone causes the contraction of the smooth muscle of the myometrium during labor?", options: ["Progesterone", "Oestrogen", "Oxytocin", "Prolactin", "HCG"], answer: "Oxytocin" },
+            { question: "The onset of uterine contractions marks the beginning of:", options: ["Lactation", "The third trimester", "Labour", "Conception", "Ovulation"], answer: "Labour" },
+            { question: "What is the first and longest stage of labour?", options: ["Expulsion stage", "Placental stage", "Dilation stage", "Afterbirth stage", "Crowning stage"], answer: "Dilation stage" },
+            { question: "During the first stage of labour, the cervix dilates to approximately:", options: ["2 cm", "5 cm", "10 cm", "15 cm", "20 cm"], answer: "10 cm" },
+            { question: "The 'breaking of waters' refers to the rupture of the:", options: ["Placenta", "Uterine wall", "Amniotic sac", "Chorionic villi", "Cervix"], answer: "Amniotic sac" },
+            { question: "The expulsion of the fetus from the vagina occurs during which stage of labour?", options: ["First stage (Dilation)", "Second stage (Expulsion)", "Third stage (Placental)", "Fourth stage (Recovery)", "Transition stage"], answer: "Second stage (Expulsion)" },
+            { question: "What is delivered during the third stage of labour, also known as the 'afterbirth'?", options: ["The baby", "The amniotic fluid", "The placenta and umbilical cord", "The cervix", "The corpus luteum"], answer: "The placenta and umbilical cord" },
+            { question: "The production and secretion of milk from the mammary glands is called:", options: ["Parturition", "Gestation", "Menstruation", "Lactation", "Ovulation"], answer: "Lactation" },
+            { question: "Which hormone stimulates the mammary glands to *produce* milk?", options: ["Oxytocin", "Prolactin", "Oestrogen", "Progesterone", "HCG"], answer: "Prolactin" },
+            { question: "Suckling by the newborn stimulates the release of which hormone, which *triggers the release* of milk?", options: ["Prolactin", "Oxytocin", "Oestrogen", "Insulin", "FSH"], answer: "Oxytocin" },
+            { question: "What is the name of the creamy, antibody-rich milk produced in the first few days after birth?", options: ["Colostrum", "Prolactin", "Lactose", "Casein", "Vernix"], answer: "Colostrum" },
+            { question: "Which type of contraception works by preventing ovulation, thinning the uterine lining, and thickening cervical mucus?", options: ["Barrier methods (condoms)", "Spermicides", "Hormonal methods (the pill)", "Intrauterine Devices (IUD)", "Surgical methods (vasectomy)"], answer: "Hormonal methods (the pill)" },
+            { question: "Depo-Provera is a form of contraception administered via:", options: ["A daily pill", "An implant", "An injection", "A patch", "A vaginal ring"], answer: "An injection" },
+            { question: "Which method provides a physical barrier to prevent sperm from entering the uterus?", options: ["The pill", "IUD", "Condom", "Spermicide", "The shot (Depo-Provera)"], answer: "Condom" },
+            { question: "Spermicides work by:", options: ["Blocking the cervix", "Killing sperm", "Preventing ovulation", "Thickening cervical mucus", "Preventing implantation"], answer: "Killing sperm" },
+            { question: "An Intrauterine Device (IUD) is placed in the:", options: ["Vagina", "Cervix", "Uterus", "Fallopian tube", "Ovary"], answer: "Uterus" },
+            { question: "Which surgical contraception method involves cutting and tying the fallopian tubes in a woman?", options: ["Vasectomy", "Hysterectomy", "Tubal ligation", "Oophorectomy", "Cervical cap insertion"], answer: "Tubal ligation" },
+            { question: "Which surgical contraception method involves cutting and tying the vas deferens in a man?", options: ["Tubal ligation", "Vasectomy", "Castration", "Epididymectomy", "Implantation"], answer: "Vasectomy" },
+            { question: "Which of the following is a hormonal implant that is inserted under the skin of the arm?", options: ["Depo-Provera", "IUD", "Norplant/Implanon", "Diaphragm", "The patch"], answer: "Norplant/Implanon" },
+            { question: "A cervical cap is a barrier method that fits over the:", options: ["Uterus", "Vagina", "Cervix", "Ovary", "Penis"], answer: "Cervix" },
+            { question: "Which of the following is considered a natural contraception method?", options: ["The pill", "Condom", "IUD", "Calendar method", "Spermicide"], answer: "Calendar method" },
+            { question: "The protective outer layer of a seed is called the:", options: ["Embryo", "Cotyledon", "Testa", "Radicle", "Endosperm"], answer: "Testa" },
+            { question: "The embryonic root within a seed is known as the:", options: ["Plumule", "Radicle", "Hypocotyl", "Epicotyl", "Coleoptile"], answer: "Radicle" },
+            { question: "The embryonic shoot within a seed is known as the:", options: ["Plumule", "Radicle", "Hypocotyl", "Coleorhiza", "Testa"], answer: "Plumule" },
+            { question: "What is the function of the cotyledons in a bean seed (dicot)?", options: ["To protect the embryo", "To store food for the embryo", "To form the first true leaves", "To absorb water for germination", "To form the root system"], answer: "To store food for the embryo" },
+            { question: "In a monocot seed like corn, what is the primary food storage tissue?", options: ["Cotyledon (Scutellum)", "Endosperm", "Pericarp", "Radicle", "Plumule"], answer: "Endosperm" },
+            { question: "The part of the embryonic axis above the attachment of the cotyledons is the:", options: ["Hypocotyl", "Radicle", "Epicotyl", "Coleoptile", "Coleorhiza"], answer: "Epicotyl" },
+            { question: "The protective sheath covering the young shoot (plumule) in a monocot is the:", options: ["Coleorhiza", "Coleoptile", "Scutellum", "Pericarp", "Hypocotyl"], answer: "Coleoptile" },
+            { question: "The protective sheath covering the young root (radicle) in a monocot is the:", options: ["Coleorhiza", "Coleoptile", "Scutellum", "Pericarp", "Epicotyl"], answer: "Coleorhiza" },
+            { question: "Flowering plants that produce seeds with two cotyledons are called:", options: ["Monocots", "Gymnosperms", "Ferns", "Dicots", "Mosses"], answer: "Dicots" },
+            { question: "The pericarp in a corn seed is formed from the fusion of the seed coat and the:", options: ["Endosperm", "Ovary wall", "Cotyledon", "Embryo", "Radicle"], answer: "Ovary wall" },
+            { question: "What is the first process that occurs during seed germination?", options: ["Photosynthesis", "Emergence of the plumule", "Activation of enzymes", "Imbibition of water", "Growth of the radicle"], answer: "Imbibition of water" },
+            { question: "Which part of the embryo is typically the first to emerge from the seed during germination?", options: ["Plumule", "Radicle", "Cotyledon", "Epicotyl", "First true leaves"], answer: "Radicle" },
+            { question: "In epigeal germination, what structure elongates and pulls the cotyledons above the soil surface?", options: ["Epicotyl", "Radicle", "Hypocotyl", "Plumule", "Coleoptile"], answer: "Hypocotyl" },
+            { question: "Which of the following is an example of a plant that undergoes epigeal germination?", options: ["Corn", "Pea", "Bean", "Wheat", "Rice"], answer: "Bean" },
+            { question: "In hypogeal germination, what remains underground?", options: ["The plumule", "The epicotyl", "The first true leaves", "The cotyledons", "The coleoptile"], answer: "The cotyledons" },
+            { question: "Which of the following is an example of a plant that undergoes hypogeal germination?", options: ["Bean", "Sunflower", "Corn", "Radish", "Onion"], answer: "Corn" },
+            { question: "Which of the following is NOT an essential condition for most seeds to germinate?", options: ["Water", "Oxygen", "Suitable temperature", "Light", "Viable embryo"], answer: "Light" },
+            { question: "Why is oxygen required for seed germination?", options: ["For photosynthesis", "For phototropism", "For aerobic respiration", "To break the seed coat", "To activate chlorophyll"], answer: "For aerobic respiration" },
+            { question: "A state in which a seed is unable to germinate even under ideal conditions is called:", options: ["Viability", "Dormancy", "Imbibition", "Stratification", "Vernalization"], answer: "Dormancy" },
+            { question: "Which plant hormone is often associated with maintaining seed dormancy?", options: ["Gibberellic acid (GA)", "Auxin", "Cytokinin", "Ethylene", "Abscisic acid (ABA)"], answer: "Abscisic acid (ABA)" },
+            { question: "The trophoblast of the blastocyst is primarily involved in forming the:", options: ["Embryo proper", "Yolk sac", "Foetal portion of the placenta", "Amniotic fluid", "Germ layers"], answer: "Foetal portion of the placenta" },
+            { question: "Which hormone shows a sharp peak around day 14 of a typical menstrual cycle?", options: ["Progesterone", "Oestrogen", "LH", "FSH", "HCG"], answer: "LH" },
+            { question: "The acrosomal reaction is essential for:", options: ["Sperm motility", "Preventing polyspermy", "The sperm to penetrate the zona pellucida", "Implantation of the blastocyst", "The production of milk"], answer: "The sperm to penetrate the zona pellucida" },
+            { question: "The coleoptile and coleorhiza are structures found in the seeds of:", options: ["Dicots", "Monocots", "Gymnosperms", "Ferns", "All plants"], answer: "Monocots" },
+            { question: "The release of oxytocin during childbirth is regulated by a:", options: ["Negative feedback loop", "Positive feedback loop", "Hormonal cascade involving the thyroid", "Neural reflex from the cerebellum", "Decrease in blood sugar levels"], answer: "Positive feedback loop" },
+            { question: "A key difference between identical and fraternal twins is:", options: ["The number of sperm involved in their conception", "The number of eggs involved in their conception", "The number of placentas they have", "The trimester in which they are formed", "Their birth weight"], answer: "The number of eggs involved in their conception" },
+            { question: "The 'afterbirth' refers to the expulsion of the:", options: ["Baby", "Amniotic fluid", "Placenta", "Cervical plug", "Corpus luteum"], answer: "Placenta" },
+            { question: "Which germ layer gives rise to the innermost lining of the digestive tract?", options: ["Ectoderm", "Mesoderm", "Endoderm", "Trophoblast", "Epiderm"], answer: "Endoderm" },
+            { question: "Hormonal birth control pills primarily work by preventing:", options: ["Fertilization", "Implantation", "Ovulation", "Menstruation", "Spermatogenesis"], answer: "Ovulation" },
+            { question: "In epigeal germination, the cotyledons often turn green and function temporarily as:", options: ["Roots", "Storage organs", "Flowers", "Leaves", "Stems"], answer: "Leaves" },
+            { question: "The corpus luteum is maintained during early pregnancy by:", options: ["LH from the pituitary", "HCG from the embryo", "Prolactin from the pituitary", "Oestrogen from the ovary", "FSH from the pituitary"], answer: "HCG from the embryo" },
+            { question: "The umbilical cord connects the fetus to the:", options: ["Uterine wall", "Amnion", "Placenta", "Yolk sac", "Mother's heart"], answer: "Placenta" },
+            { question: "Which event occurs during the second stage of labor?", options: ["Dilation of the cervix", "Delivery of the baby", "Delivery of the placenta", "Onset of contractions", "Breaking of the amniotic sac"], answer: "Delivery of the baby" },
+            { question: "A vasectomy prevents the release of:", options: ["Semen", "Sperm", "Testosterone", "Seminal fluid", "Prostatic fluid"], answer: "Sperm" },
+            { question: "The radicle of a seed develops into the plant's:", options: ["Stem", "Leaves", "Flower", "Root system", "Fruit"], answer: "Root system" },
+            { question: "Which extraembryonic membrane contributes its blood vessels to form the umbilical vessels?", options: ["Amnion", "Chorion", "Yolk Sac", "Allantois", "Placenta"], answer: "Allantois" },
+            { question: "The fusion of male and female pronuclei occurs after:", options: ["The acrosomal reaction", "Capacitation", "The cortical reaction", "Implantation", "Cleavage"], answer: "The cortical reaction" },
+            { question: "Which of the following is a key role of the chorion?", options: ["To cushion the fetus", "To form the placenta", "To produce amniotic fluid", "To store nutrients", "To form the nervous system"], answer: "To form the placenta" },
+            { question: "The primary reason for the decline in progesterone and oestrogen at the end of a non-pregnant cycle is:", options: ["The LH surge", "The degeneration of the corpus luteum", "The maturation of a new follicle", "The process of ovulation", "The thickening of the endometrium"], answer: "The degeneration of the corpus luteum" },
+            { question: "Imbibition is a critical first step in germination because it:", options: ["Provides energy for the embryo", "Activates enzymes and causes the seed to swell", "Protects the seed from fungi", "Initiates photosynthesis", "Forms the primary root"], answer: "Activates enzymes and causes the seed to swell" }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
