@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Magnetism Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light mode background */
+        }
+        .dark body {
+            background-color: #0d1117; /* Dark mode background */
+        }
+        /* Style for the selected answer during the test */
+        .selected {
+            background-color: #cce7ff !important;
+            border-color: #007bff !important;
+            color: #004085;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+        .dark .selected {
+            background-color: #2c3e50 !important;
+            border-color: #3498db !important;
+            color: #ecf0f1;
+        }
+        /* Style for correct answers on the review page */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+        /* Style for incorrect answers on the review page */
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        /* Style for the active question in the bottom navigation */
+        .nav-active {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+            transform: scale(1.1);
+        }
+        .dark .nav-active {
+             background-color: #3498db !important;
+             border-color: #3498db !important;
+        }
+        .nav-answered {
+            background-color: #e2e3e5;
+        }
+        .dark .nav-answered {
+            background-color: #34495e;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Start Screen -->
+        <div id="start-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center transition-all duration-300">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-4">Comprehensive Magnetism Test (Topic 8A)</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-8">Test your knowledge on magnetic fields, forces, and the motion of charged particles. You will have 100 questions to answer. Good luck!</p>
+            <button id="start-btn" class="bg-blue-600 text-white font-bold py-4 px-10 text-lg rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Start Quiz</button>
+        </div>
+
+        <!-- Main Quiz View -->
+        <div id="quiz-wrapper" class="hidden">
+            <div id="quiz-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 transition-all duration-300">
+                <div class="header-card text-white p-6 rounded-xl mb-6 flex justify-between items-center">
+                    <h2 class="text-2xl md:text-3xl font-bold">Magnetism Quiz</h2>
+                    <div class="text-right">
+                        <div id="progress-indicator" class="text-sm font-medium">Question 1 / 100</div>
+                        <div id="timer" class="text-2xl font-bold">00:00</div>
+                    </div>
+                </div>
+                <p id="question" class="text-lg md:text-xl font-semibold mb-6 min-h-[6rem] text-gray-700 dark:text-gray-200"></p>
+                <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                    <button id="next-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transition-all duration-300 transform hover:scale-105">Next</button>
+                </div>
+            </div>
+
+            <!-- Question Navigation Panel -->
+            <div id="question-nav-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 mt-4">
+                <h3 class="text-center text-lg font-semibold mb-4 text-gray-900 dark:text-white">Jump to Question</h3>
+                <div id="question-nav" class="flex flex-wrap justify-center gap-2 max-h-48 overflow-y-auto p-2">
+                    <!-- Navigation buttons will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results and Review View -->
+        <div id="results-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 hidden transition-all duration-300">
+            <div class="text-center mb-8">
+                 <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Test Completed!</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg mb-8">
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Final Score</p>
+                         <p id="score" class="text-4xl font-extrabold text-blue-600 dark:text-blue-400">0 / 100</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Total Time Taken</p>
+                         <p id="total-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">00:00</p>
+                     </div>
+                     <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                         <p class="font-semibold text-gray-800 dark:text-gray-200">Average Time / Question</p>
+                         <p id="avg-time" class="text-4xl font-extrabold text-gray-700 dark:text-gray-200">0s</p>
+                     </div>
+                 </div>
+                 <button id="restart-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800 transition-all duration-300 transform hover:scale-105">Take Test Again</button>
+            </div>
+            <hr class="my-8 border-gray-300 dark:border-gray-600">
+            <h3 class="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Review Your Answers</h3>
+            <div id="review-area" class="space-y-8">
+                <!-- Review content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            { question: "Which of the following statements is true regarding magnetic poles?", options: ["Like poles attract each other.", "Opposite poles repel each other.", "Like poles repel, and opposite poles attract.", "Magnetic poles do not exert forces on each other."], answer: "Like poles repel, and opposite poles attract." },
+            { question: "The direction of magnetic field lines is defined as:", options: ["The direction a freely-moving South pole would take.", "The direction a freely-moving North pole would take.", "From the South pole to the North pole outside the magnet.", "Parallel to the magnetic field."], answer: "The direction a freely-moving North pole would take." },
+            { question: "The SI unit for magnetic flux density (B) is:", options: ["Weber (Wb)", "Henry (H)", "Tesla (T)", "Farad (F)"], answer: "Tesla (T)" },
+            { question: "Which of the following is NOT a source of a magnetic field?", options: ["A stationary electric charge", "A bar magnet", "A current-carrying wire", "The Earth"], answer: "A stationary electric charge" },
+            { question: "In a uniform magnetic field, the magnetic field lines are:", options: ["Curved and close together", "Curved and far apart", "Straight, parallel, and equally spaced", "Circular"], answer: "Straight, parallel, and equally spaced" },
+            { question: "The magnetic field lines around a long, straight current-carrying wire are:", options: ["Radial lines pointing away from the wire.", "Radial lines pointing towards the wire.", "Concentric circles around the wire.", "Parallel to the wire."], answer: "Concentric circles around the wire." },
+            { question: "The direction of the magnetic field around a straight current-carrying wire can be determined by:", options: ["Fleming's Left-Hand Rule", "The Right-Hand Grip Rule", "Lenz's Law", "Faraday's Law"], answer: "The Right-Hand Grip Rule" },
+            { question: "The magnetic field strength at the center of a circular coil is:", options: ["Inversely proportional to the current.", "Directly proportional to the radius of the coil.", "Directly proportional to the current and the number of turns.", "Zero."], answer: "Directly proportional to the current and the number of turns." },
+            { question: "For a solenoid, the magnetic field is strongest and most uniform:", options: ["Outside the solenoid, near the middle.", "Inside the solenoid, far from the ends.", "At the ends of the solenoid.", "The magnetic field is zero everywhere."], answer: "Inside the solenoid, far from the ends." },
+            { question: "The constant μ_o is known as:", options: ["Permittivity of free space", "Permeability of free space", "Coulomb's constant", "The universal gravitational constant"], answer: "Permeability of free space" },
+            { question: "A charged particle moving in a magnetic field experiences a force that is:", options: ["Parallel to the magnetic field.", "Parallel to the velocity of the particle.", "Perpendicular to both the magnetic field and the velocity of the particle.", "In the same direction as the magnetic field."], answer: "Perpendicular to both the magnetic field and the velocity of the particle." },
+            { question: "The magnitude of the magnetic force on a moving charge is greatest when the velocity is:", options: ["Parallel to the magnetic field.", "Perpendicular to the magnetic field.", "At a 45-degree angle to the magnetic field.", "The force is constant regardless of the angle."], answer: "Perpendicular to the magnetic field." },
+            { question: "The direction of the force on a positive charge moving in a magnetic field is given by:", options: ["The Right-Hand Grip Rule", "Fleming's Left-Hand Rule", "The direction of the magnetic field.", "The direction opposite to the velocity."], answer: "Fleming's Left-Hand Rule" },
+            { question: "A stationary charge in a magnetic field experiences:", options: ["A force parallel to the field.", "A force perpendicular to the field.", "No magnetic force.", "A force that causes it to spin."], answer: "No magnetic force." },
+            { question: "The force on a current-carrying wire in a magnetic field is given by the formula:", options: ["F = qvB", "F = BILsinθ", "F = ma", "F = k * (q1*q2)/r^2"], answer: "F = BILsinθ" },
+            { question: "A charged particle moving perpendicular to a uniform magnetic field will follow a:", options: ["Straight line path.", "Parabolic path.", "Circular path.", "Helical path."], answer: "Circular path." },
+            { question: "The radius of the circular path of a charged particle in a magnetic field is:", options: ["Directly proportional to the magnetic field strength.", "Directly proportional to the charge of the particle.", "Inversely proportional to the momentum of the particle.", "Directly proportional to the momentum of the particle."], answer: "Directly proportional to the momentum of the particle." },
+            { question: "The magnetic force on a charged particle moving in a circle in a magnetic field provides the:", options: ["Gravitational force", "Centripetal force", "Frictional force", "Tension force"], answer: "Centripetal force" },
+            { question: "If the velocity of a charged particle in a uniform magnetic field is doubled, the radius of its circular path will:", options: ["Be halved.", "Be doubled.", "Remain the same.", "Be quadrupled."], answer: "Be doubled." },
+            { question: "A particle with no charge moving through a magnetic field will:", options: ["Be deflected in a circular path.", "Be deflected in a parabolic path.", "Be undeflected.", "Be stopped."], answer: "Be undeflected." },
+            { question: "The magnetic field strength inside a solenoid is independent of:", options: ["The current in the solenoid.", "The number of turns per unit length.", "The radius of the solenoid.", "The material inside the solenoid."], answer: "The radius of the solenoid." },
+            { question: "If you cut a bar magnet in half, you will have:", options: ["One north pole and one south pole.", "Two smaller magnets, each with a north and south pole.", "Two north poles.", "Two south poles."], answer: "Two smaller magnets, each with a north and south pole." },
+            { question: "Which of the following materials is ferromagnetic?", options: ["Copper", "Aluminum", "Iron", "Glass"], answer: "Iron" },
+            { question: "The magnetic force on a current-carrying wire is zero when the wire is:", options: ["Perpendicular to the magnetic field.", "Parallel to the magnetic field.", "At a 45-degree angle to the magnetic field.", "The force is never zero."], answer: "Parallel to the magnetic field." },
+            { question: "The torque on a current loop in a magnetic field is maximum when the plane of the loop is:", options: ["Perpendicular to the magnetic field.", "Parallel to the magnetic field.", "At a 45-degree angle to the magnetic field.", "The torque is always zero."], answer: "Parallel to the magnetic field." },
+            { question: "A velocity selector uses:", options: ["Only a magnetic field.", "Only an electric field.", "Both a magnetic and an electric field, parallel to each other.", "Both a magnetic and an electric field, perpendicular to each other."], answer: "Both a magnetic and an electric field, perpendicular to each other." },
+            { question: "Two parallel wires carrying current in the same direction will:", options: ["Repel each other.", "Attract each other.", "Exert no force on each other.", "Rotate."], answer: "Attract each other." },
+            { question: "Two parallel wires carrying current in opposite directions will:", options: ["Repel each other.", "Attract each other.", "Exert no force on each other.", "Rotate."], answer: "Repel each other." },
+            { question: "The force per unit length between two parallel current-carrying wires is:", options: ["Directly proportional to the distance between the wires.", "Inversely proportional to the distance between the wires.", "Inversely proportional to the square of the distance between the wires.", "Independent of the distance between the wires."], answer: "Inversely proportional to the distance between the wires." },
+            { question: "The magnetic field at a point midway between two parallel wires carrying equal currents in the same direction is:", options: ["Twice the field from one wire.", "Half the field from one wire.", "Zero.", "The same as the field from one wire."], answer: "Zero." },
+            { question: "The magnetic field at a point midway between two parallel wires carrying equal currents in opposite directions is:", options: ["Twice the field from one wire.", "Half the field from one wire.", "Zero.", "The same as the field from one wire."], answer: "Twice the field from one wire." },
+            { question: "The unit of magnetic flux is the:", options: ["Tesla", "Weber", "Henry", "Gauss"], answer: "Weber" },
+            { question: "Magnetic flux is a measure of:", options: ["The strength of a magnet.", "The number of magnetic field lines passing through a surface.", "The force on a moving charge.", "The torque on a current loop."], answer: "The number of magnetic field lines passing through a surface." },
+            { question: "The tesla is equivalent to:", options: ["N / (C * m/s)", "N / (A * m)", "Both A and B", "Neither A nor B"], answer: "Both A and B" },
+            { question: "The Earth's magnetic field is approximately:", options: ["5 x 10^-5 T", "5 x 10^5 T", "1 T", "10 T"], answer: "5 x 10^-5 T" },
+            { question: "A current loop in a magnetic field will experience a net force of:", options: ["Zero", "A value dependent on the current.", "A value dependent on the magnetic field.", "A value dependent on the area of the loop."], answer: "Zero" },
+            { question: "The torque on a current loop is used in:", options: ["Electric motors", "Generators", "Transformers", "Resistors"], answer: "Electric motors" },
+            { question: "The magnetic moment of a current loop is:", options: ["Directly proportional to the current and the area of the loop.", "Inversely proportional to the current and the area of the loop.", "Directly proportional to the magnetic field.", "Inversely proportional to the magnetic field."], answer: "Directly proportional to the current and the area of the loop." },
+            { question: "The direction of the magnetic moment vector is:", options: ["Parallel to the plane of the loop.", "Perpendicular to the plane of the loop.", "In the direction of the current.", "In the direction of the magnetic field."], answer: "Perpendicular to the plane of the loop." },
+            { question: "The potential energy of a magnetic dipole in a magnetic field is minimum when the magnetic moment is:", options: ["Parallel to the magnetic field.", "Anti-parallel to the magnetic field.", "Perpendicular to the magnetic field.", "The potential energy is always zero."], answer: "Parallel to the magnetic field." },
+            { question: "The Hall effect can be used to measure:", options: ["The strength of a magnetic field.", "The sign of the charge carriers in a conductor.", "The density of charge carriers in a conductor.", "All of the above."], answer: "All of the above." },
+            { question: "In the Hall effect, the Hall voltage is:", options: ["Parallel to both the current and the magnetic field.", "Perpendicular to both the current and the magnetic field.", "Parallel to the current and perpendicular to the magnetic field.", "Perpendicular to the current and parallel to the magnetic field."], answer: "Perpendicular to both the current and the magnetic field." },
+            { question: "A mass spectrometer uses magnetic fields to:", options: ["Accelerate charged particles.", "Separate charged particles based on their mass-to-charge ratio.", "Measure the charge of an electron.", "Generate electricity."], answer: "Separate charged particles based on their mass-to-charge ratio." },
+            { question: "In a mass spectrometer, the radius of the circular path of an ion is:", options: ["Directly proportional to its mass.", "Inversely proportional to its mass.", "Directly proportional to its charge.", "Independent of its mass and charge."], answer: "Directly proportional to its mass." },
+            { question: "A cyclotron is a device used to:", options: ["Accelerate charged particles to high energies.", "Measure the mass of atoms.", "Store electrical energy.", "Generate magnetic fields."], answer: "Accelerate charged particles to high energies." },
+            { question: "In a cyclotron, the frequency of the alternating voltage must be:", options: ["Equal to the cyclotron frequency of the particles.", "Twice the cyclotron frequency of the particles.", "Half the cyclotron frequency of the particles.", "Independent of the cyclotron frequency."], answer: "Equal to the cyclotron frequency of the particles." },
+            { question: "The magnetic field of a toroid is:", options: ["Zero inside the toroid and non-zero outside.", "Non-zero inside the toroid and zero outside.", "Non-zero both inside and outside the toroid.", "Zero everywhere."], answer: "Non-zero inside the toroid and zero outside." },
+            { question: "Ampere's Law relates:", options: ["The electric field to the distribution of charges.", "The magnetic field to the distribution of currents.", "The electric flux to the enclosed charge.", "The magnetic flux to the enclosed current."], answer: "The magnetic field to the distribution of currents." },
+            { question: "Gauss's Law for magnetism states that:", options: ["The net magnetic flux through any closed surface is zero.", "The net magnetic flux through any closed surface is proportional to the enclosed current.", "The net electric flux through any closed surface is zero.", "The net electric flux through any closed surface is proportional to the enclosed charge."], answer: "The net magnetic flux through any closed surface is zero." },
+            { question: "The fact that the net magnetic flux through a closed surface is zero implies that:", options: ["There are no magnetic monopoles.", "Magnetic field lines form closed loops.", "Both A and B.", "Neither A nor B."], answer: "Both A and B." },
+            { question: "The Biot-Savart Law is used to calculate:", options: ["The electric field of a point charge.", "The magnetic field of a current element.", "The force on a moving charge.", "The torque on a current loop."], answer: "The magnetic field of a current element." },
+            { question: "The magnetic field of a current element is:", options: ["Parallel to the current element.", "Perpendicular to the current element.", "Radially outward from the current element.", "The magnetic field is zero."], answer: "Perpendicular to the current element." },
+            { question: "The magnetic field on the axis of a current loop is:", options: ["Strongest at the center of the loop.", "Weakest at the center of the loop.", "Uniform along the axis.", "Zero."], answer: "Strongest at the center of the loop." },
+            { question: "The force between two magnetic poles is:", options: ["Directly proportional to the product of the pole strengths.", "Inversely proportional to the square of the distance between them.", "Both A and B.", "Neither A nor B."], answer: "Both A and B." },
+            { question: "The magnetic permeability of a material is a measure of:", options: ["How easily it can be magnetized.", "Its electrical conductivity.", "Its density.", "Its heat capacity."], answer: "How easily it can be magnetized." },
+            { question: "Diamagnetic materials are:", options: ["Weakly attracted to magnets.", "Weakly repelled by magnets.", "Strongly attracted to magnets.", "Not affected by magnets."], answer: "Weakly repelled by magnets." },
+            { question: "Paramagnetic materials are:", options: ["Weakly attracted to magnets.", "Weakly repelled by magnets.", "Strongly attracted to magnets.", "Not affected by magnets."], answer: "Weakly attracted to magnets." },
+            { question: "Ferromagnetic materials are:", options: ["Weakly attracted to magnets.", "Weakly repelled by magnets.", "Strongly attracted to magnets.", "Not affected by magnets."], answer: "Strongly attracted to magnets." },
+            { question: "The magnetic domains in a ferromagnetic material are:", options: ["Regions where the magnetic fields of atoms are aligned.", "Regions of high electrical resistance.", "Regions of low density.", "Regions where there are no atoms."], answer: "Regions where the magnetic fields of atoms are aligned." },
+            { question: "When a ferromagnetic material is placed in a magnetic field, the magnetic domains:", options: ["Align with the external field.", "Align opposite to the external field.", "Are not affected by the external field.", "Disappear."], answer: "Align with the external field." },
+            { question: "A permanent magnet is a material that:", options: ["Retains its magnetism after the external field is removed.", "Loses its magnetism after the external field is removed.", "Cannot be magnetized.", "Is not a magnetic material."], answer: "Retains its magnetism after the external field is removed." },
+            { question: "The Curie temperature is the temperature above which:", options: ["A ferromagnetic material becomes paramagnetic.", "A paramagnetic material becomes ferromagnetic.", "A superconductor becomes a normal conductor.", "A solid melts."], answer: "A ferromagnetic material becomes paramagnetic." },
+            { question: "Hysteresis is the phenomenon where:", options: ["The magnetization of a material depends on its previous magnetic history.", "The resistance of a material depends on the temperature.", "The current in a circuit depends on the voltage.", "The force on a charge depends on its velocity."], answer: "The magnetization of a material depends on its previous magnetic history." },
+            { question: "The area of the hysteresis loop represents:", options: ["The energy dissipated as heat per cycle.", "The retentivity of the material.", "The coercivity of the material.", "The saturation magnetization."], answer: "The energy dissipated as heat per cycle." },
+            { question: "Soft magnetic materials have:", options: ["A narrow hysteresis loop.", "A wide hysteresis loop.", "High retentivity.", "High coercivity."], answer: "A narrow hysteresis loop." },
+            { question: "Hard magnetic materials have:", options: ["A narrow hysteresis loop.", "A wide hysteresis loop.", "Low retentivity.", "Low coercivity."], answer: "A wide hysteresis loop." },
+            { question: "Soft magnetic materials are used in:", options: ["Permanent magnets.", "Transformer cores.", "Magnetic recording tapes.", "All of the above."], answer: "Transformer cores." },
+            { question: "Hard magnetic materials are used in:", options: ["Permanent magnets.", "Electromagnets.", "Transformer cores.", "All of the above."], answer: "Permanent magnets." },
+            { question: "An electromagnet is a:", options: ["Permanent magnet.", "Temporary magnet created by an electric current.", "Material that is not magnetic.", "Superconductor."], answer: "Temporary magnet created by an electric current." },
+            { question: "The strength of an electromagnet can be increased by:", options: ["Increasing the current.", "Increasing the number of turns in the coil.", "Inserting an iron core.", "All of the above."], answer: "All of the above." },
+            { question: "A magnetic circuit is an analogy to:", options: ["An electric circuit.", "A hydraulic circuit.", "A thermal circuit.", "A mechanical system."], answer: "An electric circuit." },
+            { question: "Magnetomotive force (MMF) is analogous to:", options: ["Voltage in an electric circuit.", "Current in an electric circuit.", "Resistance in an electric circuit.", "Capacitance in an electric circuit."], answer: "Voltage in an electric circuit." },
+            { question: "Magnetic flux is analogous to:", options: ["Voltage in an electric circuit.", "Current in an electric circuit.", "Resistance in an electric circuit.", "Capacitance in an electric circuit."], answer: "Current in an electric circuit." },
+            { question: "Reluctance is analogous to:", options: ["Voltage in an electric circuit.", "Current in an electric circuit.", "Resistance in an electric circuit.", "Capacitance in an electric circuit."], answer: "Resistance in an electric circuit." },
+            { question: "The magnetic field of a solenoid is similar to that of a:", options: ["Bar magnet.", "Horseshoe magnet.", "Straight wire.", "Single loop."], answer: "Bar magnet." },
+            { question: "The magnetic poles of a solenoid can be determined by:", options: ["The Right-Hand Grip Rule.", "Fleming's Left-Hand Rule.", "The direction of the current.", "The material of the core."], answer: "The Right-Hand Grip Rule." },
+            { question: "A magnetic shield is a material that:", options: ["Blocks magnetic fields.", "Enhances magnetic fields.", "Creates magnetic fields.", "Is not affected by magnetic fields."], answer: "Blocks magnetic fields." },
+            { question: "Magnetic shielding is achieved by using a material with:", options: ["High magnetic permeability.", "Low magnetic permeability.", "High electrical resistance.", "Low electrical resistance."], answer: "High magnetic permeability." },
+            { question: "Magnetic levitation (maglev) trains use:", options: ["Permanent magnets.", "Electromagnets.", "Both permanent and electromagnets.", "Superconducting magnets."], answer: "Superconducting magnets." },
+            { question: "Magnetic resonance imaging (MRI) uses strong magnetic fields to:", options: ["Create images of the inside of the body.", "Treat cancer.", "Generate electricity.", "Power medical devices."], answer: "Create images of the inside of the body." },
+            { question: "The Lorentz force is the total force on a charged particle due to:", options: ["Electric fields only.", "Magnetic fields only.", "Both electric and magnetic fields.", "Gravitational fields."], answer: "Both electric and magnetic fields." },
+            { question: "The equation for the Lorentz force is:", options: ["F = qE + qvB", "F = q(E + v x B)", "F = qE - qvB", "F = q(E - v x B)"], answer: "F = q(E + v x B)" },
+            { question: "The magnetic force does no work on a charged particle because:", options: ["The force is always zero.", "The force is always parallel to the displacement.", "The force is always perpendicular to the displacement.", "The magnetic field is a conservative field."], answer: "The force is always perpendicular to the displacement." },
+            { question: "The kinetic energy of a charged particle moving in a magnetic field:", options: ["Increases.", "Decreases.", "Remains constant.", "Can either increase or decrease."], answer: "Remains constant." },
+            { question: "The magnetic field of the Earth is believed to be caused by:", options: ["A large bar magnet inside the Earth.", "Electric currents in the molten outer core.", "The solar wind.", "The Earth's rotation."], answer: "Electric currents in the molten outer core." },
+            { question: "The Earth's magnetic field protects us from:", options: ["Solar flares.", "Cosmic rays.", "Both A and B.", "Neither A nor B."], answer: "Both A and B." },
+            { question: "The aurora borealis and aurora australis are caused by:", options: ["Charged particles from the sun interacting with the Earth's atmosphere.", "The reflection of sunlight from the polar ice caps.", "The Earth's magnetic field.", "The Earth's rotation."], answer: "Charged particles from the sun interacting with the Earth's atmosphere." },
+            { question: "A magnetic compass points to the:", options: ["Geographic North Pole.", "Magnetic North Pole.", "South Pole.", "East."], answer: "Magnetic North Pole." },
+            { question: "The magnetic declination is the angle between:", options: ["The geographic north and the magnetic north.", "The horizontal and the Earth's magnetic field.", "The vertical and the Earth's magnetic field.", "The east and the west."], answer: "The geographic north and the magnetic north." },
+            { question: "The magnetic inclination (or dip) is the angle between:", options: ["The geographic north and the magnetic north.", "The horizontal and the Earth's magnetic field.", "The vertical and the Earth's magnetic field.", "The east and the west."], answer: "The horizontal and the Earth's magnetic field." },
+            { question: "At the magnetic equator, the magnetic inclination is:", options: ["0 degrees.", "90 degrees.", "180 degrees.", "45 degrees."], answer: "0 degrees." },
+            { question: "At the magnetic poles, the magnetic inclination is:", options: ["0 degrees.", "90 degrees.", "180 degrees.", "45 degrees."], answer: "90 degrees." },
+            { question: "The magnetic field of the Earth has reversed its polarity many times in the past.", options: ["True", "False"], answer: "True" },
+            { question: "The study of the Earth's past magnetic field is called:", options: ["Paleomagnetism.", "Geomagnetism.", "Magnetohydrodynamics.", "Electromagnetism."], answer: "Paleomagnetism." },
+            { question: "The magnetic field of a current loop is similar to that of a:", options: ["Magnetic dipole.", "Magnetic monopole.", "Electric dipole.", "Electric monopole."], answer: "Magnetic dipole." },
+            { question: "The magnetic field lines of a bar magnet:", options: ["Start at the north pole and end at the south pole.", "Start at the south pole and end at the north pole.", "Form closed loops.", "Are straight lines."], answer: "Form closed loops." },
+            { question: "The magnetic force is a:", options: ["Conservative force.", "Non-conservative force.", "Fictitious force.", "Fundamental force."], answer: "Non-conservative force." },
+            { question: "The magnetic field can be visualized using:", options: ["Iron filings.", "A compass.", "Both A and B.", "Neither A nor B."], answer: "Both A and B." },
+            { question: "The magnetic field of a moving charge is given by:", options: ["Coulomb's Law.", "The Biot-Savart Law.", "Ampere's Law.", "Faraday's Law."], answer: "The Biot-Savart Law." },
+            { question: "The interaction between electricity and magnetism is called:", options: ["Electromagnetism.", "Electrostatics.", "Magnetostatics.", "Quantum mechanics."], answer: "Electromagnetism." }
+        ];
+
+        // --- DOM Elements ---
+        const startContainer = document.getElementById('start-container');
+        const quizWrapper = document.getElementById('quiz-wrapper');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreEl = document.getElementById('score');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const reviewArea = document.getElementById('review-area');
+        const questionNavContainer = document.getElementById('question-nav-container');
+        const questionNav = document.getElementById('question-nav');
+        const timerEl = document.getElementById('timer');
+        const totalTimeEl = document.getElementById('total-time');
+        const avgTimeEl = document.getElementById('avg-time');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        const userAnswers = new Array(quizData.length).fill(null);
+        let timerInterval;
+        let secondsElapsed = 0;
+
+        // --- Timer Functions ---
+        function startTimer() {
+            secondsElapsed = 0;
+            timerEl.textContent = '00:00';
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // --- Quiz Functions ---
+        function loadQuiz() {
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionEl.innerText = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressIndicator.innerText = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+            optionsEl.innerHTML = '';
+
+            currentQuestion.options.forEach(optionText => {
+                const button = document.createElement('button');
+                button.innerText = optionText;
+                button.classList.add('w-full', 'text-left', 'p-4', 'my-2', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-all', 'duration-200', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'dark:text-gray-200');
+                
+                if (userAnswers[currentQuestionIndex] === optionText) {
+                    button.classList.add('selected');
+                }
+                
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+
+            updateNavHighlight();
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.innerText = currentQuestionIndex === quizData.length - 1 ? 'Submit' : 'Next';
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            userAnswers[currentQuestionIndex] = selectedBtn.innerText;
+            
+            Array.from(optionsEl.children).forEach(button => button.classList.remove('selected'));
+            selectedBtn.classList.add('selected');
+
+            // Mark question as answered in navigation
+            const navBtn = document.querySelector(`#question-nav button[data-index='${currentQuestionIndex}']`);
+            if(navBtn) navBtn.classList.add('nav-answered');
+        }
+
+        function showResults() {
+            stopTimer();
+            quizWrapper.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            
+            let score = 0;
+            reviewArea.innerHTML = '';
+
+            quizData.forEach((questionData, index) => {
+                const userAnswer = userAnswers[index];
+                const correctAnswer = questionData.answer;
+                if (userAnswer === correctAnswer) {
+                    score++;
+                }
+
+                const questionReviewBlock = document.createElement('div');
+                questionReviewBlock.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-900', 'border', 'border-gray-200', 'dark:border-gray-700');
+                
+                const questionText = document.createElement('p');
+                questionText.classList.add('text-md', 'font-semibold', 'mb-4', 'text-gray-800', 'dark:text-gray-100');
+                questionText.innerHTML = `<strong>${index + 1}. ${questionData.question}</strong>`;
+                
+                const optionsGrid = document.createElement('div');
+                optionsGrid.classList.add('grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-2');
+
+                questionData.options.forEach(optionText => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.innerText = optionText;
+                    optionDiv.classList.add('p-3', 'rounded-md', 'border-2', 'transition-all');
+
+                    if (optionText === correctAnswer) {
+                        optionDiv.classList.add('correct');
+                    }
+                    if (optionText === userAnswer && userAnswer !== correctAnswer) {
+                        optionDiv.classList.add('incorrect');
+                    }
+                    
+                    optionsGrid.appendChild(optionDiv);
+                });
+
+                questionReviewBlock.appendChild(questionText);
+                questionReviewBlock.appendChild(optionsGrid);
+                reviewArea.appendChild(questionReviewBlock);
+            });
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            scoreEl.innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const totalMinutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const totalSeconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            totalTimeEl.textContent = `${totalMinutes}:${totalSeconds}`;
+
+            const avgSeconds = (secondsElapsed / quizData.length).toFixed(1);
+            avgTimeEl.textContent = `${avgSeconds}s`;
+        }
+        
+        function updateNavHighlight() {
+            const navButtons = document.querySelectorAll('#question-nav button');
+            navButtons.forEach((btn, index) => {
+                btn.classList.remove('nav-active');
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('nav-active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', () => {
+            startContainer.classList.add('hidden');
+            quizWrapper.classList.remove('hidden');
+            startTimer();
+            loadQuiz();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuiz();
+            } else {
+                showResults();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuiz();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.fill(null);
+            resultsContainer.classList.add('hidden');
+            startContainer.classList.remove('hidden');
+            document.querySelectorAll('#question-nav button').forEach(btn => {
+                btn.classList.remove('nav-answered', 'nav-active');
+            });
+        });
+
+        // --- Initial Setup ---
+        quizData.forEach((_, index) => {
+            const navBtn = document.createElement('button');
+            navBtn.innerText = index + 1;
+            navBtn.classList.add('w-10', 'h-10', 'flex-shrink-0', 'flex', 'items-center', 'justify-center', 'rounded-md', 'border', 'border-gray-300', 'dark:border-gray-600', 'hover:bg-gray-200', 'dark:hover:bg-gray-700', 'text-gray-700', 'dark:text-gray-300', 'transition-colors', 'font-medium', 'text-sm');
+            navBtn.dataset.index = index;
+            navBtn.addEventListener('click', (e) => {
+                currentQuestionIndex = parseInt(e.target.dataset.index);
+                loadQuiz();
+            });
+            questionNav.appendChild(navBtn);
+        });
+    </script>
+</body>
+</html>
